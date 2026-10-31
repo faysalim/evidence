@@ -32,13 +32,15 @@ The skill is self-contained: Markdown plus one Python script, no dependencies to
 
 ```bash
 # user-level — available in every project on the machine
-git clone https://github.com/<you>/product-qa.git ~/.claude/skills/product-qa
+git clone https://github.com/<you>/product-qa-skill.git ~/.claude/skills/product-qa
 
 # or project-level — checked in with one repo's code
-git clone https://github.com/<you>/product-qa.git .claude/skills/product-qa
+git clone https://github.com/<you>/product-qa-skill.git .claude/skills/product-qa
 ```
 
-On Windows the user-level path is `%USERPROFILE%\.claude\skills\product-qa`.
+On Windows the user-level path is `%USERPROFILE%\.claude\skills\product-qa`. **The destination
+directory must be `product-qa`**, not the repository name — Claude Code matches it against `name:` in
+`SKILL.md`'s frontmatter, which is why the commands above name their destination explicitly.
 
 Update with `git -C ~/.claude/skills/product-qa pull`.
 
