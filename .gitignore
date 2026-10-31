@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# QA run artefacts must never be committed to a public skill repo:
+# findings reference real builds, hosts, tenants and keys.
+qa-state.json
+*-findings.md
+.qa-secrets/
