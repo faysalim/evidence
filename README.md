@@ -164,6 +164,16 @@ and severity · Experience · Domain gotchas* — fill them **from a real engage
 principles**, and keep it to 60–110 lines. The value is entirely in specificity: "three nodes formed and one write was acknowledged and read
 back from a different node after the leader was killed" is useful; "the product works" is not.
 
+## Contributing
+
+`main` is protected and takes changes only through pull requests. `CONTRIBUTING.md` has the bar a new
+domain file has to clear and the four places a new domain has to be registered.
+
+## License
+
+Apache-2.0 — see `LICENSE` and `NOTICE`. Use it commercially, adapt the domain files to your own product,
+keep your adaptations private. The only obligation is attribution.
+
 ## Provenance
 
 Distilled from a four-repo, full-business QA engagement, then reviewed adversarially against product
