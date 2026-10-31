@@ -145,7 +145,7 @@ references/
   gotchas.md                       traps that each cost a cycle
   fix-phase.md                     when report-only is lifted
   case-file.md                     one worked engagement, with real numbers
-  domains/                         seventeen product classes + README index
+  domains/                         twenty-seven product classes + README index
 assets/
   finding.md                       the finding template
   ranked-index.md                  the report template
@@ -157,8 +157,9 @@ scripts/
 ## Writing a new domain file
 
 `references/domains/README.md` lists the classes that are missing and worth writing. Copy the seven fixed
-headings, fill them **from a real engagement rather than from first principles**, and keep it to 60–110
-lines. The value is entirely in specificity: "three nodes formed and one write was acknowledged and read
+headings — *Do the thing · Scope map · Failure catalogue · Defect classes to look for by name · Evidence
+and severity · Experience · Domain gotchas* — fill them **from a real engagement rather than from first
+principles**, and keep it to 60–110 lines. The value is entirely in specificity: "three nodes formed and one write was acknowledged and read
 back from a different node after the leader was killed" is useful; "the product works" is not.
 
 ## Provenance
