@@ -379,6 +379,14 @@ and *what they are trying to find out*. One line each, with the detail in each d
 | **File sync / storage** | What "synced" and "deleted" appear to mean, and whether a conflict is choosable. → `domains/file-sync-storage.md` |
 | **Observability** | Zero versus no data — a rendering defect whose consequence is a wrong 3am decision. → `domains/observability-platform.md` |
 | **Infra operator / IaC** | Diagnosis from the object and its events alone, with the source closed. → `domains/infra-operator.md` |
+| **Billing / metering** | Predictability: the gap between the bill the product predicted and the bill that arrived. → `domains/billing-and-metering.md` |
+| **Messaging delivery** | Time to answer "why did this one not arrive" — and the message as a real client renders it. → `domains/messaging-delivery.md` |
+| **Scheduling / booking** | A time shown without its zone: the commonest and most expensive wording defect there is. → `domains/scheduling-and-booking.md` |
+| **Backup / recovery** | The restorer is cold *by definition*, because the warm person is the one who is unavailable. → `domains/backup-and-recovery.md` |
+| **Secrets / PKI** | Time-to-expiry visibility: every credential the system holds, against those whose lifetime a human can see. → `domains/secrets-and-pki.md` |
+| **Workflow engine** | Side effects re-executed by the recovery action the console itself offers. → `domains/workflow-engine.md` |
+| **Search / ranking** | The zero-result screen — the one new users see most — and whether anyone logs it. → `domains/search-and-ranking.md` |
+| **E-commerce / marketplace** | The seller who cannot trace a payout to its orders, and then keeps their own spreadsheet. → `domains/ecommerce-marketplace.md` |
 
 One cost to flag before testing a funnel: proving that **every failure path reaches a human** means
 submitting real enquiries to a real sales or support team. Mark every test submission as a test in its

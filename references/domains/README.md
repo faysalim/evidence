@@ -17,6 +17,8 @@ next person in your field will need it.
 | `message-queue.md` | Broker / event streaming: offsets, ordering, retention, delivery semantics |
 | `data-pipeline.md` | ETL / streaming: sources and sinks, schema drift, backfills, exactly-once claims |
 | `file-sync-storage.md` | Files synced across devices: conflict, quota, share links, deletion |
+| `backup-and-recovery.md` | Backups and restores: chain integrity, retention, immutability, RTO |
+| `search-and-ranking.md` | Index freshness, relevance as a measured claim, facet counts, permission-aware results |
 
 **Applications**
 
@@ -27,6 +29,7 @@ next person in your field will need it.
 | `mobile-app.md` | Store-distributed app: permissions, offline, device fragmentation, policy gates |
 | `desktop-app.md` | Installed app: installer, auto-update, code signing, OS integration, CLI beside GUI |
 | `ai-product.md` | Model-backed feature: nondeterminism, injection, tool privilege, cost, eval denominators |
+| `scheduling-and-booking.md` | Availability, recurrence, DST, double-booking under concurrency, reminders |
 
 **Education**
 
@@ -35,34 +38,65 @@ next person in your field will need it.
 | `ai-tutor.md` | Model-backed tutor across levels: subject accuracy, answer leakage, level fit, safety for minors |
 | `education-platform.md` | LMS / courseware: gradebook arithmetic, deadlines, accommodations, roster integration |
 
+**Money and commerce**
+
+| File | Product class |
+|---|---|
+| `payments.md` | Checkout, refunds, processor integration — the money rail |
+| `billing-and-metering.md` | Plans, usage, proration, invoices, tax, dunning — the money arithmetic |
+| `ecommerce-marketplace.md` | Catalog, inventory under concurrency, order state machine, fulfilment, payout |
+| `licensing-server.md` | Entitlement issuing and validation, SaaS and self-hosted |
+
 **Platform and infrastructure**
 
 | File | Product class |
 |---|---|
 | `api-platform.md` | Public/partner API: spec as contract, idempotency, scopes, webhooks, versioning |
 | `identity-provider.md` | Auth and SSO: sessions, tokens, MFA, federation, revocation, recovery |
-| `licensing-server.md` | Entitlement issuing and validation, SaaS and self-hosted |
-| `payments.md` | Checkout, subscriptions, refunds, processor integration |
+| `secrets-and-pki.md` | Secret storage, dynamic credentials, key rotation, certificate renewal and revocation |
+| `messaging-delivery.md` | Email, SMS and push: deliverability, suppression, bounces, template rendering |
+| `workflow-engine.md` | Durable execution: replay determinism, duplicated side effects, in-flight deploys |
 | `observability-platform.md` | Metrics, logs, alerts: a product whose job is to tell the truth about something else |
 | `infra-operator.md` | Kubernetes operator / IaC provider: reconcile idempotency, drift, CRD upgrade |
 | `embedded.md` | Firmware and devices: OTA under power loss, no-screen failure indication, soak |
 
-Several products are two of these at once. A licensing platform with a public API is
-`licensing-server.md` **and** `api-platform.md`; a SaaS CRM is `crm.md` **and** `multi-tenant-saas.md`; an
-AI tutor is `ai-tutor.md` **and** `ai-product.md`, and inside a school product it is all of
-`ai-tutor.md`, `education-platform.md` and `multi-tenant-saas.md`. Read each one, take the union of the
-fault catalogues, and reconcile the scope maps **once** — not once per file — against the 11-agent cap.
-Two files that each claim family 8 get one family-8 agent briefed from both, never two.
+Twenty-seven files. Several products are more than one of them at once: a licensing platform with a public
+API is `licensing-server.md` **and** `api-platform.md`; a SaaS CRM is `crm.md` **and**
+`multi-tenant-saas.md`; a subscription product is `payments.md` **and** `billing-and-metering.md`; a
+storefront with real search is `ecommerce-marketplace.md` **and** `search-and-ranking.md`; an AI tutor
+inside a school product is `ai-tutor.md`, `education-platform.md` and `multi-tenant-saas.md` together.
+
+Read each one that applies, take the **union of the fault catalogues**, and reconcile the scope maps
+**once** — not once per file — against the 11-agent cap. Two files that each claim family 8 get one
+family-8 agent briefed from both, never two.
 
 ## Not yet written
 
 Each of these is a distinct defect population that the families alone will under-serve. If you run one,
-write the file afterwards: **search and ranking** (relevance as a measurable claim, index staleness),
-**video and media** (transcode matrix, playback across devices, DRM), **marketplace and multi-sided
-commerce** (seller/buyer asymmetry, payout correctness), **regulated records** (healthcare, finance:
-audit immutability, retention mandates, consent), **browser extension** (permission scope, host-page
-breakage, store review), **game client and backend** (cheat surface, matchmaking state, save integrity),
-**scientific or numerical tooling** (floating-point reproducibility, unit errors).
+write the file afterwards — the next person in your field will need it.
+
+**Closest to earning a file:** real-time collaboration (concurrent edit convergence, presence, offline
+merge, undo across users) · compiler, obfuscator and SDK tooling (semantic preservation under
+transformation, semver and packaging, deterministic output) · analytics and BI (aggregate consistency
+across filters, row-level security, export fidelity) · data warehouse and query engine (partition pruning,
+runaway query cost, time travel, concurrent writers on object storage) · feature flags and experimentation
+(evaluation consistency across SDKs, sticky bucketing, sample-ratio mismatch, kill-switch latency) ·
+network gateway, proxy and CDN (request smuggling, header mangling, cache keys, config reload under load) ·
+CI/CD platform (hermeticity, cache poisoning, secrets in logs, artifact provenance) · CMS and publishing
+(draft versus live, scheduled publish, cache invalidation, multi-locale).
+
+**Also distinct, narrower audience:** video and media (transcode matrix, playback across devices, DRM,
+captions) · regulated records in healthcare and finance (audit immutability, retention mandates, consent,
+erasure versus retention conflict) · browser extension (permission scope, host-page breakage, store
+review) · game client and backend (cheat surface, matchmaking state, save integrity) · scientific and
+numerical tooling (floating-point reproducibility, unit errors) · payroll and tax calculation
+(jurisdiction rules, effective dates, retroactive correction) · VPN and remote access (split tunnel, DNS
+leak, kill switch) · document generation (font embedding, pagination, barcode scannability).
+
+**Do not write these as domain files.** Accessibility, localization, privacy and performance are
+cross-cutting and already live in the families and in `experience.md`. A domain file earns its place only
+when it has a distinct **oracle**, a fault catalogue not already written down, and a severity mapping that
+differs from the generic one. Anything that fails all three belongs in a family.
 
 ## Every file has the same seven headings
 

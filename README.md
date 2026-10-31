@@ -79,17 +79,20 @@ can see the omission was chosen rather than missed.
 
 The method never changes between product classes. What changes is which families apply, what "do the
 thing" means concretely, which faults are worth injecting, what first success is, and how severity maps.
-`references/domains/` carries that for nineteen classes:
+`references/domains/` carries that for twenty-seven classes:
 
 **Data and state** — distributed database · relational database · message broker / streaming · ETL
-pipeline · file sync and storage
+pipeline · file sync and storage · backup and recovery · search and ranking
 
-**Applications** — multi-tenant SaaS · CRM · mobile app · desktop app · AI / model-backed feature
+**Applications** — multi-tenant SaaS · CRM · mobile app · desktop app · AI / model-backed feature ·
+scheduling and booking
 
 **Education** — AI tutor (across levels) · education platform / LMS
 
-**Platform and infrastructure** — API platform · identity and SSO · licensing server · payments ·
-observability platform · infrastructure operator / IaC · embedded and firmware
+**Money and commerce** — payments · billing and metering · e-commerce and marketplace · licensing server
+
+**Platform and infrastructure** — API platform · identity and SSO · secrets and PKI · messaging delivery ·
+workflow engine · observability platform · infrastructure operator / IaC · embedded and firmware
 
 Each file names that domain's version of the directive. A sample:
 
@@ -103,6 +106,10 @@ Each file names that domain's version of the directive. A sample:
   is the product failing at its only job."* — observability
 - *"A helpful-sounding reply is this domain's HTTP 200 — a tutor that gives answers is indistinguishable
   from one that teaches until you measure it."* — AI tutor
+- *"`Backup completed successfully` is this domain's HTTP 200. The restore is the entire product."* —
+  backup and recovery
+- *"`202 Accepted` is this domain's HTTP 200 — and `delivered` means a receiving server took it, not that a
+  human will ever see it."* — messaging delivery
 
 Each also lists its **defect classes by name**, because an unnamed defect class is one nobody looks for,
 and declares its usual agent count so the budget is checked before the operator is asked for more.
