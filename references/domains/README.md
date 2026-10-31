@@ -118,6 +118,12 @@ So a reader who knows one knows them all:
    classes, and which evidence kind carries the domain.
 7. **Domain gotchas** — the traps specific to testing this class of product.
 
+A file may add **one** domain-specific section, placed directly after *Do the thing*, when the domain has a
+structure the seven headings cannot hold: `payments.md` adds *The test-mode trap* because the safe way to
+test is also the way that hides the bugs, and `ai-tutor.md` adds *The level axis* because level is a test
+matrix rather than a setting. One extra, for a stated reason. Nothing else is optional — in particular
+*Defect classes to look for by name*, which is the heading that does the most work.
+
 ## Writing a new one
 
 Copy the headings, fill them from a real engagement rather than from first principles, and keep it to

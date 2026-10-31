@@ -32,34 +32,37 @@ Every family applies here — this is the shape the cap was calibrated on, and i
 
 **Usual set: 11 agents.** At the cap, with no spare — if a fault class needs splitting, something merges.
 
-## What the origin engagement still missed
+## Failure catalogue
 
-- **Client clock rollback.** Set the *client's* clock back a month after a trial expires. If the trial
-  resumes, every expiry is advisory. The server-clock test does not cover this, and it is the oldest
-  licensing attack there is.
-- **Tamper and replay.** Flip one byte of a signed key — validation must *reject*, not merely fail to
-  parse. Present a revoked key offline. Present a key issued for product A to product B **through the
-  API**, not only the GUI.
-- **Concurrent activation against the seat cap.** Two activations racing one seat; both succeeding is the
-  finding. Sequential "try it twice" does not find this.
-- **Seat release.** Deactivate, uninstall, change hardware: is the seat returned? Seats consumed by your
-  own testing go in the ledger — and whether they *can* be released is itself a test.
-- **Revocation propagation.** Revoke on the server; time until a connected client stops. An offline client
-  never learns — is that documented?
-- **Entitlement enforced on every channel.** A feature gated in the GUI but reachable from the CLI, the
-  API or the SDK is a bypass. Drive each channel as an unlicensed caller.
-- **Fail-closed meets durability.** The self-hosted server's own key database: back it up, restore it,
-  upgrade it with keys in place. Losing the key DB locks out every customer at once — the only `critical`
-  here that is not revenue-shaped.
-- **Validation under load.** A client that polls validation aggressively, plus a rate limit, equals the
-  vendor fail-closing its own customers. Find the limit, then ask what the client does when it hits it.
-- **Expiry at the boundary.** 23:59 in which timezone; DST; leap day; a 30-day trial issued on the 31st.
-- **Email deliverability.** Reading the raw source is already in the standard; SPF, DKIM and DMARC
-  alignment of the sending domain is not. A licence key in spam is a lost customer.
-- **Billing webhooks replayed.** A processor webhook delivered twice must not grant twice.
-- **Trial → paid transition.** Supersede or stack? And if the product self-destructs under a trial
-  licence, prove the self-destruct **never fires on a paid build** — the time bomb is a test, not only a
-  hazard.
+Everything below was a blind spot of the engagement this skill was distilled from, which is why the list is
+specific rather than tidy.
+
+**Set the *client's* clock back a month** after a trial expires · flip one byte of a signed key · present a
+revoked key while offline · present a key issued for product A to product B **through the API**, not only
+the GUI · race two activations against one remaining seat · deactivate, uninstall, and change hardware, then
+look for the seat · revoke on the server and time the connected client · drive every channel — GUI, CLI,
+API, SDK — as an unlicensed caller · back up, restore and upgrade the self-hosted server's **own key
+database** · poll validation aggressively until the rate limit answers · issue a 30-day trial on the 31st,
+expire it at 23:59 across a DST change and a leap day · read the delivery email's raw source and check SPF,
+DKIM and DMARC alignment of the sending domain · deliver the same billing webhook twice · take a trial
+through to paid.
+
+## Defect classes to look for by name
+
+**Expiry that is advisory** — a trial that resumes after a client clock rollback, which is the oldest attack
+in this domain and which a server-clock test cannot see · **tamper tolerated**: validation that fails to
+parse rather than *rejecting*, or that accepts a key issued for another product on a channel the GUI does
+not use · **seat overrun under concurrency** — two activations, one seat, both succeeding; sequential
+retries never find it · a seat that cannot be released at all, so a customer's own hardware change costs
+them a licence · revocation that propagates only at renewal, and an offline client that never learns —
+undocumented · **entitlement enforced per channel**, so a feature gated in the GUI is reachable from the
+CLI, the API or the SDK · **key-database loss locking out every customer at once**, the one `critical` here
+that is not revenue-shaped · the vendor fail-closing its own customers when an aggressive client meets a
+rate limit · expiry arithmetic at the boundary — timezone, DST, leap day, a 30-day trial issued on the 31st ·
+a licence key delivered into spam, which is a lost customer and invisible to both sides · a billing webhook
+replayed and granting twice · a trial-to-paid transition that stacks when it should supersede — and, where
+the product self-destructs under a trial licence, **a self-destruct that must be proved never to fire on a
+paid build.**
 
 ## Evidence and severity
 
