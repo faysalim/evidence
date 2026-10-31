@@ -28,6 +28,13 @@ next person in your field will need it.
 | `desktop-app.md` | Installed app: installer, auto-update, code signing, OS integration, CLI beside GUI |
 | `ai-product.md` | Model-backed feature: nondeterminism, injection, tool privilege, cost, eval denominators |
 
+**Education**
+
+| File | Product class |
+|---|---|
+| `ai-tutor.md` | Model-backed tutor across levels: subject accuracy, answer leakage, level fit, safety for minors |
+| `education-platform.md` | LMS / courseware: gradebook arithmetic, deadlines, accommodations, roster integration |
+
 **Platform and infrastructure**
 
 | File | Product class |
@@ -41,9 +48,11 @@ next person in your field will need it.
 | `embedded.md` | Firmware and devices: OTA under power loss, no-screen failure indication, soak |
 
 Several products are two of these at once. A licensing platform with a public API is
-`licensing-server.md` **and** `api-platform.md`; a SaaS CRM is `crm.md` **and**
-`multi-tenant-saas.md`. Read both, take the union of the fault catalogues, and reconcile the scope maps
-once — not twice — against the 11-agent cap.
+`licensing-server.md` **and** `api-platform.md`; a SaaS CRM is `crm.md` **and** `multi-tenant-saas.md`; an
+AI tutor is `ai-tutor.md` **and** `ai-product.md`, and inside a school product it is all of
+`ai-tutor.md`, `education-platform.md` and `multi-tenant-saas.md`. Read each one, take the union of the
+fault catalogues, and reconcile the scope maps **once** — not once per file — against the 11-agent cap.
+Two files that each claim family 8 get one family-8 agent briefed from both, never two.
 
 ## Not yet written
 
@@ -78,5 +87,7 @@ So a reader who knows one knows them all:
 ## Writing a new one
 
 Copy the headings, fill them from a real engagement rather than from first principles, and keep it to
-60–100 lines. The value is in specificity: "three nodes formed and one write acknowledged and read back
+60–110 lines — or up to about 150 when the domain carries a **test matrix of its own** that the families
+cannot express, as `mobile-app.md` does for devices and `ai-tutor.md` does for learner levels. That is the
+only accepted reason to run long; a longer file for any other reason is padding. The value is in specificity: "three nodes formed and one write acknowledged and read back
 from a different node" is useful; "the product works" is not.

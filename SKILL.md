@@ -128,11 +128,13 @@ install) · 5. Entitlement lifecycle · 6. Secondary products, SDKs, compatibili
 **11. Upgrade, migration and rollback** · **12. Experience & diagnosability**
 
 `references/scope-playbooks.md` has the generic playbook per family. `references/domains/` maps the
-families onto seventeen product classes, grouped in its README as data and state, applications, and
-platform and infrastructure — each file carrying that domain's version of "do the thing", its fault
+families onto nineteen product classes, grouped in its README as data and state, applications, education,
+and platform and infrastructure — each file carrying that domain's version of "do the thing", its fault
 catalogue, the evidence it needs, and its severity notes. **Read the closest one before briefing, and read
-two when the product is two things at once** — a SaaS CRM, an API-fronted licensing platform. If none is
-close, say so in the report, work from the families, and write the missing file afterwards.
+every file that applies when the product is two things at once** — a SaaS CRM, an API-fronted licensing
+platform, an AI tutor inside a school platform. Take the union of the fault catalogues and reconcile the
+scope maps once against the cap. If none is close, say so in the report, work from the families, and write
+the missing file afterwards.
 
 Run them in parallel when subagents are available **and the user has actually asked for a multi-agent
 sweep**; otherwise work the scopes yourself in severity-likelihood order. Either way, brief each scope
@@ -325,7 +327,7 @@ registered identities, registry paths, anything where a rename is really a migra
 |---|---|
 | `references/evidence-standard.md` | Before the first finding. What counts as proof, per surface. |
 | `references/scope-playbooks.md` | Splitting scopes or briefing an agent. The twelve families, with steps, and the agent budget. |
-| `references/domains/` | **First, every time.** Seventeen product classes — its README indexes them and says which pair up. Each maps the families onto that class, declares its applicable set and agent count, defines what "first success" means, and lists the fault catalogue and defect classes by name. |
+| `references/domains/` | **First, every time.** Nineteen product classes — its README indexes them and says which pair up. Each maps the families onto that class, declares its applicable set and agent count, defines what "first success" means, and lists the fault catalogue and defect classes by name. |
 | `references/docs-conformance.md` | Scope 9. Claim extraction, two-way coverage, and what a 100% claim requires. |
 | `references/experience.md` | Usability and UX. The first-run measurement, making a UX finding provable, error messages, accessibility. |
 | `references/iteration-cycles.md` | Any iteration after the first. Phases, the gate, the finding register, when to stop. |

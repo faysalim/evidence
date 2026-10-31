@@ -374,6 +374,8 @@ and *what they are trying to find out*. One line each, with the detail in each d
 | **Broker / streaming** | Whether a consumer's position is legible, and whether an offset reset can be previewed. → `domains/message-queue.md` |
 | **Desktop** | First launch on a locked-down machine, OS trust prompts, and crash recovery. → `domains/desktop-app.md` |
 | **AI / model-backed** | Whether the user can tell a confident wrong answer from a right one, and verify without leaving. → `domains/ai-product.md` |
+| **AI tutor** | The transfer test: can the learner do the *next* problem unaided? The only experience measure that separates teaching from telling. → `domains/ai-tutor.md` |
+| **Education platform** | Receipt-ability — can a learner prove what they submitted and when, to someone who will not take their word for it? → `domains/education-platform.md` |
 | **File sync / storage** | What "synced" and "deleted" appear to mean, and whether a conflict is choosable. → `domains/file-sync-storage.md` |
 | **Observability** | Zero versus no data — a rendering defect whose consequence is a wrong 3am decision. → `domains/observability-platform.md` |
 | **Infra operator / IaC** | Diagnosis from the object and its events alone, with the source closed. → `domains/infra-operator.md` |
