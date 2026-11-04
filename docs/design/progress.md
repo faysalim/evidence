@@ -86,6 +86,17 @@ claude plugin marketplace remove product-suite-scaffold-market
 rm -rf /e/Personal/projects/product-suite-scaffold
 ```
 
+## Self-found, to fix in the post-council apply pass
+
+Found by inspection while the council ran. Held rather than fixed mid-review, so the reviewers'
+reads stay valid. All three are mine.
+
+| id | Defect | Fix |
+|---|---|---|
+| `SF-1` | **`.gitignore:8` (`qa-state.json`) silently excluded both fixtures' generated view.** `fix-state.json` is committed, `qa-state.json` is not, so a clone gets half a fixture — and `tests/test_fixtures.py` cannot catch it because it rebuilds from scratch rather than reading the committed copy. The ignore rule was written for a QA repo where `qa-state.json` held real engagement data; it is now also a legitimate committed artifact under `tests/fixtures/`. | Scope the ignore to the repo root, or negate it under `tests/fixtures/`. **And add a check** that every file the fixtures' README claims is committed, is committed — the durable fix, since the rule is "the repo cannot lie about itself" |
+| `SF-2` | **`evals/results/` is committed** — 14 files of run reports including HTML. Run artefacts, not source, and the same class as the existing ignore rule about QA run artefacts. | gitignore it and remove it from the index |
+| `SF-3` | **`NOTICE` still names `product-qa`.** | Rename to `product-suite` |
+
 ## NOT RUN — carried to the final report, never silently passed
 
 | What | Why | What would unblock it |
