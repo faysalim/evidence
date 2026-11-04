@@ -10,27 +10,21 @@ rewrite history or delete branches.
 
 ## Where we are
 
-**Build complete. Council round 1 applied. Independent verification in flight.**
+**DONE.** Build complete, two council-and-verify rounds complete, final report written.
 
-| Step | What | Commit |
-|---|---|---|
-| 1-9 | snapshot through README/CONTRIBUTING | `306816a` .. `43695c0` |
-| 9b | eval graders, deterministic where they decide | `22bfc74` |
-| 10a | council round 1: code fixes, 8 criticals closed | `0d4c25f` |
-| 10b | the intended message for 0d4c25f | `32d13fe` |
-| 10c | council round 1: docs + the enforcement-claims test | `78346ef` |
-| 10d | consolidated council review, 59 findings | `5955316` |
-| 10e | verification agent | IN FLIGHT |
-| 11 | `final-report.md` | drafted, awaiting §6 |
+Read `docs/design/final-report.md` first. `council-review.md` has all 66 defects with repros and
+dispositions; `plugin.md` has the design and its 13 decisions; `round1-changelog.md` holds the
+message that commit `0d4c25f` lost to shell quoting.
 
-**Two findings cannot be closed from here** and are the final report's §4: `PE-1` (the README's
-install path needs a push, which was forbidden) and `PE-2` (the plugin exceeds the skill-listing
-budget, which needs a product decision, not a code change).
+**Two things need Faisal and cannot be done from here:**
 
-## Next
+1. `PE-1` — the README's install commands cannot work: `origin/main` is still the old standalone
+   skill and `plugin-suite` is unpushed. One `git push -u origin plugin-suite`.
+2. `PE-2` — the plugin exceeds the skill-listing budget, so 7 of 15 descriptions are dropped in a
+   real session. Needs a product decision; `disable-model-invocation` was measured and does not
+   help.
 
-Append the verification agent's results to `final-report.md` §6, fix anything it returns PARTIAL or
-STILL PRESENT, verify once more, then stop. At most two rounds, and this is round one.
+**Nothing is pushed.** 25 commits on `plugin-suite`; `main` untouched at `6db632e`.
 
 ## Test status
 
