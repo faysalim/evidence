@@ -6,123 +6,53 @@ way a second iteration wastes its whole budget.
 
 ## Knowing which iteration you are in
 
-This cannot come from memory. A later iteration usually runs in a **new session** with no recollection of
-the first, and the operator will often just say "we fixed those, have another look" — which does not say
-whether three findings were fixed or thirty, or which build is now live.
+This cannot come from memory. A later iteration usually runs in a **new session** with no
+recollection of the first, and the operator will often just say "we fixed those, have another
+look" -- which does not say whether three findings were fixed or thirty, or which build is now
+live.
 
-So iteration state lives **on disk**, and reading it is the lead's first action of the run:
+So iteration state lives in the **hub**, and reading it is the lead's first action of the run:
 
-**`<report-dir>/qa-state.json`** — small, authoritative for state. The markdown reports stay the human
-deliverable; this file is what makes the run resumable.
-
-```json
-{
-  "engagement": "acme-full-business",
-  "report_dir": "<report-dir>",
-  "iteration": 2,
-  "mandate": {
-    "role": "QA",
-    "report_only": true,
-    "owned_environments": ["the three-node cluster I stood up", "test tenant <id>"],
-    "out_of_bounds": ["deploys", "merges", "production config", "the shared staging cluster"],
-    "credentials": "test tenant only; no production token was supplied",
-    "time_bombs": ["Release builds self-obfuscate under a trial licence"],
-    "acceptance_requirements": "<path to the operator's written requirements>"
-  },
-  "scopes": ["website", "app-windows", "saas", "selfhosted", "licensing",
-             "secondary", "telemetry", "security", "docs", "state", "upgrade",
-             "experience"],
-  "builds_tested": {
-    "1": { "website": "dfd358b", "service": "2.5.0-ui6 @ faec816" },
-    "2": { "website": "a1b2c3d", "service": "2.5.1 @ 9f8e7d6" }
-  },
-  "findings": [
-    { "id": "K1", "title": "Self-hosted activation names the wrong env var",
-      "severity": "blocker", "scope": "selfhosted",
-      "status": { "1": "OPEN", "2": "VERIFIED FIXED" }, "closed_in": 2 },
-    { "id": "L5", "title": "+subaddressing defeats one-trial-per-email",
-      "severity": "major", "scope": "licensing",
-      "status": { "1": "OPEN", "2": "PARTIAL" }, "closed_in": null }
-  ],
-  "cases": [
-    { "id": "S5-01", "scope": "licensing",
-      "action": "POST /v1/trial with the documented payload, verbatim",
-      "oracle": "a usable key arrives in the real mailbox and activates a real binary",
-      "result": { "1": "FAIL", "2": "PASS" }, "finding": "K1" },
-    { "id": "S5-03", "scope": "licensing",
-      "action": "tag-only local part, e.g. +tag@example.com",
-      "oracle": "whether a second trial mints for the same mailbox",
-      "result": { "2": "FAIL" }, "finding": "L5",
-      "note": "adversarial variant of L5; permanent from iteration 2" },
-    { "id": "S10-04", "scope": "state",
-      "action": "partition one node for 60s under write load, heal, read back both sides",
-      "oracle": "both sides agree with my own acknowledged-write ledger after heal",
-      "guards": { "class": "divergence after heal", "ceiling": "critical" },
-      "touches": ["membership", "replication"],
-      "provenance": "derived", "source": "fault-catalogue",
-      "ran_under": { "topology": "3 nodes listed, RF2, 64 partitions", "n": 20000,
-                     "duration": "20m", "load": "2k ops/s",
-                     "ran_by": "scope-10-agent", "at": "2026-11-04T09:12:00Z" },
-      "result": { "1": "NOT RUN", "2": "NOT RUN" },
-      "blocked_by": "only two hosts available on this machine" }
-  ],
-  "not_verified": [
-    { "what": "macOS installer and Gatekeeper", "why": "no macOS host in this engagement",
-      "unblocked_by": "any current macOS host", "cases": ["S2-11"], "since_iteration": 1 }
-  ],
-  "cleanup": [
-    { "item": "3-node cluster, region <r>", "created_by": "iteration 1",
-      "removable_by": "me", "cost": "billing per hour", "status": "TORN DOWN",
-      "verified_by": "re-listed instances: NONE" },
-    { "item": "test tenant <id>", "created_by": "iteration 1",
-      "removable_by": "operator", "cost": "consumes a seat", "status": "OPEN" }
-  ],
-  "stopped": null
-}
+```
+python "${CLAUDE_PLUGIN_ROOT}/shared/scripts/hub.py" status
 ```
 
-Four of those fields exist because a resumed run cannot work without them and nothing else carries them:
-
-- **`mandate`** — otherwise iteration 2 re-asks the operator what it may touch, or worse, guesses. Which
-  environments are *yours to break* is the field that decides whether the state scope can run at all.
-- **`cleanup`** — this is the one that bills money if a run dies mid-sweep. A ledger that lives only in a
-  markdown report is a ledger nobody inherits. Status stays `OPEN` until a **re-listing** verifies it.
-- **`not_verified`** — Phase 3 calls these the highest-value targets of the next iteration, so they have to
-  survive the session that found them. `since_iteration` is what makes "this has been blocked for three
-  rounds" visible, which is itself a `PROCURE` finding.
-- **`findings[].status_action`** — the closing action (`CODE` / `DEPLOY` / `RELEASE` / `DATA` / `PROCURE` /
-  `DECIDE` / `INVESTIGATE`), because "22 bugs" of which nine are deploy lag is not a plan.
-
-The `cases` array is the run's denominator and carries forward exactly as `findings` does: ids are names,
-never positions, and a case is never retired for passing — it is the regression suite.
-`references/test-cases.md` has the contract. Phase 2's selection is computed from this array, which is why
-it is cheap: the `PASS`
-cases whose subject falls in the diff's blast radius, rather than a guess at what the fix might have
-disturbed. A `NOT RUN` row whose `blocked_by` has not changed in three iterations is itself a finding about
-the test environment, usually `PROCURE`; promote it into `findings` rather than letting it ride.
+**The hub is the source of truth.** `qa-state.json` and `fix-state.json` still exist, but they are
+now **generated views** carrying a `generated_from` header with a digest of the events they were
+built from. A view that disagrees with the hub is not a second opinion; it is a stale artifact, and
+`hub.py validate` says so. Never hand-edit one -- that is the same class of error as testing a
+build that does not contain the fix it claims.
 
 **The lead's decision procedure, in order:**
 
-1. Look for `qa-state.json`. Check `./qa-reports/` first — that is the default convention, so an
-   ordinary first run costs no question — then anywhere the operator has named. Ask only if neither exists
-   and the operator has described a prior run.
-2. **Found it** → this is `iteration + 1`. Run Phases 0–2 before anything else.
-3. **Not found, but prior report files exist** (ranked index, findings files) → this is still a later
-   iteration. Reconstruct the register from those reports, write `qa-state.json` from it, and say in the
-   report that you reconstructed it — the operator needs to know the ids came from parsing, not from state.
-4. **Nothing found, and the operator describes no prior run** → iteration 1. Create `qa-state.json` as
-   your first write, before testing, so an interrupted run is still resumable.
-5. **Ambiguous** — the operator says "re-test the bugs" but you can find no register at all. Ask. One
-   question costs far less than a sweep that re-reports known findings as new.
+1. Run `hub.py status`. It checks `./qa-reports/hub` by default, so an ordinary run costs no
+   question; ask the operator only if reports live elsewhere.
+2. **A hub exists** -> this is `iteration + 1`. Run the case review, then Phases 0-2 before
+   anything else.
+3. **No hub, but an old `qa-state.json` or prior report files exist** -> still a later iteration.
+   Run `hub.py import <report-dir>`. Ids are preserved unchanged, every item arrives
+   `provenance: reconstructed` **and in its initial state** -- the old verdicts are not inherited,
+   because nobody verified them here. Say in the report that the register was reconstructed.
+4. **Nothing at all, and the operator describes no prior run** -> iteration 1. Run `hub.py init`
+   as your first write, before testing, so an interrupted run is resumable.
+5. **Ambiguous** -- the operator says "re-test the bugs" but there is no hub and no prior report.
+   Ask. One question costs far less than a sweep that re-reports known findings as new.
 
-Update the file at the end of every phase, not just at the end of the run. A run that dies mid-sweep
-should leave behind enough state for the next session to resume rather than restart.
+**The iteration number is an explicit event**, never inferred: `hub.py iteration <n>`. Regenerate
+the compatibility views at the end of every phase with `hub.py views`, so a run that dies mid-sweep
+leaves state the next session can read.
+
+What the hub holds, per item: id, type, state, owner role, provenance, links, and full history with
+every transition's actor, role and timestamp. The mandate, the acceptance requirements and the
+cleanup ledger live there too -- `hub.py profile` and `cleanup` items -- because a resumed run
+cannot work without them and nothing else carries them.
 
 ## Agents never infer the iteration — they are told
 
 A scope agent has no view of the engagement, so asking it to work out which round it is in invites it to
 guess wrong and sweep when it should be verifying. The lead puts the round and the phase in the brief,
-explicitly, along with that scope's open findings. `assets/agent-brief.md` is the template; the fields
+explicitly, along with that scope's open findings.
+`${CLAUDE_PLUGIN_ROOT}/skills/qa/assets/agent-brief.md` is the template; the fields
 that matter here:
 
 ```
@@ -143,7 +73,7 @@ lead and go into Phase 3's target list.
 
 Before Phase 0, and before anyone is briefed, the lead revisits the case set. Zero agents, minutes of work,
 and it is not optional: **there is always more to add, and the previous round is what generates it.**
-`references/test-cases.md` has the contract; the five steps are:
+`${CLAUDE_PLUGIN_ROOT}/skills/qa/references/test-cases.md` has the contract; the five steps are:
 
 1. **Promote last round's `discovered` cases** to permanent `derived` ones, and ask which source should
    have predicted each. Where the answer is a domain file's fault catalogue, that file is wrong — a PR to
@@ -198,7 +128,8 @@ trusted the tag, it would have reported a correct fix as broken.
 
 **When a separate dev session delivered the build, Phase 0 has a cheaper predecessor:** check the handback
 packet is complete before briefing anyone. No build digest per component, any finding still `NEW`, or
-missing fail-first evidence → return it unread (`references/dev-handoff.md`). A returned handback costs one
+missing fail-first evidence → return it unread (`${CLAUDE_PLUGIN_ROOT}/shared/contracts/qa-dev.md`). A
+returned handback costs one
 message; the alternative is a verification round whose result is `NOT IN BUILD` for half the register.
 Phase 0 still runs — the handback is a claim about which build contains what, and Phase 0 is the
 independent check of that claim. A complete handback does not excuse it.
@@ -363,7 +294,7 @@ builds. Prefix by scope so the id says where it came from (`K1`, `L5`, `T1`, `G2
 numbering sparse so later findings in the same scope can slot in.
 
 Per finding, carry forward: id, title, severity, scope, status per iteration, and the iteration that
-closed it. Template in `assets/ranked-index.md`.
+closed it. Template in `${CLAUDE_PLUGIN_ROOT}/skills/qa/assets/ranked-index.md`.
 
 ## Agent budget per phase
 

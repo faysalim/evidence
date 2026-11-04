@@ -89,6 +89,10 @@ A technical design is a delta against the current state:
 5. **The failure modes the product class is known for.** Read the domain file and work its fault catalogue
    against the new design before anyone builds it — that is far cheaper than finding them in scope 10.
 
+**On a small team.** An ADR is `ACCEPTED` by a tech lead who did not author it. Where there is
+only one, a senior engineer wears `TECH_LEAD` for the acceptance — a different actor, not the same
+person with a second `--role`.
+
 ## For the lead
 
 Review the `falsifier` first. An ADR with no falsifier cannot be wrong, which means it cannot be assessed

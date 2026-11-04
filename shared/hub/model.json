@@ -30,7 +30,8 @@
     "supersedes",
     "blocks",
     "graded_by",
-    "derived_from"
+    "derived_from",
+    "found_by"
   ],
   "chain": [
     "initiative",
@@ -1435,5 +1436,17 @@
         }
       ]
     }
+  },
+  "chain_links": {
+    "initiative->prd": "realizes",
+    "prd->requirement": "refines",
+    "requirement->story": "realizes",
+    "story->design": "realizes",
+    "story->adr": "realizes",
+    "story->case": "verifies",
+    "case->finding": "found_by",
+    "finding->fix": "fixes",
+    "fix->release": "ships",
+    "release->metric": "measures"
   }
 }

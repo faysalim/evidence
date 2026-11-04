@@ -236,7 +236,8 @@ actually interpreted in.
 ## Experience findings
 
 A usability finding needs evidence too, or it is answered with "that's subjective" and the section becomes
-decoration. The hierarchy and the severity scale live in `references/experience.md`; in one line, the four
+decoration. The hierarchy and the severity scale live in
+`${CLAUDE_PLUGIN_ROOT}/shared/references/experience.md`; in one line, the four
 admissible kinds, strongest first, are: the product **already does it right somewhere else** (its own two
 surfaces disagreeing, which removes taste from the argument); a **blocked or abandoned goal**, stated as a
 goal; a **measurement** — time, steps, exits from the product, time-to-diagnose, or a count of conditions

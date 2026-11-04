@@ -23,7 +23,8 @@ text-mode read is therefore silently false. This rewrote an entire 3,863-line fi
 and adding `utf-8-sig` on the write put a BOM on it as well — a diff that buried the actual two-line change
 completely.
 
-Use `scripts/safe_edit.py`, which reads **bytes**, detects the newline and BOM from the bytes, requires
+Use `${CLAUDE_PLUGIN_ROOT}/shared/scripts/safe_edit.py`, which reads **bytes**, detects the newline and
+BOM from the bytes, requires
 every anchor to match **exactly once**, and writes nothing at all if any anchor fails. The abort-on-mismatch
 behaviour is the valuable half: an anchor that matches zero times usually means a character you assumed is
 a hyphen is actually an em dash (`—`), and failing loudly beats a partial edit.

@@ -96,6 +96,9 @@ re-run the forward claim set for every surface the release touched, and redo the
 **fixes add environment variables, flags and endpoints, so new undocumented surface is created by the very
 act of fixing.** That is not a hypothetical; it is the normal case.
 
+**On a small team.** A `doc` is `PUBLISHED` by a different actor than the one who drafted it, and
+a finding you file is verified and closed by QA — not by you, however obvious the fix.
+
 ## For the lead
 
 Two questions. **Was every claim run, or read?** — the difference is the whole skill, and a verified doc

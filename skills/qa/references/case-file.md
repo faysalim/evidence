@@ -3,7 +3,8 @@
 The engagement this skill was distilled from, with real numbers. Read it when you want to see the method
 produce a result, or to calibrate what a thorough run actually yields.
 
-**One engagement, of one shape.** `references/domains/` exists because of what this file does not contain:
+**One engagement, of one shape.** `${CLAUDE_PLUGIN_ROOT}/shared/domains/` exists because of what this
+file does not contain:
 no cluster under fault, no migration with data in it, no device matrix, no pipeline reconciliation. Scopes
 10, 11 and 12 were all blind spots of this run, which is why they are now families rather than footnotes.
 

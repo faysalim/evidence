@@ -54,6 +54,14 @@ hub.py move S-12 READY -f acceptance_criteria="<the oracle text>" --role PO
 The hub refuses `READY` without criteria. That is the gate, and it is why this skill cannot be skipped
 quietly.
 
+**There is a second gate, and it will surprise you.** A story cannot be `ACCEPTED` until a `case`
+linked `verifies` is `PASS` — and **a PO may not create a case** (QA, DEV, designers and analysts
+may). So when DEV marks a story `DONE` before QA has written anything, your move is *not*
+`REJECTED`: that records a reason against DEV's work for QA's absence. Ask for the case.
+`hub.py list --type story --state DONE` is exactly the list of stories waiting on one. And if a
+case was linked by mistake and now blocks acceptance, `hub.py unlink <case> verifies <story>
+--reason "..."` retracts it as an attributed event rather than an erasure.
+
 ## Slicing
 
 A story is a slice through the whole product, not a layer of it. "Build the API" and "build the UI" are

@@ -118,6 +118,18 @@ python shared/scripts/hub.py validate                   # is the hub internally 
 python shared/scripts/hub.py dashboard                  # render the local HTML dashboard
 ```
 
+Those four are read commands. Writing needs an actor and a role, because a claim is attributable
+or it is anonymous:
+
+```bash
+python shared/scripts/hub.py --actor you --role QA init --engagement my-product
+python shared/scripts/hub.py --actor you --role QA iteration 1
+python shared/scripts/hub.py --actor you --role QA add case S1-01 -f action="..." -f oracle="..."
+```
+
+`/product-suite:hub` has the six-command first engagement and the conventions the verdict reads.
+The options work before or after the subcommand.
+
 **Storage is one append-only log per actor** — `hub/events/<role>/<actor>.jsonl` — so no two writers ever
 share a file. State is a deterministic fold over every event. There is no lock, because a locking protocol
 between two agents working hours apart is a fiction, and a git merge of two appends is a concatenation
@@ -181,6 +193,7 @@ python -I shared/scripts/test_hub.py            # 70 checks: the hub, its invari
 python -I shared/scripts/test_safe_edit.py      # 25 checks
 python -I shared/scripts/test_qa_dashboard.py   # 25 checks
 python -I shared/scripts/check_repo.py          # 7 repo self-checks
+python -I tests/test_enforcement_claims.py      # every "Enforced:" claim is backed by a refusal
 python -I tests/test_description_budget.py      # the measured always-on cost
 python -I tests/triggers/check_overlap.py       # trigger overlap, from the descriptions
 python -I tests/fixtures/build.py --all         # rebuild both fixtures end to end

@@ -35,96 +35,48 @@ Read it off the mandate, and if the operator has not said, ask — one question.
 DEV when it is QA will start editing a repository under a report-only mandate, which is the single
 unforgivable error in this method.
 
-A DEV session reads this file and `references/fix-phase.md`. Everything in `fix-phase.md` — worktree
+A DEV session reads this file and `${CLAUDE_PLUGIN_ROOT}/skills/dev/references/fix-phase.md`. Everything
+in `fix-phase.md` — worktree
 isolation, one finding one branch, test-first with proof it fails, deliberate exclusions — applies
 unchanged. This file adds only what the second session makes necessary.
 
-## The two files: one writer each
+## One log per actor, and two generated views
 
-Do not share a ledger. Two sessions writing one JSON file lose each other's edits, and a locking protocol
-between two agents that may be hours apart is a fiction. Instead:
+Do not share a ledger. Two sessions writing one file lose each other's edits, and a locking
+protocol between two agents that may be hours apart is a fiction. The hub's answer:
 
-| File | Written by | Read by | Holds |
-|---|---|---|---|
-| `<report-dir>/qa-state.json` | **QA only** | both | iteration, builds tested, findings, the case register, verification verdicts |
-| `<report-dir>/fix-state.json` | **DEV only** | both | triage decision, assignee, root cause, branch and commit, claimed status, tests added, dev notes |
-| `<report-dir>/qa-events.jsonl` | **QA only**, append-only | both | every QA state change, timestamped |
-| `<report-dir>/fix-events.jsonl` | **DEV only**, append-only | both | every DEV state change, timestamped |
+| Path | Written by | Holds |
+|---|---|---|
+| `<hub>/events/<ROLE>/<actor>.jsonl` | that actor, append-only | every state change, timestamped and attributed |
+| `<report-dir>/qa-state.json` | **generated** | QA's compatibility view |
+| `<report-dir>/fix-state.json` | **generated** | DEV's compatibility view |
 
-They join on the finding id. Neither side ever writes a field the other owns — not to "tidy up", not to
-correct an obvious error. A correction you cannot make yourself goes in **your own** file as a note
-addressed to the other side, which is also how it ends up in the report. Keep both under version control if
-the operator has a repo for reports: the history then shows who changed what and when, which is the audit
-trail a procurement review asks for and nobody can reconstruct afterwards.
+**No two writers ever share a file**, so there is no lock and a git merge of two actors' work is a
+concatenation rather than a conflict. State is a deterministic fold over every event, ordered by
+`(ts, actor, seq)` and applied in causal order via explicit `after` links -- `ts` is advisory,
+because two machines' clocks disagree and a QA session can legitimately stamp its answer before the
+DEV event it answers.
 
-`fix-state.json`, per finding:
+**Neither side hand-writes anything.** Every change goes through
+`python "${CLAUDE_PLUGIN_ROOT}/shared/scripts/hub.py"`, which refuses the transitions this contract
+forbids -- so the invariants below are enforced rather than agreed. The two state files are
+**generated views**: they carry a `generated_from` header with a digest of the events they were
+built from, and a view that disagrees with the hub is a stale artifact, not a second opinion.
+`hub.py validate` reports it; `hub.py views` regenerates it.
 
-```json
-{
-  "engagement": "acme-full-business",
-  "role": "DEV",
-  "fixes": [
-    { "id": "K1",
-      "triage": "ACCEPTED", "triaged_in_build": "2.5.0-ui6", "reason": null,
-      "severity_agreed": true,
-      "root_cause": "service reads KEYRIGHT_SELF_LICENSE; the documented name is KEYRIGHT_LICENSE",
-      "branch": "fix/qa-k1-env-var", "commit": "9f8e7d6", "base": "release/2.5.0",
-      "delivered_in_build": "2.5.1 @ 9f8e7d6",
-      "claimed": "FIXED",
-      "satisfies_cases": ["S5-01", "S5-02"],
-      "tests_added": [
-        { "test": "SelfHostedActivation_AcceptsDocumentedEnvVarName",
-          "automates_case": "S5-01", "failed_before_fix": true } ],
-      "note_to_qa": "the old name is still accepted as a deprecated alias; S5-02 should pass for both" },
-    { "id": "T4",
-      "triage": "REJECTED", "reason": "works as designed",
-      "design_citation": null,
-      "severity_agreed": false, "severity_claimed": "minor",
-      "claimed": null,
-      "note_to_qa": "intended behaviour; I cannot find where it is documented" }
-  ]
-}
-```
+Keep the hub under version control if the operator has a repo for reports. The history then shows
+who changed what and when, which is the audit trail a procurement review asks for and nobody can
+reconstruct afterwards.
 
-That second entry is deliberately shown half-answered, because it is the common case and it has a defined
-outcome rather than an argument. See *Disputes* below.
+Every event carries `ts`, `actor`, `role` and the item it concerns, and `event_id` is
+`<role>/<actor>#<seq>` so one person wearing two hats cannot collide with themselves. `actor` names
+the agent or session, because "who ran it" is part of the evidence: a `PASS` is attributable or it
+is anonymous.
 
-## The event log: append-only, one per side
-
-The state files say where a finding *is*. They do not say how it got there, and "how it got there" is the
-whole audit trail — who reported what, when it was triaged, how long it sat with whom, how many times it
-reopened. A status-per-iteration map cannot answer any of that, and it is the one thing a procurement
-review, a regulated release and a post-mortem all ask for.
-
-So each side **appends** to its own log, one JSON object per line, never rewriting a line:
-
-```jsonl
-{"ts":"2026-11-04T09:12:03Z","actor":"qa/scope-5-agent","role":"QA","event":"FILED","id":"K1","severity":"blocker","build":"2.5.0-ui6@faec816","case":"S5-01"}
-{"ts":"2026-11-04T09:48:11Z","actor":"qa/lead","role":"QA","event":"HANDED_OVER","id":"K1","iteration":1}
-{"ts":"2026-11-05T11:02:00Z","actor":"dev/session-2","role":"DEV","event":"TRIAGED","id":"K1","triage":"ACCEPTED"}
-{"ts":"2026-11-05T15:40:22Z","actor":"dev/session-2","role":"DEV","event":"FIX_DELIVERED","id":"K1","branch":"fix/qa-k1-env-var","commit":"9f8e7d6","build":"2.5.1@9f8e7d6","satisfies_cases":["S5-01","S5-02"]}
-{"ts":"2026-11-06T08:15:00Z","actor":"qa/lead","role":"QA","event":"BUILD_IDENTITY","build":"2.5.1@9f8e7d6","present":["K1"],"absent":[]}
-{"ts":"2026-11-06T08:31:45Z","actor":"qa/scope-5-agent","role":"QA","event":"CASE_RESULT","case":"S5-01","result":"PASS","ran_under":{"topology":"self-hosted 1 node listed"}}
-{"ts":"2026-11-06T08:33:02Z","actor":"qa/scope-5-agent","role":"QA","event":"VERIFIED","id":"K1","status":"VERIFIED FIXED","variant_used":"tag-only local part +x@example.com"}
-{"ts":"2026-11-06T09:00:00Z","actor":"qa/lead","role":"QA","event":"CLOSED","id":"K1","iteration":2}
-```
-
-Append-only JSONL is chosen deliberately: no line is ever rewritten, so two sessions hours apart cannot
-clobber each other, and a git merge of two appends is trivial where a merge of two edited JSON trees is
-not. The event vocabulary, by owner:
-
-| QA appends | DEV appends |
-|---|---|
-| `FILED` · `CASE_ADDED` · `CASE_RESULT` · `HANDED_OVER` · `HANDBACK_RETURNED` · `BUILD_IDENTITY` · `SMOKE` · `CALIBRATION` · `VERIFIED` · `PARTIAL` · `STILL_PRESENT` · `CLOSED` · `REOPENED` · `CONVERTED` · `WITHDRAWN` · `VERDICT` | `TRIAGED` · `IN_PROGRESS` · `FIX_DELIVERED` · `TEST_ADDED` · `DISPUTED` · `DEFERRED` · `NOTE` |
-
-Every event carries `ts`, `actor`, `role`, and the `id` or `case` it concerns. `actor` names the agent or
-session, because "who ran it" is part of the evidence — a `PASS` is attributable or it is anonymous.
-
-**The log is what the dashboards are generated from.** `scripts/qa_dashboard.py` reads both state files and
-both logs and writes a self-contained local HTML site per release: the verdict, the lifecycle of every
-finding as a QA/DEV swimlane, case coverage, time-in-state, and reopen counts. Nothing in the dashboard is
-authored — if it is not in the log it is not on the page, which is the same discipline the register applies
-to findings.
+**The dashboard is generated from the hub**, never authored:
+`hub.py dashboard` prints the computed verdict and its condition table and writes a
+self-contained local site -- the lifecycle of every finding as a QA/DEV swimlane, time-in-state,
+and reopen counts. If it is not in the logs it is not on the page.
 
 ## The defect lifecycle, and who may move it
 
@@ -158,7 +110,8 @@ Four invariants. Each exists because its absence is a way a broken product ships
 
 ## QA → DEV: the ticket packet
 
-The finding template in `assets/finding.md` is already most of it. A two-session handoff adds one field,
+The finding template in `${CLAUDE_PLUGIN_ROOT}/shared/templates/finding.md` is already most of it. A
+two-session handoff adds one field,
 and it is the field that changes dev behaviour most:
 
 > **Acceptance criterion.** The case id and its **oracle**, stated plainly: this is what your fix will be
@@ -183,7 +136,7 @@ Specification first, reproducible result second.
 The packet is complete when a stranger could start work from it alone: id, severity, status
 (`CODE / DEPLOY / …`), the verbatim repro, build identity under which it reproduced, the environment and
 topology, expected vs actual with raw evidence, **what the finding does NOT claim**, and the acceptance
-criterion. Template in `assets/handoff-packet.md`.
+criterion. Template in `${CLAUDE_PLUGIN_ROOT}/shared/contracts/handoff-packet.md`.
 
 A `DECIDE` finding is not a ticket and must not be handed over as one. It goes to the operator as a memo
 with options and a recommendation. Handing a decision to DEV as a bug is how you get an unauthorised

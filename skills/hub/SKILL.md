@@ -41,6 +41,39 @@ second opinion, it is a stale artifact. `hub.py validate` says so.
 costs no question. Writes need `--actor NAME --role ROLE`, because **a claim is attributable or it is
 anonymous** — that is the same rule as evidence on a finding.
 
+## Starting an engagement
+
+The README covers reading; this is writing. Six commands, in order:
+
+```
+hub.py --actor <you> --role QA init --engagement <name>
+hub.py --actor <you> --role QA iteration 1
+hub.py --actor <you> --role QA profile --set mode=existing --set domains='["crm"]'
+hub.py --actor <you> --role PO add story S-1 -f title="..."
+hub.py --actor <you> --role PO move S-1 READY -f acceptance_criteria="..."
+hub.py --actor <you> --role QA add case S3-01 -f action="..." -f oracle="..."
+```
+
+The hub lives at `./qa-reports/hub` unless `--hub` or `$PRODUCT_HUB` says otherwise. The options
+work before or after the subcommand. `hub.py --help` lists every command; `hub.py <cmd> --help`
+lists its fields.
+
+## What the verdict actually reads
+
+The computed verdict depends on conventions nothing else states in one place. A hub that ignores
+them is not wrong — it simply produces conditions with no rows, which yields `NO VERDICT`:
+
+| Convention | Why |
+|---|---|
+| Acceptance requirements are `case` items with ids starting **`R-`** | They outrank the docs, so the verdict counts them separately |
+| Journeys are `case` items with ids starting **`J-`** | A journey crosses families and needs its own owner |
+| A scope's smoke row ends **`-00a`**, its calibration row **`-00b`** | A scope whose `-00b` has not passed contributes no `PASS` |
+| `-00b` is matched to a scope by the case's **`graded_by`** field, else `scope` | `R-` and `J-` rows must set `graded_by`, or they are linked to no calibrated scope |
+| `guards` is an **object** with a `ceiling` from the severity vocabulary | The ceiling is the stake a row guards; an unreadable one is reported rather than ignored |
+| `ran_under.build` on a `-00a`/`-00b` row must match the release's `build` | Otherwise "passed on the build this verdict names" is name-only |
+
+All six are enforced on write, so a mistake is a refusal rather than a silent gap.
+
 ## Answering a status question
 
 Four steps, in order. The order is what stops a confident wrong answer:

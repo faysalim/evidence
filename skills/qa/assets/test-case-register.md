@@ -2,7 +2,8 @@
 
 The run's denominator, and what the verdict is computed from. One row per thing that can independently
 break. **Each scope's case set is finalized before that scope executes anything**, and its smoke and
-calibration rows run before any other. `references/test-cases.md` is the method; this is the shape.
+calibration rows run before any other. `${CLAUDE_PLUGIN_ROOT}/skills/qa/references/test-cases.md` is the
+method; this is the shape.
 
 Three rules decide whether this file is worth anything:
 
@@ -101,7 +102,8 @@ missed for a month: `/health` was green the whole time.*
 
 ### Scope 9 — Documentation conformance
 
-Adopted from the claim ledger in `references/docs-conformance.md` by reference — `D1`–`D<n>`,
+Adopted from the claim ledger in `${CLAUDE_PLUGIN_ROOT}/shared/references/docs-conformance.md` by
+reference — `D1`–`D<n>`,
 `<n>` `PASS`, `<n>` `FAIL`, `<n>` `BLOCKED`. **Not re-listed here**, so the denominator does not
 double-count. Scope 9's gate is the surface inventory, not a finalized claim list.
 

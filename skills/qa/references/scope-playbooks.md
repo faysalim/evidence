@@ -1,6 +1,7 @@
 # Scope playbooks
 
-Twelve scope families. Which apply is decided per product in Step 0, and `references/domains/` maps them
+Twelve scope families. Which apply is decided per product in Step 0, and
+`${CLAUDE_PLUGIN_ROOT}/shared/domains/` maps them
 onto specific product classes. Adapt the names; keep the shape. Each playbook lists what to *do*, because
 a scope described as a noun ("website") gets tested as a noun ("the website loads").
 
@@ -230,7 +231,8 @@ and losing data at saturation is `critical`.
 ## 9. Documentation conformance
 
 Its own agent and its own deliverable: the coverage matrix and the two coverage numbers. The full playbook
-is `references/docs-conformance.md`; read it before extracting a single claim. In outline:
+is `${CLAUDE_PLUGIN_ROOT}/shared/references/docs-conformance.md`; read it before extracting a single
+claim. In outline:
 
 - **Inventory every doc surface** — docs site, every README, `--help` output, API reference and schema
   files, quickstarts, sample repos, changelog, marketing and pricing claims, `llms.txt`, container labels
@@ -319,7 +321,7 @@ one starts from full.
 
 Cross-cutting with an owner, like scope 9. Every other scope produces the raw material on first contact;
 this scope's owner holds the baseline, runs the two deliberate audits, and keeps the usability section
-from becoming decoration. Full playbook: `references/experience.md`.
+from becoming decoration. Full playbook: `${CLAUDE_PLUGIN_ROOT}/shared/references/experience.md`.
 
 A dedicated experience agent sweeping its own surfaces would be **warm by definition** — it arrives after
 another agent has already installed the thing. That is why the perishable measurement is delegated outward

@@ -52,7 +52,8 @@ fix the class rather than the value. The **value** QA actually used is published
 the fact — withholding it leaves a `PARTIAL` nobody else can reproduce, which turns the status that
 matters most into an argument. The register row carries the concrete action either way.*
 
-*Required when a separate dev session will fix this (`references/dev-handoff.md`); good practice always.
+*Required when a separate dev session will fix this
+(`${CLAUDE_PLUGIN_ROOT}/shared/contracts/qa-dev.md`); good practice always.
 Verified by QA, never by the author of the fix.*
 
 ### What this finding does NOT claim

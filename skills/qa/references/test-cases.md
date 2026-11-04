@@ -9,7 +9,8 @@ This skill already refuses a documentation-coverage number without its denominat
 same rule applied to the whole run.** Without it, "we tested the product" is exactly the claim the prime
 directive exists to destroy: it sounds like a result and carries no information.
 
-It is also the thing the verdict is computed from (`assets/ranked-index.md`). A register nothing can refuse
+It is also the thing the verdict is computed from
+(`${CLAUDE_PLUGIN_ROOT}/skills/qa/assets/ranked-index.md`). A register nothing can refuse
 is decoration; this file is mostly about what can refuse it.
 
 ## The row
@@ -137,7 +138,8 @@ who disagrees with your enumeration can say so. Eight sources, in order of autho
 2. **The domain file's "defect classes to look for by name".** Each class needs at least one case that
    *would catch it*. A class with no such case is declared unexercised in the register — the honest version
    of what otherwise happens silently.
-3. **The scope playbook steps** for each applicable family (`references/scope-playbooks.md`).
+3. **The scope playbook steps** for each applicable family
+(`${CLAUDE_PLUGIN_ROOT}/skills/qa/references/scope-playbooks.md`).
 4. **The documentation claims.** Scope 9's claim ledger *is* a case ledger of one kind; adopt its rows by
    reference rather than duplicating them, so the denominator does not double-count.
 5. **The product's own enumerated surface**, from reverse coverage: route table, every environment-variable
@@ -150,7 +152,13 @@ who disagrees with your enumeration can say so. Eight sources, in order of autho
    id `J-<n>`, owned by **one** agent or the lead, run as a single actor with **no operator-supplied
    shortcut at any step**. Per-family `PASS` rows do not sum to a journey: the origin engagement's trial
    flow was broken end to end while the form, the issuing API and the activation each passed in isolation.
-8. **The client's incident history.** Every production incident and escaped defect from their tracker over
+8. **The story's acceptance criteria, one row per gradeable clause.** `/product-suite:backlog`
+   writes them as oracles precisely so they arrive here needing no translation — but a criterion
+   with three clauses is three cases, not one. The fixture's own story asked for delivery within
+   five minutes, offline activation, and a 14-day expiry, and the single linked case covered one
+   of the three; the story was accepted on it. Decompose, and name the case per clause, or the
+   gate passes on a case weaker than the criterion.
+9. **The client's incident history.** Every production incident and escaped defect from their tracker over
    the last few releases becomes a permanent case. Nothing predicts a product's next failure like its last
    one, and this is field evidence for correctness, not only for the UX use `experience.md` already makes
    of it.
@@ -205,7 +213,8 @@ to regress it. One finding may span several cases; one case produces at most one
 ## Across iterations
 
 The register carries with stable ids, exactly as the finding register does, in the same `qa-state.json`,
-and every state change is appended to the event log that `references/dev-handoff.md` defines — which is
+and every state change is appended to the event log that
+`${CLAUDE_PLUGIN_ROOT}/shared/contracts/qa-dev.md` defines — which is
 what makes the lifecycle reconstructable and the dashboards possible.
 
 - **Phase 0** — build identity, and the per-component smoke row. Preconditions, not cases.
@@ -257,7 +266,8 @@ another cycle.
 
 ## Deliverable
 
-One register per run in the report directory, template in `assets/test-case-register.md`. Per-scope agents
+One register per run in the report directory, template in
+`${CLAUDE_PLUGIN_ROOT}/skills/qa/assets/test-case-register.md`. Per-scope agents
 return their own rows; the lead concatenates them and resolves the overlap with scope 9's claim ledger.
 
 **The lead re-runs a sample of every agent's `PASS` rows** — three per agent, highest severity ceiling

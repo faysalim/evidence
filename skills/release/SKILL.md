@@ -23,9 +23,24 @@ Items move only through `python "${CLAUDE_PLUGIN_ROOT}/shared/scripts/hub.py"`.
 hub.py dashboard
 ```
 
-That prints the verdict and the condition table, and exits non-zero if the hub has integrity problems.
-**Read the table, not the headline** — the headline is derived from it. Every condition names the rows that
-satisfy it, and a condition with **no rows at all** yields `NO VERDICT`:
+That prints the verdict and the condition table to stdout, and exits non-zero if the hub has
+integrity problems. **Read the table, not the headline** — the headline is derived from it.
+
+**Two things this skill does not let you do, and you will meet both.** Recording the verdict is
+**QA's transition**, not the PM's or the EM's: `move <release> GREEN | NOT_GREEN | NO_VERDICT`
+belongs to QA, and the hub refuses anyone else. And `GREEN` is refused unless the *computed*
+verdict already says `GREEN within stated bounds` — you cannot write a verdict the hub does not
+compute. What this skill is for is reading the table, writing the memo, and getting the operator's
+decision when the answer is "ship anyway".
+
+**The conditions key on id conventions QA owns**, and nothing else states them in one place:
+acceptance requirements are `case` items whose ids start **`R-`**; journeys start **`J-`**; a scope's
+smoke row ends **`-00a`** and its calibration row **`-00b`**, matched to a scope by the case's
+`graded_by` field. A hub where QA used plain ids will read "none recorded — green is against the
+docs only", which is honest and means the requirement rows were never created.
+
+Every condition names the rows that satisfy it, and a condition with **no rows at all** yields
+`NO VERDICT`:
 
 | Condition | Why it is a gate |
 |---|---|

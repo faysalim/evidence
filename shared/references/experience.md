@@ -49,7 +49,8 @@ without those two numbers, it has produced opinion.
 Name every one before starting; they rarely share a surface. An operator, an integrating developer, a
 buyer, an end user, an administrator, an auditor, and — for mobile — a platform reviewer whose guidelines
 are enforced. A product can be excellent for one and unusable for another, and a report that says "the UX
-is good" has silently picked one. The domain files in `references/domains/` carry this per product class.
+is good" has silently picked one. The domain files in `${CLAUDE_PLUGIN_ROOT}/shared/domains/` carry this
+per product class.
 
 ## The first-run measurement
 
@@ -197,7 +198,8 @@ not.
 
 ## Severity
 
-Consequence-based, like the bug rubric in `assets/finding.md`, but the consequence is **abandonment or
+Consequence-based, like the bug rubric in `${CLAUDE_PLUGIN_ROOT}/shared/templates/finding.md`, but the
+consequence is **abandonment or
 support cost** rather than incorrect output:
 
 | Severity | Test |
@@ -394,4 +396,4 @@ free-text field, tell the operator in advance, and put it in the cleanup ledger 
 your fake leads is a cost you created.
 
 > Writing the report itself is also a design problem. That guidance now lives where the writer will see
-> it: the preamble of `assets/ranked-index.md`.
+> it: the preamble of `${CLAUDE_PLUGIN_ROOT}/skills/qa/assets/ranked-index.md`.

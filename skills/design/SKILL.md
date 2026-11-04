@@ -96,6 +96,11 @@ For an existing product, **inventory the inconsistencies before proposing anythi
 three button styles for the same action, two words for the same object. Each is a finding of kind 1 above
 — the strongest kind — and together they are usually a bigger win than any new screen.
 
+**On a small team.** A design needs `REVIEWED` by a `DESIGN_LEAD` and `ACCEPTED` by someone who
+did not propose it. Roles are hats (`${CLAUDE_PLUGIN_ROOT}/shared/vocabulary.md`), so where there is
+no design lead the PO wears that hat — but the guard is on the **actor**, not the role, so it must
+be a different person, and findings you file are still closed by QA.
+
 ## For the lead
 
 Review the state list before the visuals: if empty, partial, error-per-cause and permission-denied are

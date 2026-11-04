@@ -26,6 +26,7 @@ python -I shared/scripts/test_hub.py
 python -I shared/scripts/test_safe_edit.py
 python -I shared/scripts/test_qa_dashboard.py
 python -I shared/scripts/check_repo.py
+python -I tests/test_enforcement_claims.py
 python -I tests/test_description_budget.py
 python -I tests/triggers/check_overlap.py
 python -I tests/fixtures/build.py --all
@@ -81,6 +82,12 @@ loads on every trigger, so length there costs every user.
 Thirteen of the fifteen skills are marked `status: draft` in their own README because they were written
 from first principles. **If you have run a real engagement in one of those roles, correcting it from
 experience is the highest-value contribution in the repo** — and say in the PR what the evidence was.
+
+**If you add or change an "Enforced:" line in `shared/principles.md`, add its probe to
+`tests/test_enforcement_claims.py`.** That test exists because three of the ten principles once
+claimed enforcement that did not exist, and the repo's other checks validate paths rather than
+promises. A principle whose probe cannot be written is a principle that is not enforced, and it
+should say so instead.
 
 ## Changing the method
 

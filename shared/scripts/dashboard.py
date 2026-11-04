@@ -434,8 +434,11 @@ def render_board(hub, item_type):
 
 def render_traceability(hub):
     """story -> design/adr -> case -> finding -> fix -> release, from links alone."""
+    # `found_by` and `graded_by` were missing, so no relation could reach a finding from a case
+    # and every finding was reported "not reachable from any initiative, PRD or story" -- while
+    # the links to reach it plainly existed.
     chain_rel = {"realizes", "refines", "implements", "verifies", "fixes", "ships", "measures",
-                 "derived_from"}
+                 "derived_from", "found_by", "graded_by", "introduced_by"}
     outgoing = defaultdict(list)
     for i in hub.items.values():
         for l in i["links"]:

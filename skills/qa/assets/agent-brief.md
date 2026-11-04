@@ -3,6 +3,12 @@
 Copy this per scope agent. An agent only knows what the brief tells it — it cannot see the engagement, the
 other scopes, or which round this is. Everything it needs to avoid guessing goes here.
 
+**Fill in `<ABSOLUTE PATH>` before you send this.** The brief is copied *verbatim* into an agent
+that has no plugin context: `${CLAUDE_PLUGIN_ROOT}` is substituted only into a skill's own text at
+load, so it will arrive at the agent as literal characters and every path in the brief will resolve
+nowhere. The lead reads the expanded root from its own SKILL.md and pastes it here. This is the one
+artifact in the method where a variable cannot do the work for you.
+
 The two fields people leave out are the two that cause the most waste: **Phase** (an agent that thinks it
 is sweeping will sweep) and **Out of scope this phase** (without it, a verification agent drifts into a
 sweep and the gate's cost advantage evaporates).
@@ -58,11 +64,12 @@ Recently changed, re-verify:       <claims the team believes are already fixed>
 
 ```
 Scope:           <name, e.g. "Entitlement lifecycle">
-Domain file:     references/domains/<domain>.md   — read this first; it maps the families
+Domain file:     <ABSOLUTE PATH>/shared/domains/<domain>.md   — read this first; it maps
                  onto this product class and defines what "first success" means here
-Playbook:        references/scope-playbooks.md §<n>  — read it before starting
-Standard:        references/evidence-standard.md     — read it before the first finding
-Cases:           references/test-cases.md  — YOUR FIRST DELIVERABLE, before any test runs:
+Playbook:        <ABSOLUTE PATH>/skills/qa/references/scope-playbooks.md §<n>
+Standard:        <ABSOLUTE PATH>/shared/references/evidence-standard.md
+Cases:           <ABSOLUTE PATH>/skills/qa/references/test-cases.md
+                 YOUR FIRST DELIVERABLE, before any test runs:
                  the finalized case set for this scope, each case with its action and its
                  ORACLE. Derive it from the domain file's fault catalogue (one case per
                  entry), its named defect classes (each needs a case that would catch it, or
@@ -130,7 +137,7 @@ THEN, the same rows filled in:          result (PASS / FAIL / BLOCKED / NOT RUN 
                                         (health endpoint, green build, the product's own
                                         counters) is not an oracle; the row is not a case
 Per finding (verification/regression):  id, status, evidence, the exact invocation used
-Per new finding (sweep):                the assets/finding.md template
+Per new finding (sweep):                the finding template named in your brief
 First-run trace (first contact only):   time and steps per milestone, exits from the product,
                                         concepts before first success, guesses, doc round-trips,
                                         empty states, the call-someone point

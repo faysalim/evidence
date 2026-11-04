@@ -1,0 +1,1 @@
+{"v": 1, "event_id": "PO/po1#1", "seq": 1, "ts": "2026-11-04T15:24:27.474468Z", "actor": "po1", "role": "PO", "op": "add", "fields": {"title": "Viewer-role export"}, "item": "S-12", "owner": "PO", "provenance": null, "state": "DRAFT", "type": "story"}

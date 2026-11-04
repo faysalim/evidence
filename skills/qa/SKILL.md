@@ -126,7 +126,7 @@ on a 12-hour wait.
 
 ## Step 3 — Design the cases first, then test by doing
 
-`${CLAUDE_SKILL_DIR}/references/test-cases.md` carries the row fields, the eight derivation sources and the
+`${CLAUDE_SKILL_DIR}/references/test-cases.md` carries the row fields, the nine derivation sources and the
 honesty rules. Four things must survive any summary of it:
 
 - **A case is an action, an oracle, a result and its evidence**, and the oracle rule from
@@ -254,6 +254,8 @@ oracle. A disagreement is a finding about the harness and downgrades that scope 
 | `${CLAUDE_PLUGIN_ROOT}/shared/references/evidence-standard.md` | Before the first finding. What counts as proof, per surface |
 | `${CLAUDE_SKILL_DIR}/references/scope-playbooks.md` | Splitting scopes. The twelve families, with steps |
 | `${CLAUDE_SKILL_DIR}/references/test-cases.md` | Step 3, before running anything |
+| `${CLAUDE_SKILL_DIR}/assets/test-case-register.md` | The register itself — the run's denominator |
+| `${CLAUDE_PLUGIN_ROOT}/shared/contracts/handoff-packet.md` | Writing the ticket packet for a dev session |
 | `${CLAUDE_PLUGIN_ROOT}/shared/domains/` | **First, every time.** Twenty-seven product classes |
 | `${CLAUDE_PLUGIN_ROOT}/shared/references/docs-conformance.md` | Scope 9, both directions |
 | `${CLAUDE_SKILL_DIR}/references/iteration-cycles.md` | Any iteration after the first |

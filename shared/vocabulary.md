@@ -44,7 +44,8 @@ rename is `minor`. File such findings in both sections under one id — the expe
 *why* the user does it, the product-bug section records *what it costs*. Without this rule neither rubric
 owns the class, because the product "worked as designed".
 
-**Experience findings** use the severity table in `references/experience.md`, scaled by abandonment and
+**Experience findings** use the severity table in
+`${CLAUDE_PLUGIN_ROOT}/shared/references/experience.md`, scaled by abandonment and
 support cost rather than incorrect output — and, for operator-facing products, by time to diagnose and
 recover. Severity there is consequence × **reach**, so state reach on the finding: every user / first run
 only / one role / one platform / operators under incident. Anything that **tells the user something
@@ -52,8 +53,26 @@ false** is always both a product bug and an experience blocker, under one shared
 
 ## Closing action: what actually closes a finding
 
+"Bug" collapses the distinction the operator needs to plan. A report that says "22 bugs" when
+nine are deploy lag and two need a certificate has told them nothing about what to do on Monday.
+
+- `CODE` -- the code is wrong. Closing it is a diff.
+- `DEPLOY` -- the code is right, production is behind. Closing it is a deploy.
+- `RELEASE` -- needs a build or publish action (a stale bundle, an unbuilt tag).
+- `DATA` -- a production data operation (duplicate rows, orphaned records).
+- `PROCURE` -- needs a certificate, licence or account nobody has yet.
+- `DECIDE` -- intentional-but-arguable. Write it as a decision memo with options and a
+  recommendation, not as a bug. **Operators answer memos; they argue with bug reports.**
+- `INVESTIGATE` -- real symptom, root cause not established. Say so; never guess in a status
+  column.
+
+## Type: which kind of defect it is
+
+Orthogonal to the closing action. A `content/i18n` defect can still be closed by a `DEPLOY`.
+
 `product bug` · `usability` · `correctness` · `security` · `privacy` · `perf` · `content/i18n` ·
-`docs` (the documentation is wrong, stale, or missing — see `references/docs-conformance.md`)
+`docs` (the documentation is wrong, stale, or missing — see
+`${CLAUDE_PLUGIN_ROOT}/shared/references/docs-conformance.md`)
 
 ## Roles
 

@@ -94,6 +94,9 @@ two interviews and spending the rest confirming it.
 For an existing product, **read the support tickets before writing the guide.** They are a free, large,
 already-sampled corpus of real failures, and they will change what you ask.
 
+**On a small team.** An insight is `ACCEPTED` by someone other than whoever evidenced it. A PM
+doing their own research hands acceptance to the sponsor (`HEAD_OF_PRODUCT`).
+
 ## For the lead
 
 Two checks. **Does every insight name a denominator and a `does_not_show`?** — if not, the report will be

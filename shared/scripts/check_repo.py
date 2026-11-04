@@ -138,6 +138,14 @@ def check_refs():
             if not os.path.exists(os.path.join(ROOT, cand)):
                 fail("refs", "%s references `%s`, which does not exist" % (rel(path), cand))
                 bad += 1
+        # A bare pre-restructure path. These were invisible to this check before, so 31 of them
+        # survived the move -- 9 naming files that no longer exist under any name -- while the
+        # check reported 7/7 green. The directories are gone, so none of them resolves.
+        for cand in re.findall(r'`((?:references|assets|scripts)/[A-Za-z0-9_./-]+)`', text):
+            fail("refs", "%s references `%s`, a pre-restructure path. Those directories no "
+                         "longer exist; use ${CLAUDE_PLUGIN_ROOT}/... or ${CLAUDE_SKILL_DIR}/..."
+                 % (rel(path), cand))
+            bad += 1
     if not bad:
         ok("refs", "%d variable path(s) resolve; no escapes" % seen)
 

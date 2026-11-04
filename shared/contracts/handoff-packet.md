@@ -1,7 +1,8 @@
 # Handoff packets
 
 Two templates for a two-session engagement: what QA hands DEV, and what DEV hands back.
-`references/dev-handoff.md` is the mechanism — the lifecycle, who may set which state, and how disputes
+`${CLAUDE_PLUGIN_ROOT}/shared/contracts/qa-dev.md` is the mechanism — the lifecycle, who may set which
+state, and how disputes
 resolve. These are the shapes.
 
 Both are files on disk. Nothing passes between the sessions in a message alone; a live message may announce
@@ -87,7 +88,7 @@ far cheaper than a verification round that reports `NOT IN BUILD` for half the r
 | `L7` | `DUPLICATE` | — | — | — | Same root cause as `K1` | — |
 
 A `REJECTED` row with no citation does not close the finding — it converts it to a documentation finding
-against the same id. See *Disputes* in `references/dev-handoff.md`.
+against the same id. See *Disputes* in `${CLAUDE_PLUGIN_ROOT}/shared/contracts/qa-dev.md`.
 
 ## Tests added, with the fail-first proof
 

@@ -913,8 +913,8 @@ def last_event_for(hub_state, item_id):
 
 
 def identity(args):
-    actor = args.actor or os.environ.get("PRODUCT_ACTOR")
-    role = args.role or os.environ.get("PRODUCT_ROLE")
+    actor = getattr(args, "actor", None) or os.environ.get("PRODUCT_ACTOR")
+    role = getattr(args, "role", None) or os.environ.get("PRODUCT_ROLE")
     if not actor or not role:
         raise HubError("a write needs --actor NAME --role ROLE (or $PRODUCT_ACTOR / "
                        "$PRODUCT_ROLE). Every PASS is attributable or it is anonymous.")
@@ -922,7 +922,7 @@ def identity(args):
 
 
 def resolve_hub(args):
-    return args.hub or os.environ.get("PRODUCT_HUB") or DEFAULT_HUB
+    return (getattr(args, "hub", None) or os.environ.get("PRODUCT_HUB") or DEFAULT_HUB)
 
 
 def cmd_init(args):
@@ -1095,7 +1095,7 @@ def cmd_list(args):
         if args.waiting_on and args.waiting_on not in waiting:
             continue
         if args.mine:
-            me = args.role or os.environ.get("PRODUCT_ROLE")
+            me = getattr(args, "role", None) or os.environ.get("PRODUCT_ROLE")
             if me and me not in waiting and item["owner_role"] != me:
                 continue
         rows.append({"id": item["id"], "type": item["type"], "state": item["state"],
@@ -1239,58 +1239,88 @@ def cmd_dashboard(args):
     h = Hub(resolve_hub(args))
     out = args.out or os.path.join(os.path.dirname(h.dir), "dashboard")
     pages = dash.render(h, out)
+    # The go/no-go must be readable without a browser: the release skill says this prints the
+    # verdict and the condition table, and it printed a file path.
+    label, first_gap, conditions = dash.verdict(h)
+    print("VERDICT: %s" % label)
+    if first_gap:
+        print("  first condition without rows: %s" % first_gap)
+    width = max(len(n) for n, _ok, _ev in conditions)
+    for name, holds, evidence in conditions:
+        print("  [%s] %-*s  %s" % ("yes" if holds else " NO", width, name, evidence[:60]))
+    problems = h.validate()
+    for problem in problems:
+        print("  integrity: %s" % problem)
     print("wrote %d page(s) to %s" % (pages, out))
     print("open: %s" % os.path.join(out, "index.html"))
-    return 2 if h.validate() else 0
+    return 2 if problems else 0
 
 
 def build_parser():
-    ap = argparse.ArgumentParser(prog="hub.py", description=__doc__.strip().splitlines()[0])
-    ap.add_argument("--hub", help="hub directory (default ./qa-reports/hub or $PRODUCT_HUB)")
-    ap.add_argument("--actor", help="who is writing (or $PRODUCT_ACTOR)")
-    ap.add_argument("--role", help="which role (or $PRODUCT_ROLE)")
+    # --hub/--actor/--role are accepted BEFORE or AFTER the subcommand. argparse puts global
+    # options before it, which is not what anyone writes: every documented example in six skills
+    # trailed them, so the first command each non-QA role ran failed with an "unrecognized
+    # arguments" error that named no fix. Registering them on a parent parser as well means the
+    # natural order simply works, which is a better fix than correcting nine example lines.
+    # SUPPRESS matters: with parents=, the subparser carries the SAME options, and a plain
+    # default of None would overwrite a value given before the subcommand with nothing. With
+    # SUPPRESS an unsupplied option leaves no attribute at all, so whichever side supplied it
+    # wins and both orders work.
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--hub", default=argparse.SUPPRESS,
+                        help="hub directory (default ./qa-reports/hub or $PRODUCT_HUB)")
+    common.add_argument("--actor", default=argparse.SUPPRESS,
+                        help="who is writing (or $PRODUCT_ACTOR)")
+    common.add_argument("--role", default=argparse.SUPPRESS,
+                        help="which role (or $PRODUCT_ROLE)")
+
+    ap = argparse.ArgumentParser(prog="hub.py", parents=[common],
+                                 description=__doc__.strip().splitlines()[0])
     sub = ap.add_subparsers(dest="cmd")
 
-    p = sub.add_parser("init"); p.add_argument("--engagement"); p.set_defaults(fn=cmd_init)
-    p = sub.add_parser("profile"); p.add_argument("--set", action="append")
+    def add_parser(name):
+        return sub.add_parser(name, parents=[common])
+
+    p = add_parser("init"); p.add_argument("--engagement"); p.set_defaults(fn=cmd_init)
+    p = add_parser("profile"); p.add_argument("--set", action="append")
     p.set_defaults(fn=cmd_profile)
-    p = sub.add_parser("iteration"); p.add_argument("n", type=int)
+    p = add_parser("iteration"); p.add_argument("n", type=int)
     p.add_argument("--note"); p.set_defaults(fn=cmd_iteration)
 
-    p = sub.add_parser("add")
+    p = add_parser("add")
     p.add_argument("type"); p.add_argument("id")
     p.add_argument("--state"); p.add_argument("--owner")
     p.add_argument("--provenance", choices=["authored", "derived", "reconstructed"])
     p.add_argument("-f", "--field", action="append"); p.set_defaults(fn=cmd_add)
 
-    p = sub.add_parser("move"); p.add_argument("id"); p.add_argument("state")
+    p = add_parser("move"); p.add_argument("id"); p.add_argument("state")
     p.add_argument("-f", "--field", action="append"); p.set_defaults(fn=cmd_move)
 
-    p = sub.add_parser("set"); p.add_argument("id")
+    p = add_parser("set"); p.add_argument("id")
     p.add_argument("-f", "--field", action="append", required=True); p.set_defaults(fn=cmd_set)
 
-    p = sub.add_parser("link"); p.add_argument("id"); p.add_argument("rel")
+    p = add_parser("link"); p.add_argument("id"); p.add_argument("rel")
     p.add_argument("target"); p.set_defaults(fn=cmd_link)
 
-    p = sub.add_parser("unlink"); p.add_argument("id"); p.add_argument("rel")
+    p = add_parser("unlink"); p.add_argument("id"); p.add_argument("rel")
     p.add_argument("target"); p.add_argument("--reason"); p.set_defaults(fn=cmd_unlink)
 
-    p = sub.add_parser("note"); p.add_argument("id"); p.add_argument("text")
+    p = add_parser("note"); p.add_argument("id"); p.add_argument("text")
     p.set_defaults(fn=cmd_note)
 
-    p = sub.add_parser("show"); p.add_argument("id"); p.set_defaults(fn=cmd_show)
+    p = add_parser("show"); p.add_argument("id"); p.set_defaults(fn=cmd_show)
 
-    p = sub.add_parser("list")
+    p = add_parser("list")
     p.add_argument("--mine", action="store_true"); p.add_argument("--waiting-on")
     p.add_argument("--type"); p.add_argument("--state")
     p.add_argument("--json", action="store_true"); p.set_defaults(fn=cmd_list)
 
-    p = sub.add_parser("status"); p.set_defaults(fn=cmd_status)
-    p = sub.add_parser("validate"); p.add_argument("--json", action="store_true")
+    p = add_parser("status"); p.set_defaults(fn=cmd_status)
+    p = add_parser("validate"); p.add_argument("--json", action="store_true")
     p.set_defaults(fn=cmd_validate)
-    p = sub.add_parser("import"); p.add_argument("report_dir"); p.set_defaults(fn=cmd_import)
-    p = sub.add_parser("views"); p.set_defaults(fn=cmd_views)
-    p = sub.add_parser("dashboard"); p.add_argument("-o", "--out")
+    p = add_parser("import"); p.add_argument("report_dir"); p.set_defaults(fn=cmd_import)
+    p = add_parser("views"); p.set_defaults(fn=cmd_views)
+    p = add_parser("dashboard"); p.add_argument("-o", "--out")
     p.set_defaults(fn=cmd_dashboard)
     return ap
 

@@ -38,7 +38,7 @@ This binds every role. A coverage figure, a research sample, a success metric, a
 number: state what it is out of and how you enumerated it. A metric with no denominator is not read, it is
 asserted.
 
-*Enforced:* the dashboard prints case counts with their derivation; `metric` items cannot reach `READ`
+*Enforced:* `metric` items cannot reach `READ`
 without a `denominator` field.
 
 ## 3. An oracle exists outside the product and outside your own judgement

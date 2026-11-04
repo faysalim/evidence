@@ -60,14 +60,18 @@ Report counts with their denominators — "11 of 34 stories accepted" — and th
 
 ## The risk log
 
+Ids are global across the hub, and QA owns three prefixes: `R-` for acceptance requirements, `J-`
+for journeys, `S<n>-` for scope cases. Use `RISK-<n>` here, or the verdict's requirement row and
+your risk log fight over the same name.
+
 RAID, with one addition that changes how it is used: **a mitigation needs evidence, and the hub enforces
 it.**
 
 ```
-hub.py add risk R-3 -f title="single supplier for the signing certificate" \
+hub.py add risk RISK-3 -f title="single supplier for the signing certificate" \
   -f impact="cannot ship a signed build; blocks every desktop release" \
   -f likelihood="low" -f owner=TECH_LEAD --role DELIVERY
-hub.py move R-3 MITIGATED -f mitigation="second CA account provisioned" \
+hub.py move RISK-3 MITIGATED -f mitigation="second CA account provisioned" \
   -f evidence="test build signed with the backup CA, 2026-11-04, sha256:..." --role TECH_LEAD
 ```
 
