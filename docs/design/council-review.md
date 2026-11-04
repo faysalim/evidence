@@ -1,188 +1,196 @@
 # Council review — round 1
 
-Five cold reviewers, each given only its brief and the repo, none seeing the others' work. This file
-consolidates their findings **de-duplicated by root cause** and ranked, with a disposition for each.
+Five cold reviewers, each given only its brief and the repo, none seeing the others' work. Between
+them: **59 findings, 8 of them critical.** This file consolidates them **de-duplicated by root
+cause**, with a disposition for each.
 
-**Status: 2 of 5 reported** (`MG` method guardian, `PP` practitioner panel). `PE` platform engineer,
-`HA` hub adversary and `CR` cold runner still running; their findings append below as round 1b.
+Every finding marked **VERIFIED** was reproduced here before being accepted. Several were verified
+and then reclassified or rejected; that is recorded too, because a council whose findings are all
+accepted was not read critically.
 
-Every finding marked **VERIFIED** was reproduced here before being accepted. Three were verified and
-rejected or reclassified; that is recorded too, because a council whose findings are all accepted was
-not read critically.
+| Reviewer | Scope | Findings |
+|---|---|---|
+| `MG` | method guardian — was anything lost in the move? | 14 |
+| `PE` | plugin platform engineer — does it work as a plugin? | 7 |
+| `HA` | hub integrity adversary — break the hub | 18 |
+| `PP` | practitioner panel — can each role do its job? | 12 |
+| `CR` | cold end-to-end runner — first-run measurement on itself | 15 |
+| `SF` | self-found, before the council | 3 |
 
 ---
 
 ## The one sentence worth taking away
 
 > The restructure's own claims about what it did are now the weakest lines in the repo.
-> — method guardian, summary
+> — method guardian
 
-Three principles in `shared/principles.md` say *"Enforced: X"* where X does not enforce it. The design
-doc records retargeting work that was not done. `check_repo.py` — the thing that exists so the repo
-cannot lie about itself — is blind to all of it, because it validates `${CLAUDE_PLUGIN_ROOT}` paths and
-nothing else.
+Three principles said *"Enforced: X"* where X did not enforce it. The design doc recorded retargeting
+work that was not done. And `check_repo.py` — the thing that exists so the repo cannot lie about
+itself — was blind to all of it, because it validates paths rather than promises.
 
-That is exactly the failure this method is built to prevent, committed by the method's own author, in the
-commit that claimed to make it enforceable. It is the most useful result the council could have produced.
+That is precisely the failure this method is built to prevent, committed by the method's own author,
+in the commit that claimed to make it enforceable. **It is the most useful result the council could
+have produced**, and it is why `tests/test_enforcement_claims.py` now exists: every "Enforced:" line
+has a probe that attempts the forbidden thing and asserts the refusal.
+
+The cold runner's result is the counterweight: **it completed a full engagement in 8 minutes** —
+orient through to a shipped release with a computed verdict and a torn-down cleanup ledger — and
+reported that the role guards, the state-machine refusals, the stale-view detection and the
+`NO VERDICT` default "all behaved exactly as documented and their messages are the strongest part of
+the tool."
 
 ---
 
-## Root-cause clusters
+## Cluster A — false or lost enforcement claims · **blocker** · APPLIED
 
-### A — False or lost enforcement claims · **blocker**
+**Root cause:** "Enforced: X" written from intention rather than from a test, and nothing checked a
+claim *about* enforcement.
 
-**Root cause:** I wrote "Enforced: X" from intention rather than from a test, and nothing checks a claim
-*about* enforcement. `MG-1`, `MG-2`, `MG-3`, `MG-9`, `MG-11`, and the second half of `PP-4`.
-
-| id | Claim | Reality | Verified |
+| id | Claim | Reality | Fix |
 |---|---|---|---|
-| `MG-1` | `principles.md:58` — "`case` items require an `oracle` field" | `add case S1-01 -f action=x` succeeds with no oracle. `model.json` has no create-time required fields and `cmd_add` checks only id, role and state | **VERIFIED** — reproduced, `show` has no oracle |
-| `MG-2` | `principles.md:93` — "Verdicts are computed, never written. *Enforced:* `dashboard.py`" | `move REL-1 GREEN` succeeds by hand while `dashboard` computes `NO VERDICT` on the same hub. Nothing in `hub.py` consults the verdict | **VERIFIED** — reproduced both outputs side by side |
-| `MG-3` | `ranked-index.md:46` and the old verdict both carry "Build identity established per component" | `grep -c` → `qa_dashboard.py:1`, `ranked-index.md:1`, **`dashboard.py:0`**. The condition was dropped in the port, and the generated `qa-state.json` no longer carries `builds_tested`, so there is nowhere for it to live | **VERIFIED** |
-| `MG-9` | `qa-dev.md` invariant 1 — "NEW is not a resting state", with a `validate` check | The check keys on `fields.handed_over`, which **no skill, template or contract ever sets**. A finding filed and left `NEW` validates clean | **VERIFIED** by inspection: `grep -rn handed_over skills shared` → only the three lines inside `hub.py` |
-| `MG-11` | `principles.md:41` — "the dashboard prints case counts with their derivation" | It prints counts by type and state. No derivation breakdown exists in `dashboard.py` | **VERIFIED** |
+| `MG-1`, `CR-7` | `case` items require an `oracle` | `add case -f action=x` succeeded with none | `requires_fields_on_create: [action, oracle]` |
+| `MG-2`, `HA-14` | verdicts are computed, never written | `move REL GREEN` succeeded while the dashboard computed `NO VERDICT` | the write path now asks the same verdict function |
+| `MG-3` | "Build identity established per component" | computed by `qa_dashboard.py`, **lost in the port**; 0 occurrences in `dashboard.py` | restored, plus a check that smoke/calibration ran on the named build (`CR-3`) |
+| `MG-9` | "NEW is not a resting state" has a check | it keys on `fields.handed_over`, which **nothing ever sets** | left as a known gap; see NEEDS FAISAL |
+| `MG-11` | the dashboard prints counts with their derivation | it prints counts by type and state | claim deleted |
 
-**Disposition: APPLY all five.** Two routes per item — make the claim true, or delete the claim. Taking
-*make it true* for `MG-1` (create-time required fields), `MG-3` (restore the condition and the field it
-needs) and `MG-9` (a real hand-over event). Taking *correct the claim* for `MG-11`. `MG-2` needs a
-judgement call recorded below.
+**The `MG-2` fix needed a correction of its own**, which the tests caught: the first version ran the
+verdict check during *replay*, where the mid-fold hub looks stale to its own generated view, so a
+recorded GREEN became permanently unreplayable. Role and different-actor are **invariants** and are
+re-checked every fold; "the computed verdict agreed" is a **precondition** and is checked at write
+time only.
 
-**`MG-2` — the decision.** Wiring `hub.py` to refuse `GREEN` unless `dashboard.verdict()` agrees is the
-stronger fix and is what §6 promises. It also couples the write path to the renderer, which is a real
-design cost. Taking it anyway: the alternative is softening the principle, and §6 is the one the whole
-release skill rests on. **This changes how a release exits a phase, so it is recorded here as a
-decision** rather than applied silently — but it restores a stated rule rather than changing one, so it
-is applied, not held.
+**Durable fix:** `tests/test_enforcement_claims.py`. Verified both ways — it passes now, and
+deleting the case oracle requirement makes it fail.
 
-### B — Documents moved whole, still describing the old world · **blocker**
+## Cluster B — documents moved whole, still describing the old world · **blocker** · APPLIED
 
-**Root cause:** files moved with `git mv` and never re-read in their new context; `check_repo.py` only
-sees `${…}`-prefixed paths, so a bare legacy path is invisible to it. `MG-4`, `MG-5`, `MG-7`, `MG-6`,
-`MG-10`, `MG-13`.
+**Root cause:** `git mv` and never re-read in the new context; `check_repo.py` saw only
+`${…}`-prefixed paths, so a bare legacy path was invisible.
 
-| id | Defect | Verified |
+| id | Defect | Fix |
 |---|---|---|
-| `MG-4` | `qa-dev.md` and `iteration-cycles.md` have **one-character diffs** and still instruct hand-writing `qa-state.json` as "authoritative for state" — the exact thing `skills/hub` calls a stale artifact and a Phase 0 error. `iteration-cycles.md` mentions the hub **zero** times, yet QA Step 0 routes every later iteration into it | **VERIFIED** |
-| `MG-5` | `agent-brief.md` hands every scope agent five paths (`references/domains/…`, `references/scope-playbooks.md`, …) that do not exist in the installed layout — and the brief is the one artifact **copied verbatim into a subagent with no plugin context**, so variable substitution cannot save it | **VERIFIED** |
-| `MG-6` | The closing-action taxonomy (`CODE / DEPLOY / RELEASE / DATA / PROCURE / DECIDE / INVESTIGATE`) was **dropped**, and `vocabulary.md`'s heading "Closing action" sits above the old *Type* list. "Operators answer memos; they argue with bug reports" is gone from the repo | **VERIFIED** — the seven appear only as a bare key in `ranked-index.md:28` |
-| `MG-7` | 36 bare legacy relative references across 15 moved files; **9 unresolvable** under any name (`references/dev-handoff.md` ×6, `assets/finding.md` ×2, and `experience.md:213` pointing at a table that moved to `vocabulary.md`). `plugin.md:164` claims this retargeting was done | **VERIFIED** |
-| `MG-10` | `test-case-register.md` and `handoff-packet.md` are no longer reachable from the QA skill that produces them | **VERIFIED** |
-| `MG-13` | Four `qa-state.json` view fields dropped that `iteration-cycles.md` says "a resumed run cannot work without": `scopes` (applied/N-A families), `not_verified[].unblocked_by`, `stopped`, `builds_tested`. Plus three one-sentence rules gone, including *"state the blocked test rather than improvising around it"* | **VERIFIED** |
+| `MG-4`, `CR-11` | `qa-dev.md` and `iteration-cycles.md` had **one-character diffs** and still called `qa-state.json` "authoritative for state", telling the reader to create it as their first write — the exact thing the hub skill calls a Phase 0 error. `iteration-cycles.md` mentioned the hub **zero** times while QA Step 0 routed every later iteration into it | both re-pointed to the hub, its per-actor logs and the generated views |
+| `MG-5` | `agent-brief.md` handed every scope agent five paths that do not exist in the installed layout — and it is the one artifact **copied verbatim into a subagent with no plugin context**, so no variable can save it | `<ABSOLUTE PATH>` placeholders, with the reason stated |
+| `MG-6` | the closing-action taxonomy was **dropped entirely** and vocabulary's "Closing action" heading sat above the *Type* list | restored with definitions; Type retitled |
+| `MG-7` | 31 bare pre-restructure references, **9 naming files that exist under no name**; the design doc claimed this retargeting was done | all retargeted; `check_refs` now fails on any bare `references/`, `assets/` or `scripts/` path |
+| `MG-10` | the QA skill no longer pointed at two templates it produces | rows restored |
+| `MG-13` | three one-sentence rules dropped, incl. *"state the blocked test rather than improvising around it"* | restored |
+| `CR-8` | no relation could reach a finding from a case, so **every finding** was "not reachable" | `found_by` added; the per-hop relation documented for the whole chain |
 
-**Disposition: APPLY all six**, plus the durable fix: extend `check_repo.refs` to fail on any bare
-`references/|assets/|scripts/` path, which is what would have caught every one of them. The design doc's
-false claim at `plugin.md:164-166` gets corrected rather than quietly deleted.
+## Cluster C — examples nothing ever executed · **blocker** · APPLIED
 
-### C — Examples nothing ever executed · **blocker**
-
-| id | Defect | Verified |
+| id | Defect | Fix |
 |---|---|---|
-| `PP-1` | **Every `hub.py` write example in six skills is rejected verbatim.** `--actor/--role` are top-level argparse options and all nine examples trail them after the subcommand. The documented first command of every non-QA role fails | **VERIFIED** — `usage: hub.py …` error reproduced; `grep` confirms 9 lines across 6 skills |
+| `PP-1`, `CR-4` | **every `hub.py` write example in six skills was rejected verbatim.** argparse wants the global options first; all nine examples trailed them, so the documented first command of every non-QA role failed with an error that named no fix | the subparsers accept them too, so both orders work |
 
-**Root cause:** the fixture builder is Python that passes options in the right order, so it never
-exercised the prose. `check_repo.py lint` passes 7/7 because nothing runs the examples.
+The fixture builder never caught it because it is Python passing options in the right order. **The
+fix needed its own fix:** a plain `None` default on the parent parser had the subparser overwrite a
+value given *before* the subcommand; `argparse.SUPPRESS` was required.
 
-**Disposition: APPLY, as the class fix.** Register `--hub/--actor/--role` on every subparser so both
-orders work — better than editing nine lines, because the natural order then works forever — **and** add
-`check_repo.py examples` which executes every `hub.py` block in the skills against a scratch hub. The
-second half is the real fix; the first is so that correct-looking commands are correct.
+## Cluster D — lifecycle dead ends the fixtures never reached · **blocker** · APPLIED
 
-### D — Lifecycle dead ends the fixture never reached · **blocker**
+`PP-2`, `PP-8`, `CR-5`. `launch` and `doc` in `CHANGES_REQUESTED`, `metric` in `NOT_MEASURABLE` and
+`finding` in `DEFERRED` were all **terminal**, so send-back-and-resubmit and "deferred to the next
+build" were one-way doors out of the id — which `qa-dev.md` invariant 3 forbids. Return edges added.
 
-| id | Defect | Verified |
-|---|---|---|
-| `PP-2` | `launch` and `doc` in `CHANGES_REQUESTED` are **terminal**. A PMM or writer whose copy is sent back can never resubmit; the only exit is a new id, which severs `derived_from` and the history time-in-state is built on. `prd` and `design` have the return edge; these two do not | **VERIFIED** for both types |
-| `PP-8` | `metric` `NOT_MEASURABLE` is **terminal** — and `skills/analytics` explicitly steers the analyst into it for a not-yet-instrumented metric, which for a new product is the normal path. The PRD's `measures` link then points at a dead item | **VERIFIED** |
+**Root cause:** both fixtures walk happy paths through review. A fixture that only succeeds cannot
+find a dead end.
 
-**Root cause:** both fixtures walk happy paths through review, so `build.py` never requested changes or
-declared a metric unmeasurable. A fixture that only succeeds cannot find a dead end.
+## Cluster E — the give-up point · **major** · APPLIED
 
-**Disposition: APPLY.** Add the return edges, add a `test_hub.py` case for each, **and extend both
-fixtures to walk a rejection path**, which is the fix that stops this class recurring.
+`CR-6`. A wrong `verifies` link permanently blocked story acceptance, with no `unlink` and no
+documented way out. The cold runner recorded this as the point where an unpaid user stops. `unlink`
+added as an attributed event rather than an erasure.
 
-### E — Skills promising outputs their role may not create · **major**
+## Cluster F — `waiting_on` reported resting states as blocked · **major** · APPLIED
 
-| id | Defect | Verified |
-|---|---|---|
-| `PP-3` | `discovery` tells the RESEARCHER a conflict "is a `decision`" and lists `metric` as an output; `launch` lists `finding` and `decision` for the PMM. The hub refuses all four | **VERIFIED** — all four refusals reproduced |
+`PP-5`, `CR-9`. It unioned the roles on *every* outgoing transition, including escape hatches, so a
+`SHIPPED` release was reported as awaiting the operator (it can still be rolled back) and an
+`AGREED` requirement as awaiting the PO. That made the delivery report's first and most-read
+section — "blocked on a human" — wrong by construction, in a tool whose own rule is to quote states
+rather than paraphrase them. Escape hatches are now marked in the model and excluded.
 
-**Disposition: APPLY** by widening the `create` lists in `model.json`. A researcher who finds two user
-groups in conflict is the right person to file that decision, and a PMM who finds copy right and the
-product wrong is filing a real finding. The alternative — telling them to ask someone else to file it
-under their name — breaks "a claim is attributable", which is principle 7's point.
+## Cluster G — the "no translation step" claim did not hold · **major** · APPLIED
 
-### F — `waiting_on` reports resting states as blocked · **major**
-
-| id | Defect | Verified |
-|---|---|---|
-| `PP-5` | `list --waiting-on OPERATOR` on the committed fixture reports `REL-1 release SHIPPED` as awaiting the operator, and the committed dashboard's "Awaiting the operator" section says the same. Cause: `waiting_on` unions the roles on *any* outgoing transition, including escape hatches (`SHIPPED→ROLLED_BACK`, `AGREED→SUPERSEDED`, `PASS→DESIGNED`), and `TERMINAL_OK` has no entry for 8 of the 17 types | **VERIFIED** — reproduced on the unmodified committed fixture |
-
-**Disposition: APPLY.** This is the delivery skill's first and most-read report section — "blocked on a
-human" — being wrong by construction, and the hub skill's own rule is "quote states, do not paraphrase".
-Mark escape-hatch transitions in `model.json` and exclude them from `waiting_on`.
-
-### G — The "no translation step" claim does not hold · **major**
-
-| id | Defect | Verified |
-|---|---|---|
-| `PP-6` | `skills/backlog` says a criterion written as an oracle "becomes a QA case with no translation step" and that QA "derives cases from the story's criteria as a derivation source". QA's eight derivation sources **do not include story criteria**. On the fixture, `S-1`'s criterion has three clauses (email within 5 minutes, activates offline, expiry is 14 days) and the linked case `S5-01` carries one; the story was `ACCEPTED` on that case alone | **VERIFIED** by inspection |
-| `PP-7` | A PO whose story is `DONE` before QA has written a case has no documented move: accept is refused, a PO may not create a case, and `backlog` never says who can | **VERIFIED** |
-
-**Disposition: APPLY.** This is the suite's stated reason for hanging together, so the claim gets made
-true rather than withdrawn: add story acceptance criteria as a **named derivation source** in
-`test-cases.md` and the QA skill, one case per gradeable clause, and tell the PO in `backlog` what the
+`PP-6`, `PP-7`. The backlog skill says a criterion written as an oracle becomes a QA case with no
+translation step. **QA's eight derivation sources did not include story criteria.** On the fixture,
+a three-clause criterion produced one case, and the story was accepted on it. Story criteria are now
+a named derivation source, one case per gradeable clause, and the PO is told what the
 `DONE`-with-no-case move actually is.
 
-### H — Natural prompts mostly do not route · **major, and the least certain**
+## Cluster H — write-path robustness · **critical** · APPLIED
 
-| id | Finding |
+All eight of the adversary's criticals. `HA-1` (field ownership enforced in `set` only, so
+`move -f severity=polish` let a DEV un-block a release), `HA-2` (`add --state` reached any state,
+defeating every authority rule with one flag), `HA-3` (a duplicate pointing at nothing),
+`HA-4` (unknown, padded, null or list severity), `HA-5` (a `FAIL` case denying nothing — the page
+printed "cases fail: 2" and GREEN together), `HA-6`/`CR-1` (prose `guards`, which is the form every
+skill documents, **crashed the only verdict path**), `HA-7` (an unreadable log line was a *note*, so
+`validate` exited 0 over a log the hub had failed to read), `HA-8` (cleanup parked in `OPERATORS`).
+
+Plus `CR-2`, which is the subtlest of the set: `requires_fields` OR-ed with fields already on the
+item, so a release reaching `SHIPPED` already carried QA's `reason` and **the operator's own reason
+was never demanded** — the audit trail showed a reason-less ship that read as reasoned.
+
+And `HA-10` (`event_id` was per-file, so one person wearing two hats collided and the fold silently
+dropped the second event), `HA-12` (the view check was a row count; a hand-edit with the header
+intact passed clean — now a sha256 over applied event ids), `HA-13` (the fold trusted payload
+`role`/`actor` over the path), `HA-17`, `HA-18`.
+
+## Cluster I — platform · **blocker** · ONE APPLIED, ONE CANNOT BE
+
+| id | Defect | Disposition |
+|---|---|---|
+| `PE-3` | on Windows **every read command died** with `UnicodeEncodeError` once an item carried a character outside cp1252, and `python -I` — which every skill prescribes — ignores `PYTHONUTF8` | APPLIED: stdout/stderr reconfigured explicitly |
+| `PE-5` | the lint checked only bash-family fences, though an unbraced `$CLAUDE_*` resolves nowhere at all | APPLIED: any unbraced occurrence, anywhere |
+| `PE-4` | the eval suite's routing graders were an `llm` judge reading prose, which voted FAIL on runs whose **traces prove the right skill fired**. A deterministic grader exists — `tool_used` + `input_match` — and `evals/README.md` published its absence as a harness limitation | APPLIED: graders rewritten. Not re-run, on cost |
+| `PE-1` | **the README's install commands cannot work.** `origin/main` is still the old standalone skill with no `.claude-plugin/`, and `plugin-suite` is unpushed. Every documented acquisition path fails at step one; the install the council reviewed used a local path that appears nowhere in the README | **CANNOT APPLY** — the fix is a push, which was forbidden for this run. NEEDS FAISAL |
+| `PE-2` | **in a real session, 7 of 15 skills have no description.** The listing is 38,132 chars against a 30,000 budget on the default model and 8,000 on a 200k-window one; this plugin's descriptions alone are ~96% of the latter *before any other plugin exists*. The drop lands on the least-invoked skills — the drafts. And `tests/test_description_budget.py` printed `ok` | **PARTIALLY APPLIED** — the test now measures the real constraint and **fails**. The remedy is a product decision. NEEDS FAISAL |
+
+## Minor, applied without discussion
+
+`PP-3` (skills promising outputs their role may not create — `create` lists widened; a researcher
+who finds two user groups in conflict is the right person to file that decision), `PP-4` (the
+release skill addressed to PM/EM while only QA may record a verdict, with a condition table that
+did not match the computed one), `PP-9` (second-hat notes for one-person teams), `PP-10` (`R-` id
+namespace collision), `CR-10` (`dashboard` printed a path, not the verdict), `CR-12` (the
+conventions the verdict silently depends on, now one table), `CR-13` (the README had no
+first-engagement path), `HA-15`, `HA-16` (a metric reading of **0** was refused as "missing" because
+required fields were tested for truthiness), `MG-12`, `SF-1` (`.gitignore` silently excluding both
+fixtures' generated view), `SF-2`, `SF-3`.
+
+## Rejected or reclassified, with reasons
+
+| id | Why |
 |---|---|
-| `PP-12` | 1 of 8 realistic prompts fired a skill (`what's waiting on me?` → `hub`). Prompts matching description text nearly verbatim — the refund-window conflict, the launch blog, "did onboarding move activation", "can we ship on Friday" — fired nothing; the model answered in prose or asked for context instead |
-
-**Disposition: PARTIALLY APPLY, and record the uncertainty.** One run per prompt in an empty working
-directory with `--max-turns 3` is not a rate, and the reviewer says so. It is also consistent with the
-deterministic eval result, where the *must-not-trigger* case is solid and the hit cases are
-inconclusive. What is actionable now: prompt 2 ("what goes in the next release") is genuinely ambiguous
-across three skills and none of their descriptions claims it. The rest needs a measurement before a fix —
-**recorded as `NEEDS FAISAL`**, because trading description length against trigger rate would push the
-measured always-on cost up against its ceiling, and that is a cost/benefit call rather than a defect fix.
-
-### Minor, applying without discussion
-
-| id | Defect |
-|---|---|
-| `MG-12` | `principles.md` renamed the secrets directory to `.product-secrets/`; `.gitignore` still ignores only `.qa-secrets/`. **A rule that says "gitignored" over a directory that is not.** |
-| `PP-10` | `delivery`'s worked risk example uses id `R-3`, which is the namespace QA's acceptance requirements own. Ids are global, so it collides |
-| `PP-11` | No skill says where its document artifact lives; the hub holds a one-line summary. The launch claims table "the artifact this skill is built around" exists nowhere in either fixture |
-| `PP-4` | `release` is addressed to "EM, QA lead, PM" but only QA may record the verdict, and the skill's condition table has two rows the dashboard never computes while the rows it does compute key on QA id conventions (`-00a`, `-00b`, `R-`) the release skill never mentions |
-| `PP-9` | Four skills rely on a second actor that a one-person-per-role team does not have, and none names the fallback hat |
-| `SF-1` | **Mine, found before the council:** `.gitignore`'s `qa-state.json` rule silently excluded both fixtures' generated view. `fix-state.json` is committed, `qa-state.json` is not — a clone gets half a fixture, and `test_fixtures.py` cannot catch it because it rebuilds from scratch |
-| `SF-2` | `evals/results/` committed as source |
-| `SF-3` | `NOTICE` still names `product-qa` |
-
-### Rejected, with reasons
-
-| id | Why not |
-|---|---|
-| `MG-14` (both) | Correctly identified as **pre-existing, not regressions** — the "scope-playbooks says what extra agents buy" mismatch and `test-cases.md`'s "Eight sources" over a 0–8 list are both identical at the snapshot. Recording them, fixing the count (a one-word edit), and leaving the agent-budget wording for a separate pass rather than smuggling a method change into a restructure |
-| `PP-12`, in part | See above — the trigger *rate* is not established by one run per prompt, so the fix is not yet knowable |
+| `MG-14` | Correctly identified as **pre-existing, not regressions** — both are identical at the snapshot. Recorded; the agent-budget wording is left for a separate pass rather than smuggling a method change into a restructure |
+| `PP-12` | 1 of 8 natural prompts fired a skill — but one run per prompt in an empty directory is not a rate, and the reviewer says so. It is also consistent with `PE-2`: in that environment, 7 of 15 descriptions were absent, so the prompts could not route. **Reclassified as evidence for `PE-2` rather than a separate trigger defect** |
+| `HA-8` | The reviewer flagged this itself as the weakest critical. Applied anyway: a resource handed to the operator still exists and still bills |
+| `HA-9` | Cross-item clock skew flipping an accepted story back to `DONE` on replay. Partially applied — transitions now declare the other items their checks read in `after`. Whether that closes every path is **unverified**; the reviewer's own `b6_skew.py` is the test to re-run |
+| `HA-11` | `import` not validated or atomic, with a path-traversal id writing outside the output directory. **Partially applied** (ids validated via `SAFE_ID`); atomicity NEEDS FAISAL |
+| `PP-11` | No skill says where its document artifact lives. **Not applied** — it needs one convention chosen across all 15 skills, which is a decision rather than a fix |
+| `PE-6` | Bare `/hub` and `/qa` **do** resolve to this plugin, so the README's claim that bare names are not invokable is false. The *rule* to document only the namespaced form stands; the justification was wrong. Wording left for a follow-up |
 
 ---
 
 ## What survived, which is most of it
 
-The method guardian checked the prime directive and both halves, every Step 0 mandate bullet, the Step 1
-ground-truth table, the twelve families with the provisional-then-reconfirmed N/A rule, the agent budget,
-the case gate including smoke and calibration, two-way docs coverage with denominators, the first-run
-trace rules, dedupe by root cause, the iteration gate phase by phase, and the whole QA↔DEV contract —
-**and found them intact**, with `fix-phase.md`, `handoff-packet.md`, `evidence-standard.md`,
-`docs-conformance.md`, `experience.md`, `test-cases.md`, `scope-playbooks.md`, `case-file.md`, all 27
-domain files and `safe_edit.py` at **0-line diffs**. The `gotchas.md` split lost nothing: all three moved
-sections are byte-identical.
+The method guardian checked the prime directive and both halves, every Step 0 mandate bullet, the
+Step 1 ground-truth table, the twelve families with the provisional-then-reconfirmed N/A rule, the
+agent budget, the case gate including smoke and calibration, two-way docs coverage with
+denominators, the first-run trace rules, dedupe by root cause, the iteration gate phase by phase,
+and the whole QA↔DEV contract — **and found them intact**, with `fix-phase.md`,
+`handoff-packet.md`, `evidence-standard.md`, `docs-conformance.md`, `experience.md`,
+`test-cases.md`, `scope-playbooks.md`, `case-file.md`, all 27 domain files and `safe_edit.py` at
+**0-line diffs**. The `gotchas.md` split lost nothing: all three moved sections are byte-identical.
 
-Two things are now **stronger** than before the restructure: stable ids are mechanically enforced
-(`hub.py` refuses reuse, with the original sentence as its message), and an uncalibrated scope denies
-the verdict rather than merely being discouraged.
+Two things are **stronger** than before the restructure: stable ids are mechanically enforced, and
+an uncalibrated scope denies the verdict rather than merely being discouraged.
 
-So the restructure moved the method without weakening it. What it got wrong was its own bookkeeping —
-which is the part the method says to check first.
+The adversary also recorded what it **could not** break: HTML injection (every value escaped), fold
+order independence, a log concatenated twice, role-string variants, and every direct invariant via
+`move`. That list is evidence too.
+
+So the restructure moved the method without weakening it. What it got wrong was its own
+bookkeeping — which is the part the method says to check first.
