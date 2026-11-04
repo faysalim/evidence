@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eval report — product-suite v0.1.0</title>
+</head>
+<body>
+<style>
+:root{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}}
+:root[data-theme="dark"]{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}
+:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px 64px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+header h1{margin:2px 0 0;font-size:24px;font-weight:600;line-height:1.25;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;color:var(--ink-2);font-size:13px}
+.meta .num{font-variant-numeric:tabular-nums lining-nums}
+.banner{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;
+  border:1px solid var(--hairline);background:var(--surface);font-size:13px}
+.banner .chip-warn{color:var(--warning);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:4px}
+.tile .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.tile .value{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
+.tile.hero .value{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:48px}
+.tile .sub{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tile .value.delta-pos{color:var(--delta-good)}
+.tile .value.delta-neg{color:var(--critical)}
+.toolbar{display:flex;gap:8px;justify-content:flex-end}
+.toolbar button{font:12px system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:4px 10px;cursor:pointer}
+.toolbar button:hover{color:var(--ink)}
+.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.case{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px}
+.case-regressed{border-left:3px solid var(--critical)}
+.verdict{margin:6px 0 0;font-size:15px}
+.verdict .delta{font-size:15px}
+.flag{font-size:11px;font-weight:600;color:var(--warning);white-space:nowrap}
+.star{color:var(--warning);font-size:.45em;vertical-align:super;line-height:0;cursor:help}
+.legend summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.legend-list{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-2)}
+.case-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.case-head h2{margin:0;font-size:16px;font-weight:600}
+.case-head .spacer{flex:1}
+.case-score{font-size:15px;font-weight:600}
+.mono{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--ink-3);font-size:12px}
+.meter{display:inline-block;position:relative;width:120px;height:6px;border-radius:4px;background:var(--grid);
+  vertical-align:middle}
+.meter>span{display:block;height:100%;border-radius:4px;max-width:100%}
+.meter .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-3);border-radius:1px}
+.m-accent>span{background:var(--accent)}
+.m-base>span{background:var(--base-fill)}
+.delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.delta-pos{color:var(--delta-good)}
+.delta-neg{color:var(--critical)}
+.delta-zero{color:var(--ink-3)}
+details.section{border-top:1px solid var(--grid);padding-top:10px}
+details.section>summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);list-style-position:outside;margin-left:2px}
+details.section>summary:hover{color:var(--ink)}
+details.section[open]>summary{margin-bottom:8px}
+.md{display:flex;flex-direction:column;gap:8px;background:var(--inset);border-radius:8px;
+  padding:12px 14px;overflow-wrap:break-word}
+.md>:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:4px 0 0;font-size:1em;font-weight:600;line-height:1.3}
+.md p,.md ul,.md ol,.md blockquote,.md table,.md pre,.md hr{margin:0}
+.md ul,.md ol{display:flex;flex-direction:column;gap:4px;padding-left:20px}
+.md blockquote{border-left:2px solid var(--hairline);padding-left:10px;color:var(--ink-2)}
+.md :not(pre)>code{background:var(--inset);padding:1px 4px;border-radius:4px;
+  font:.92em "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre{background:var(--inset);border:1px solid var(--hairline);padding:10px 12px;border-radius:6px;
+  overflow-x:auto;font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre code{background:none;padding:0;font:inherit}
+.md table{width:100%;border-collapse:collapse}
+.md th,.md td{padding:5px 8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--grid)}
+.md th{font-weight:600;color:var(--ink-2)}
+.md a{color:var(--accent);text-decoration:none}
+.md a:hover{text-decoration:underline}
+.grader-def{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.grader-def+.grader-def{border-top:1px solid var(--grid)}
+.grader-def-head{display:flex;align-items:baseline;gap:8px}
+.grader-name{font:13px "SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:600}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+  border:1px solid var(--hairline);border-radius:999px;padding:1px 8px}
+.config{display:flex;flex-direction:column;gap:2px;background:var(--inset);border-radius:8px;padding:10px 14px}
+.config code{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.arm{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.arm+.arm{border-top:1px dashed var(--grid);margin-top:4px;padding-top:12px}
+.arm-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.arm-label{font-size:13px;font-weight:600}
+.run{border:1px solid var(--grid);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.run-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.run-title{font-size:12px;font-weight:600;color:var(--ink-2)}
+.run-error .explanation{color:var(--ink-2)}
+.note{font-size:12px;color:var(--ink-2)}
+.graders{display:flex;flex-direction:column;gap:4px}
+details.grader{border-radius:6px}
+details.grader>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:3px 4px;
+  border-radius:6px;list-style:none}
+details.grader>summary::-webkit-details-marker{display:none}
+details.grader>summary::before{content:'▸';font-size:10px;color:var(--ink-3);flex:none;
+  transition:transform .12s ease}
+details.grader[open]>summary::before{transform:rotate(90deg)}
+details.grader>summary:hover{background:var(--inset)}
+details.grader>summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grader-body{padding:6px 8px 8px 24px;display:flex;flex-direction:column;gap:6px}
+.chip{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.chip-pass{color:var(--good);border:1px solid currentColor}
+.chip-fail{color:var(--critical);border:1px solid currentColor}
+.chip.chip-warn{color:var(--warning);border:1px solid currentColor}
+.explanation{margin:0;font-size:13px;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:break-word}
+.kv{display:flex;gap:8px;font-size:12px;color:var(--ink-3)}
+.votes{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+pre.evidence{margin:0;background:var(--inset);border:1px solid var(--hairline);border-radius:6px;
+  padding:8px 10px;overflow-x:auto;max-height:320px;
+  font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:break-word}
+footer{color:var(--ink-3);font-size:12px;text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  details.grader>summary,.toolbar button{transition:background .12s ease,color .12s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  details.grader>summary::before{transition:none}
+}
+@media print{
+  :root,:root[data-theme="dark"],:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+  body{background:#fff}
+  .toolbar{display:none}
+  .case,.run,.grader-def{break-inside:avoid}
+  pre.evidence{max-height:none}
+}
+</style>
+<div class="wrap">
+<header>
+<div class="eyebrow">Plugin eval report</div>
+<h1>product-suite v0.1.0</h1>
+<p class="verdict">Plugin effect: <span class="delta delta-neg">↓ -5.6 pts</span> vs baseline — improved 0 · flat 5 · regressed 1 of 6 cases.</p>
+<div class="meta">
+<span class="mono">.</span>
+<span>Claude Code v2.1.318</span>
+<span class="num">2026-11-04 14:43 UTC</span>
+<span class="num">2m 6s</span>
+<span class="num">$2.70</span>
+<span class="num">36 runs</span>
+<span class="num">3 in flight</span>
+<span class="mono">product-suite@product-suite-market</span>
+
+<span>judge default</span>
+<span class="num">threshold 100%</span>
+
+</div>
+</header>
+<div class="banner"><span class="chip-warn">⚠ Averages include non-judgments</span><span>21 runs errored — their scores count toward the averages shown without a complete judgment.</span></div>
+<section class="tiles">
+<div class="tile hero"><span class="label">Suite score · with plugin</span><span class="value">16.7%<span class="star" title="Includes runs that errored or hit the cost ceiling — see “How to read this report”">*</span></span><span class="sub">mean of per-case scores · * includes 15 runs without a complete judgment</span></div>
+<div class="tile"><span class="label">Ablation Δ</span><span class="value num delta-neg">↓ -5.6</span><span class="sub">score points vs baseline, 6 of 6 cases</span></div>
+<div class="tile"><span class="label">Baseline score</span><span class="value num">22.2%</span><span class="sub">without the plugin</span></div>
+<div class="tile"><span class="label">Cases</span><span class="value num">6</span><span class="sub">1 of 6 ≥ 100% threshold</span></div>
+<div class="tile"><span class="label">Perfect runs</span><span class="value num">16.7%</span><span class="sub">runs where every grader passed</span></div>
+</section>
+<details class="section legend">
+<summary>How to read this report</summary>
+<ul class="legend-list">
+<li>A run's score is the weighted fraction of its graders that passed; a "perfect" run passed every grader.</li>
+<li>A case's score is the mean of its runs; a case passes when its score is at or above the 100% threshold (the tick on each case bar).</li>
+<li>The suite score is the mean of the per-case scores.</li>
+<li>Judge votes are independent samples of the LLM judge; the majority decides pass or fail.</li>
+<li>"With plugin" and "Baseline" runs are identical except for the plugin being loaded; Δ is the with-plugin score minus the baseline score.</li>
+<li>Scores marked with * include runs that errored or hit the cost ceiling (LLM graders force-failed); those runs count toward the means without a complete judgment.</li>
+</ul>
+</details>
+<div class="toolbar"><button type="button" data-act="expand">Expand all</button><button type="button" data-act="collapse">Collapse all</button></div>
+<article class="case" id="case-1">
+<div class="case-head">
+<h2>trigger-backlog-near-miss-from-qa</h2>
+<span class="muted mono">evals\trigger-backlog-near-miss-from-qa</span>
+<span class="spacer"></span>
+<span class="flag">⚠ 3 runs errored</span>
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%<span class="star" title="Includes runs that errored or hit the cost ceiling — see “How to read this report”">*</span></span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.09 · 14:43:06 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.09 · 14:43:06 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.09 · 14:43:06 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.05 · 14:43:15 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t find the story. It wasn&apos;t in your message, and your working directory is empty, so there&apos;s no story file there either.
+
+Please paste the story, ideally including:
+- **The user story**, e.g. &quot;As a [user], I want [capability] so that [benefit]&quot;
+- **Any context you have**: what&apos;s in and out of scope, business rules, edge cases, or related systems
+- **Your preferred format**: Given/When/Then (Gherkin) or a checklist
+
+Once I have it, I&apos;ll write the acceptance criteria. They&apos;ll cover the main path, validation and error cases, edge cases, and any non-functional requirements that apply.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.05 · 14:43:15 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t find the story. Nothing was attached to your message, and the working directory is empty.
+
+Please paste the story text, or give me the file path or ticket link. If you can, also include:
+- **Who it&apos;s for and what it&apos;s for** (e.g. &quot;As a… I want… so that…&quot;)
+- **Constraints** you already know: business rules, edge cases, platforms, performance or security needs
+- **Format you want**: Given/When/Then (Gherkin), a checklist, or a rule-based list
+
+Once I have the story, I&apos;ll write acceptance criteria that cover the main path, alternate paths, errors and edge cases, plus any non-functional needs that apply.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.05 · 14:43:16 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t find the story. Nothing was attached to your message, and the working directory is empty.
+
+Please paste the user story, or give me a path or link to it. The usual format is &quot;As a… I want… so that…&quot;, plus any notes on business rules, edge cases or constraints.
+
+Once I have it, I&apos;ll write the acceptance criteria. Tell me which format you&apos;d like:
+- **Given/When/Then (Gherkin):** works well if the criteria will become automated tests.
+- **A checklist:** short, testable statements, better for quick backlog grooming.
+
+If you don&apos;t choose, I&apos;ll use Given/When/Then. I&apos;ll cover the main path, validation and error cases, edge cases and any non-functional needs the story implies.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>Write acceptance criteria for this story.</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must invoke product-suite:backlog, NOT product-suite:qa. Acceptance criteria are the product owner's, written before any test exists.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case" id="case-2">
+<div class="case-head">
+<h2>trigger-dev-near-miss-from-qa</h2>
+<span class="muted mono">evals\trigger-dev-near-miss-from-qa</span>
+<span class="spacer"></span>
+<span class="flag">⚠ 6 runs errored</span>
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%<span class="star" title="Includes runs that errored or hit the cost ceiling — see “How to read this report”">*</span></span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.10 · 14:43:24 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.10 · 14:43:26 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.11 · 14:43:26 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:43:33 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:43:36 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:43:37 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>Fix the finding QA filed about the CSV export.</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must invoke product-suite:dev, NOT product-suite:qa. Fixing belongs to dev; qa never fixes and never closes its own work.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case case-regressed" id="case-3">
+<div class="case-head">
+<h2>trigger-hub-hit</h2>
+<span class="muted mono">evals\trigger-hub-hit</span>
+<span class="spacer"></span>
+<span class="flag">⚠ 3 runs errored</span>
+<span class="delta delta-neg">↓ -33.3 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%<span class="star" title="Includes runs that errored or hit the cost ceiling — see “How to read this report”">*</span></span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.09 · 14:43:43 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.09 · 14:43:45 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.09 · 14:43:47 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:33.3%"></span></span>
+<span class="num">33.3%</span>
+<span class="muted num">33.3% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">3 turns · $0.06 · 14:43:51 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS FAIL PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✗ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I couldn&apos;t find anything that&apos;s waiting on you, but that&apos;s mostly because I don&apos;t have much to look at:
+
+- **Working directory:** It&apos;s empty, and the git repo has no commits. The only change git shows is an untracked `.gitconfig` in the parent folder, so there&apos;s no open work, TODOs or pending changes here.
+- **Saved memory:** I was denied permission to read my memory folder, so I couldn&apos;t check whether I&apos;d saved any notes about your ongoing tasks.
+- **Outside sources:** I&apos;m not connected to email, calendar, Slack, GitHub, Jira or any other task tracker, so I can&apos;t see messages, PR reviews, tickets or meetings waiting on you.
+
+If you&apos;d like me to check, you could:
+1. Point me at a project folder or repo, and I&apos;ll look for uncommitted work, TODOs and failing tests.
+2. Allow access to the memory folder, if you think I saved notes from an earlier session.
+3. Connect a tool like GitHub or a task tracker, and I can pull your open reviews and assigned items.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:43:54 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I couldn&apos;t find anything waiting on you, but I also can&apos;t see the places where that kind of thing usually lives. Here&apos;s what I checked:
+
+- **Current directory:** it&apos;s a git repo on `main` with no commits and no files. The only change git shows is an untracked `.gitconfig` in the parent folder. There are no open branches, unfinished changes, or TODOs here.
+- **Saved memory:** I was denied permission to read my memory folder, so I couldn&apos;t check whether you&apos;d told me about any tasks or deadlines in earlier sessions.
+- **Email, calendar, tickets, PRs, Slack:** I don&apos;t have access to any of these in this session, so I can&apos;t see reviews, messages or assigned issues waiting on you.
+
+If you meant a specific place, such as GitHub PRs, a ticket queue or a particular project folder, tell me which one and I&apos;ll check it if I can get to it. You could also allow access to the memory folder and I&apos;ll look there.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:43:56 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I couldn&apos;t find anything waiting on you. Here&apos;s what I checked:
+
+- **Working directory:** it&apos;s empty. The git repo on `main` has no commits, so there are no open branches, TODO notes or unfinished changes.
+- **Saved notes from earlier sessions:** I was denied permission to read that folder, so I couldn&apos;t check it.
+- **Inbox, calendar, tickets, pull requests:** I don&apos;t have access to any of these here, so I can&apos;t see requests or reviews waiting for you.
+
+To get a real answer, you could:
+1. Point me at a project folder or repo to look for open work.
+2. Allow access to the saved-notes folder so I can check what earlier sessions recorded.
+3. Connect a tool like GitHub, Jira, Linear, email or a calendar, and I can pull your open items from there.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>What is waiting on me right now?</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must invoke product-suite:hub, NOT product-suite:delivery. A direct 'waiting on me' query is a hub query; delivery owns status reports with risks and milestones.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case" id="case-4">
+<div class="case-head">
+<h2>trigger-none-ordinary-debugging</h2>
+<span class="muted mono">evals\trigger-none-ordinary-debugging</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.08 · 14:44:06 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">You didn&apos;t include the regex or the input, so I can&apos;t see what&apos;s going wrong yet. Please send:
+
+1. **The pattern itself**, copied exactly as it appears in your code, including the quotes or slashes and any flags (for example `/^\d+$/gm` or `r&quot;\bfoo\b&quot;`).
+2. **The input string** that isn&apos;t matching.
+3. **The language or tool** (JavaScript, Python, Java, .NET, grep, an editor&apos;s search box, etc.). Regex syntax and escaping differ between them.
+4. **How you call it** (`match` vs `search`, `test`, `matches()`, and so on) and what you expected to match.
+
+While you get that together, these are the most common causes:
+
+- **Anchored or full-match methods:** Python&apos;s `re.match` only matches at the start of the string, and Java&apos;s `String.matches()` must match the whole string. Use `re.search` or `find()` to match anywhere.
+- **Double escaping:** In a normal string, `&quot;\d&quot;` or `&quot;\b&quot;` can be changed before the regex engine sees it. `&quot;\b&quot;` becomes a backspace character. Use raw strings (`r&quot;...&quot;`) in Python or `&quot;\\d&quot;` in Java and C#.
+- **Hidden characters in the input:** Trailing `\r` from Windows line endings, non-breaking spaces, and look-alike Unicode characters (smart quotes, en-dash vs hyphen) are easy to miss.
+- **`^` and `$` without multiline mode:** Without the `m` flag they match only at the start and end of the whole string, not each line.
+- **`.` and newlines:** `.` doesn&apos;t match a newline unless you turn on the `s` (DOTALL) flag.
+- **Unescaped special characters:** `.`, `(`, `)`, `[`, `+`, `?`, `$` and `|` have special meanings and need a `\` in front to match literally.
+- **Case sensitivity:** Matching is case-sensitive unless you add the `i` flag.
+- **JavaScript&apos;s `g` flag with `.test()`:** With `g`, the regex remembers `lastIndex`, so calling it again on the same regex can fail even though the first call matched.
+
+If the regex is in a file in this repo, tell me the path and I&apos;ll read it directly.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.07 · 14:44:08 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I don&apos;t see a regex or input string in your message. Could you paste:
+
+1. **The regex pattern**, exactly as written in your code, including the delimiters or quotes
+2. **The input string** you expect it to match
+3. **The language or tool** (JavaScript, Python, Java, grep, etc.), since regex flavors differ
+4. **What you expected and what happened**: no match at all, a partial match, or the wrong capture groups
+
+Common causes worth checking while you gather that:
+
+- **Unescaped special characters**: `.`, `?`, `+`, `(`, `[`, `$` need a backslash to match literally.
+- **Double-escaping in string literals**: in Java, C#, or a plain Python string, `\d` must be written `&quot;\\d&quot;` (or use a raw string like `r&quot;\d&quot;` in Python).
+- **Anchors**: `^` and `$` force a match of the whole string or line. Python&apos;s `re.match` only matches at the start, and Java&apos;s `matches()` requires the entire string to match.
+- **Multiline input**: `.` doesn&apos;t match newlines by default, and `^`/`$` only match per line when the multiline flag is on.
+- **Case sensitivity**: you may need the `i` flag.
+- **Hidden characters in the input**: trailing whitespace, `\r\n` line endings (common on Windows), non-breaking spaces, or &quot;smart&quot; quotes.
+- **Greedy vs. lazy matching**: `.*` may consume more than you intend, so try `.*?`.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.07 · 14:44:11 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">The user hasn&apos;t shared the regex or input. Ask.
+
+I&apos;m happy to help, but I don&apos;t see the regex or the input string in your message. Please paste:
+
+1. **The regular expression**, exactly as written in your code, including delimiters, flags, and escaping (`/.../gi`, `r&quot;...&quot;`, `&quot;\\d+&quot;`, etc.)
+2. **The input string** you expect it to match
+3. **The language or tool** (JavaScript, Python, Java, .NET, grep, PCRE, etc.), because regex flavors differ
+4. **What you expected and what happened**: no match at all, a partial match, or the wrong capture groups
+
+If it&apos;s in a file in this repo, give me the path and I&apos;ll look at it directly.
+
+While you gather that, here are the most common causes:
+- **Double escaping in string literals:** `&quot;\d&quot;` needs to be `&quot;\\d&quot;` in Java, C#, or non-raw Python strings.
+- **Anchors:** `^`/`$` combined with multiline input, or using `match()` (anchored at the start) when you meant `search()` in Python.
+- **Line endings:** Windows input ends lines with `\r\n`, so a pattern like `foo$` can fail because of the trailing `\r`.
+- **Greedy vs. lazy:** `.*` consumes more than intended, while `.*?` takes as little as possible.
+- **`.` doesn&apos;t match newlines** unless you turn on the DOTALL/`s` flag.
+- **Unescaped special characters** like `.`, `(`, `?`, `+`, `[`, or `$` in what you meant as literal text.
+- **Invisible characters** in the input, such as non-breaking spaces, zero-width characters, or smart quotes.</pre>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.05 · 14:44:20 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I don&apos;t see the regex or the input string in your message. Could you paste:
+
+1. **The regular expression**, exactly as it appears in your code, including the delimiters or quotes
+2. **The input string** you expect it to match
+3. **The language or tool** you&apos;re using (JavaScript, Python, Java, grep, etc.), since regex flavors differ
+4. **What happens**: no match at all, a partial match, or the wrong capture groups?
+
+While you gather that, these are the most common causes:
+
+- **Unescaped special characters**: `.`, `?`, `+`, `(`, `[`, `$` and `|` need a `\` to match literally.
+- **Double escaping in string literals**: in Java, C#, or non-raw Python strings, `\d` often has to be written `&quot;\\d&quot;` (or use `r&quot;\d&quot;` in Python).
+- **Anchors**: `^...$` requires the whole string or line to match. Python&apos;s `re.match` only matches at the start of the string, while `re.search` looks anywhere in it.
+- **Missing flags**: you might need case-insensitive (`i`), multiline (`m`, so `^`/`$` work per line), or dotall (`s`, so `.` matches newlines).
+- **Hidden characters**: trailing whitespace, `\r\n` line endings (common on Windows), non-breaking spaces, or &quot;smart&quot; quotes in the input.
+- **Greedy vs. lazy matching**: `.*` can consume more than you expect, so try `.*?`.
+- **Stateful global regexes in JS**: reusing a `/g` regex with `.test()` advances `lastIndex`, so every other call can fail.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.06 · 14:44:20 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I don&apos;t see the regex or the input string in your message. Could you paste:
+
+1. **The regex**, exactly as it appears in your code, including delimiters and flags (e.g. `/^\d+$/m` or `re.compile(r&quot;...&quot;)`)
+2. **The input string** you expect it to match
+3. **The language or tool** you&apos;re using (Python, JavaScript, grep, etc.), since regex flavors behave differently
+4. **What happens**: no match at all, a partial match, or the wrong capture groups
+
+While you gather that, these are the most common causes:
+
+- **Anchors**: `^`/`$` match the start and end of the whole string unless multiline mode is on. Also, Python&apos;s `re.match` only checks from the start of the string.
+- **Escaping**: in a non-raw string, `&quot;\d&quot;` or `&quot;\b&quot;` can get changed before the regex engine sees it (Python `&quot;\b&quot;` is a backspace character). Use raw strings (`r&quot;...&quot;`) or double the backslashes.
+- **Hidden characters**: trailing `\r` from Windows line endings, non-breaking spaces, or curly quotes in the input.
+- **Greedy vs. lazy**: `.*` grabs as much as it can, so it can swallow text you meant to match later.
+- **`.` and newlines**: `.` doesn&apos;t match newlines unless you turn on the DOTALL/`s` flag.
+- **Case**: matching is case-sensitive unless you add the `i` flag.
+- **Flavor differences**: lookbehind, `\d` matching Unicode digits, and POSIX classes like `[[:digit:]]` aren&apos;t supported the same way everywhere.
+
+If the regex is in a file in this repo, tell me the path and I&apos;ll look at it directly.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.06 · 14:44:23 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I don&apos;t see the regex or the input string in your message. Please paste:
+
+1. **The pattern**, exactly as it appears in your code, including quotes, delimiters, and flags (e.g. `/^\d+$/g` or `r&quot;\bfoo\b&quot;`)
+2. **The input string** you expect it to match
+3. **The language or tool** (JavaScript, Python, Java, .NET, grep, an editor&apos;s search, etc.), since regex flavors differ
+4. **What happens**: no match at all, a partial match, or the wrong groups
+
+While you gather that, these are the most common causes:
+
+- **Escaping in string literals:** in a normal string, `&quot;\d&quot;` or `&quot;\b&quot;` can get eaten before the regex sees it. Use raw strings (`r&quot;...&quot;` in Python) or double the backslashes (`&quot;\\d&quot;`).
+- **Anchors and full-match methods:** `^`/`$`, or methods like Java&apos;s `matches()` and Python&apos;s `re.fullmatch`, require the whole string to match, not just part of it.
+- **Hidden characters:** trailing `\r` (common with Windows line endings), extra whitespace, non-breaking spaces, or &quot;smart&quot; quotes in the input.
+- **Multiline input:** `^`/`$` only match at line boundaries with the multiline flag, and `.` only matches newlines with the dotall/`s` flag.
+- **Case sensitivity:** you may need the `i` flag.
+- **Greedy quantifiers:** `.*` may consume more than you expect. Try `.*?`.
+- **Global flag state in JS:** reusing a `/g` regex with `.test()` keeps `lastIndex` between calls, so every other call can fail.
+- **Unescaped special characters:** `.`, `?`, `+`, `(`, `[`, `|`, `$` and `\` need escaping when you mean them literally.
+
+If the regex is in a file in this repo, tell me which file and I&apos;ll look at it directly.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>Why is this regular expression not matching my input string?</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must NOT invoke any product-suite skill. This is ordinary debugging, and the qa description explicitly excludes it.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case" id="case-5">
+<div class="case-head">
+<h2>trigger-qa-hit</h2>
+<span class="muted mono">evals\trigger-qa-hit</span>
+<span class="spacer"></span>
+<span class="flag">⚠ 6 runs errored</span>
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%<span class="star" title="Includes runs that errored or hit the cost ceiling — see “How to read this report”">*</span></span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.12 · 14:44:31 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.12 · 14:44:31 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.12 · 14:44:35 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.05 · 14:44:39 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.05 · 14:44:41 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.05 · 14:44:44 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>QA this release before we ship it, and tell me what is broken.</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must invoke the product-suite:qa skill, and no other product-suite skill.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case" id="case-6">
+<div class="case-head">
+<h2>trigger-release-near-miss-from-qa</h2>
+<span class="muted mono">evals\trigger-release-near-miss-from-qa</span>
+<span class="spacer"></span>
+<span class="flag">⚠ 3 runs errored</span>
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%<span class="star" title="Includes runs that errored or hit the cost ceiling — see “How to read this report”">*</span></span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.09 · 14:44:47 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.09 · 14:44:49 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.09 · 14:44:51 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">exit 1: Reached maximum number of turns (2)</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.05 · 14:44:55 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t say yes, because there&apos;s nothing here to ship yet.
+
+- **The working directory (`cwd`) is empty.** It contains no files.
+- **The git repository on `main` has no commits.**
+- **The only change git reports is an untracked `../.gitconfig`.** It&apos;s in the parent directory, so it isn&apos;t project code.
+
+Were you thinking of a different project? If so, give me its path or open me in that directory. I can then review the changes, run the tests and build, and do a code or security review before you ship.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.05 · 14:44:58 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t tell you we&apos;re ready, because I couldn&apos;t find anything to ship.
+
+- **The working directory is empty.** `C:\Users\faisal_iqbal\...\home\cwd` has no files.
+- **The repo has no commits.** `main` has no history.
+- **The only change git sees is `../.gitconfig`,** an untracked config file one level up. It isn&apos;t project code.
+
+So far there&apos;s no code, tests, build or changes for me to check.
+
+Did you mean a different directory or branch? Point me at the project (a path, branch or PR) and I&apos;ll check it properly: review the diff, run the tests and build, and look for loose ends like TODOs, debug code or missing config.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.05 · 14:45:00 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t say it&apos;s ready, because there&apos;s nothing here to ship yet:
+
+- **No files:** the working directory (`...\home\cwd`) is empty.
+- **No commits:** the repo is on `main` but has no history.
+- **No changes in this directory:** the only thing git reports is an untracked `../.gitconfig`, which sits in the parent folder and isn&apos;t project code.
+
+There&apos;s no code, diff or build to check. Maybe the project is in another directory, or the work hasn&apos;t been committed or copied here. Tell me where it is, or which branch or PR you want to ship. Then I can review the diff, run the tests and build, and give you a real yes or no.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>Are we ready to ship?</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must invoke product-suite:release, NOT product-suite:qa. The go/no-go is computed by release.</p>
+</div>
+</div>
+</details>
+</article>
+<footer>Generated by <code>claude plugin eval</code> · schema v1 · scores are not comparable across different suites</footer>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var bar=document.querySelector('.toolbar');
+  if(!bar)return;
+  bar.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest('button');
+    if(!b)return;
+    var open=b.dataset.act==='expand';
+    document.querySelectorAll('details.section, details.grader').forEach(function(d){d.open=open});
+  });
+});
+// Collapsed details vanish from print/PDF; these pages are share artifacts.
+window.addEventListener('beforeprint',function(){
+  document.querySelectorAll('details').forEach(function(d){
+    if(!d.open){d.dataset.printOpened='1';d.open=true}
+  });
+});
+window.addEventListener('afterprint',function(){
+  document.querySelectorAll('details[data-print-opened]').forEach(function(d){
+    d.open=false;delete d.dataset.printOpened;
+  });
+});
+</script>
+</body>
+</html>

@@ -243,6 +243,11 @@ def check_headings():
 def check_width():
     bad = 0
     for path in md_files():
+        # evals/ holds prompts and grader criteria, not prose. A criterion is one sentence read
+        # by a judge model; hard-wrapping it is a change to the text being graded, so the column
+        # rule does not apply there.
+        if rel(path).startswith("evals/"):
+            continue
         text = read(path)
         # YAML frontmatter cannot wrap: a folded description changes meaning.
         fm_end = 0
