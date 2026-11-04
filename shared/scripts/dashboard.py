@@ -247,13 +247,19 @@ def verdict(hub):
 
     # HA-3: a duplicate pointing at nothing, or at an open blocking finding, is still open.
     def duplicate_resolves(item):
-        """Follow duplicate_of to a non-DUPLICATE finding. A cycle resolves to nothing."""
+        """Follow duplicate_of to a non-DUPLICATE finding of the same type.
+
+        A cycle resolves to nothing, and so does a target that is not a finding -- pointing a
+        critical at a PASS case used to resolve to something `TERMINAL_OK` counts as closed.
+        """
         seen, cur = set(), item
         while cur is not None and cur["state"] == "DUPLICATE":
             if cur["id"] in seen:
                 return None                      # cycle: resolves to nothing
             seen.add(cur["id"])
             cur = items.get(cur["fields"].get("duplicate_of"))
+            if cur is not None and cur["type"] != item["type"]:
+                return None                      # not a finding: resolves to nothing
         return cur
 
     dangling_dup = []
@@ -302,9 +308,14 @@ def verdict(hub):
     # MG-3: restored. This was computed by qa_dashboard.py and dropped in the port -- and it is
     # the condition the whole iteration gate rests on, because a verdict about a build you
     # cannot name is a verdict about nothing.
+    # Only releases still under consideration. A ROLLED_BACK or already-SHIPPED release's build
+    # is not the build this verdict is about, and counting it let a fresh candidate inherit the
+    # previous release's gate rows.
+    IN_FLIGHT = {"CANDIDATE", "NO_VERDICT", "NOT_GREEN", "GREEN"}
     builds = {}
     for i in items.values():
-        if i["type"] == "release" and i["fields"].get("build"):
+        if (i["type"] == "release" and i["state"] in IN_FLIGHT
+                and i["fields"].get("build")):
             builds[i["id"]] = i["fields"]["build"]
     named = sorted("%s=%s" % (k, v) for k, v in builds.items())
     conditions.append(("Build identity established per component", bool(builds),
@@ -312,25 +323,43 @@ def verdict(hub):
 
     # CR-3: smoke and calibration must have run on the build the verdict names, not on some
     # earlier one. Without this the rows are name-only.
-    stale, unstamped = [], []
+    # The question is per release, not hub-wide. Asking only "is this row's build *some*
+    # release's build" let a fresh candidate inherit the previous release's gate rows -- so
+    # "the build this verdict names" quietly became "any build in the hub".
     gate_rows = [cid for cid, c in items.items()
                  if c["type"] == "case" and (cid.endswith("-00a") or cid.endswith("-00b"))]
-    if builds:
-        for cid in gate_rows:
-            ran = items[cid]["fields"].get("ran_under")
-            ran_build = ran.get("build") if isinstance(ran, dict) else None
-            if not ran_build:
-                # No build recorded means the row cannot be shown to have run on this one, which
-                # is the whole point of the condition. Silence is not agreement.
-                unstamped.append(cid)
-            elif ran_build not in builds.values():
-                stale.append("%s ran on %s" % (cid, ran_build))
-    detail = "; ".join(sorted(stale))
+    stamped = {}
+    unstamped = []
+    for cid in gate_rows:
+        ran = items[cid]["fields"].get("ran_under")
+        ran_build = ran.get("build") if isinstance(ran, dict) else None
+        if not ran_build:
+            unstamped.append(cid)               # silence is not agreement
+        else:
+            stamped.setdefault(ran_build, []).append(cid)
+
+    uncovered = []
+    for rel_id, build in sorted(builds.items()):
+        rows = stamped.get(build, [])
+        if not any(c.endswith("-00a") for c in rows):
+            uncovered.append("%s (%s) has no smoke row on its build" % (rel_id, build))
+        if not any(c.endswith("-00b") for c in rows):
+            uncovered.append("%s (%s) has no calibration row on its build" % (rel_id, build))
+    orphan = sorted("%s ran on %s" % (c, b_)
+                    for b_, cs in stamped.items() if b_ not in builds.values() for c in cs)
+
+    detail_parts = []
+    if uncovered:
+        detail_parts.append("; ".join(uncovered))
+    if orphan:
+        detail_parts.append("; ".join(orphan))
     if unstamped:
-        detail = ((detail + "; ") if detail else "") +             "no ran_under.build on " + ", ".join(sorted(unstamped))
+        detail_parts.append("no ran_under.build on " + ", ".join(sorted(unstamped)))
     conditions.append(("Smoke and calibration rows ran on the build this verdict names",
-                       bool(gate_rows) and not stale and not unstamped,
-                       detail or (", ".join(sorted(gate_rows)) or "no gate rows")))
+                       bool(builds) and bool(gate_rows) and not uncovered and not orphan
+                       and not unstamped,
+                       "; ".join(detail_parts)
+                       or (", ".join(sorted(gate_rows)) or "no gate rows")))
 
     if hub.validate():
         conditions.append(("The hub itself validates", False,

@@ -55,12 +55,40 @@ def write_line(path, payload):
         fh.write(json.dumps(payload) + "\n")
 
 
+def green_base(hub):
+    """A hub that genuinely computes GREEN, so an attack on it can actually fail.
+
+    This is the point verification made about the first version of these tests: a regression run
+    against a hub that was not green anyway would have passed with the fix removed.
+    """
+    cli(hub, "q", "QA", "init", "--engagement", "base")
+    cli(hub, "q", "QA", "iteration", "1")
+    for cid, action, oracle in (("S1-00a", "smoke", "first success through the real client"),
+                                ("S1-00b", "inject one known defect", "reports exactly one")):
+        cli(hub, "q", "QA", "add", "case", cid, "-f", "scope=p", "-f", "graded_by=p",
+            "-f", "action=%s" % action, "-f", "oracle=%s" % oracle,
+            "-f", 'ran_under={"build":"sha256:abc"}')
+        cli(hub, "q", "QA", "move", cid, "PASS", "-f", "evidence=ok")
+    cli(hub, "q", "QA", "add", "case", "R-1", "-f", "scope=requirements",
+        "-f", "graded_by=p", "-f", "action=contract 4.2", "-f", "oracle=independent recompute")
+    cli(hub, "q", "QA", "move", "R-1", "PASS", "-f", "evidence=ok")
+    cli(hub, "dm", "DELIVERY", "add", "release", "REL-1", "-f", "title=1.0")
+    cli(hub, "d", "DEV", "move", "REL-1", "CANDIDATE", "-f", "build=sha256:abc")
+    return hub
+
+
 def main():
     tmp = tempfile.mkdtemp(prefix="round2-")
     try:
         print("HA-3 round 2 -- a DUPLICATE cycle must not hide two criticals")
-        hub = os.path.join(tmp, "dup", "hub")
-        cli(hub, "q", "QA", "init", "--engagement", "dup")
+        # On a GENUINELY GREEN base. The first version of this test ran on a hub that was not
+        # green anyway, so it would have passed with the fix removed — verification said so, and
+        # it was right. A regression test that cannot fail proves nothing.
+        hub = green_base(os.path.join(tmp, "dup", "hub"))
+        label0, _gap0, _c0 = D.verdict(H.Hub(hub))
+        check("the base really is GREEN before the attack",
+              label0 == "GREEN within stated bounds", label0)
+
         cli(hub, "q", "QA", "add", "finding", "C-1",
             "-f", "title=acked loss", "-f", "severity=critical")
         cli(hub, "q", "QA", "add", "finding", "C-2",
@@ -70,11 +98,63 @@ def main():
         h = H.Hub(hub)
         label, gap, conditions = D.verdict(h)
         check("both moves are legal on their own", a == 0 and b == 0, "rc=%r/%r" % (a, b))
-        check("[REGRESSION] the cycle does not produce GREEN",
+        check("[REGRESSION] the cycle does not produce GREEN on a green base",
               label != "GREEN within stated bounds", "%s / %s" % (label, gap))
         check("   and the failing condition names the cycle",
               any("DUPLICATE" in n and not ok for n, ok, _ in conditions),
               [n for n, ok, _ in conditions if not ok])
+
+        print("\nNEW-1 -- `set duplicate_of` must not bypass that check")
+        hub = green_base(os.path.join(tmp, "setdup", "hub"))
+        cli(hub, "q", "QA", "add", "finding", "C-9",
+            "-f", "title=acked loss", "-f", "severity=critical")
+        cli(hub, "q", "QA", "add", "finding", "M-9", "-f", "title=m", "-f", "severity=minor")
+        cli(hub, "dev1", "DEV", "move", "C-9", "DUPLICATE", "-f", "duplicate_of=M-9")
+        rc = cli(hub, "dev1", "DEV", "set", "C-9", "-f", "duplicate_of=R-1")
+        check("[REGRESSION] set cannot point a finding at a case", rc != 0, "rc=%r" % rc)
+        rc = cli(hub, "dev1", "DEV", "set", "C-9", "-f", "duplicate_of=C-9")
+        check("   nor at itself", rc != 0, "rc=%r" % rc)
+        rc = cli(hub, "dev1", "DEV", "set", "C-9", "-f", "duplicate_of=NOPE-1")
+        check("   nor at nothing", rc != 0, "rc=%r" % rc)
+        label, _gap, _c = D.verdict(H.Hub(hub))
+        check("   and the open minor it points at still denies",
+              label != "GREEN within stated bounds", label)
+
+        print("\nNEW-2 -- a log nested under another role's directory is not folded")
+        hub = green_base(os.path.join(tmp, "nested", "hub"))
+        cli(hub, "q", "QA", "add", "finding", "C-7", "-f", "title=t", "-f", "severity=critical")
+        write_line(os.path.join(hub, "events", "DEV", "QA", "x.jsonl"),
+                   {"v": 1, "event_id": "QA/x#1", "seq": 1, "actor": "x", "role": "QA",
+                    "ts": "2026-11-04T23:30:00.000000Z", "op": "move", "item": "C-7",
+                    "to": "WITHDRAWN", "fields": {"reason": "forged"}})
+        h = H.Hub(hub)
+        check("[REGRESSION] the nested line is reported",
+              any("not at events/<ROLE>/<actor>.jsonl" in p for p in h.validate()),
+              h.validate()[:1])
+        check("   and the critical is still open", h.items["C-7"]["state"] == "NEW",
+              h.items["C-7"]["state"])
+        label, _gap, _c = D.verdict(h)
+        check("   so the verdict is not GREEN", label != "GREEN within stated bounds", label)
+
+        print("\nNEW-3 -- gate rows must match a release still under consideration")
+        hub = green_base(os.path.join(tmp, "twobuilds", "hub"))
+        cli(hub, "dm", "DELIVERY", "add", "release", "REL-2", "-f", "title=next")
+        cli(hub, "d", "DEV", "move", "REL-2", "CANDIDATE", "-f", "build=sha256:new")
+        label, gap, conditions = D.verdict(H.Hub(hub))
+        row = [(n, ok, ev) for n, ok, ev in conditions if "ran on the build" in n]
+        check("[REGRESSION] a new candidate cannot inherit the old release's gate rows",
+              row and not row[0][1], row)
+
+        print("\nNEW-4 -- a JSON-typed empty does not satisfy a required field")
+        hub = green_base(os.path.join(tmp, "jsonempty", "hub"))
+        cli(hub, "q", "QA", "add", "finding", "F-4", "-f", "title=t", "-f", "severity=minor")
+        for literal in ("null", "[]", "{}", '""'):
+            rc = cli(hub, "d1", "DEV", "move", "F-4", "REJECTED", "-f", "reason=%s" % literal)
+            check("[REGRESSION] reason=%s is refused" % literal, rc != 0, "rc=%r" % rc)
+        cli(hub, "an", "ANALYST", "add", "metric", "MM-1", "-f", "name=x")
+        rc = cli(hub, "an", "ANALYST", "move", "MM-1", "BASELINED",
+                 "-f", "denominator=signups", "-f", "baseline=0")
+        check("   but a baseline of 0 is still a reading", rc == 0, "rc=%r" % rc)
 
         print("\nreplay gaps -- a hand-written line must not do what the CLI refuses")
         cases = [
@@ -125,7 +205,8 @@ def main():
         h = H.Hub(hub)
         check("[REGRESSION] a log outside events/<ROLE>/ is not folded at all",
               "F-9" not in h.items, sorted(h.items))
-        check("   and says why", any("not inside an events" in p for p in h.validate()),
+        check("   and says why",
+              any("events/<ROLE>/<actor>.jsonl" in p for p in h.validate()),
               h.validate()[:1])
 
         print("\nempty strings must not satisfy a required field")
@@ -175,7 +256,8 @@ def main():
         row = [(n, ok, ev) for n, ok, ev in conditions if "ran on the build" in n]
         check("[REGRESSION] an unstamped gate row fails the build condition",
               row and not row[0][1], row)
-        check("   and the message names the rows", row and "ran_under.build" in row[0][2], row)
+        check("   and the message names the rows",
+              row and ("ran_under.build" in row[0][2] or "no smoke row" in row[0][2]), row)
 
         print("\nfix RETURNED must be resumable")
         hub = os.path.join(tmp, "ret", "hub")

@@ -184,12 +184,14 @@ def read_all_events(hub):
                     ev["_src"] = rel
                     ev["_line"] = lineno
                     parts = rel.split("/")
-                    if len(parts) < 2:
+                    if len(parts) != 2:
                         # A log must live under events/<ROLE>/<actor>.jsonl. One sitting directly
                         # under events/ has no attribution to check, so it is not folded at all.
                         notes.append(
-                            "UNREADABLE %s line %d is not inside an events/<ROLE>/<actor>.jsonl "
-                            "path, so it carries no attribution and is not applied." % (rel, lineno))
+                            "UNREADABLE %s line %d is not at events/<ROLE>/<actor>.jsonl -- it is "
+                            "%d level(s) deep. Attribution comes from that exact shape, so this "
+                            "line carries none and is not applied."
+                            % (rel, lineno, len(parts)))
                         continue
                     path_role, path_actor = parts[-2], name[:-len(".jsonl")]
                     if ev.get("role") != path_role or ev.get("actor") != path_actor:
@@ -461,7 +463,9 @@ class Hub:
                                  % (ev.get("_src"), ev.get("_line"), iid))
             return
         for problem in (severity_problem(self.model, item["type"], ev.get("fields")),
-                        guards_problem(ev.get("fields"))):
+                        guards_problem(ev.get("fields")),
+                        link_field_problem(self.items, item["id"], item["type"],
+                                           ev.get("fields"))):
             if problem:
                 self.problems.append("%s line %d: %s"
                                      % (ev.get("_src"), ev.get("_line"), problem))
@@ -574,7 +578,7 @@ class Hub:
         # insists on -- was never demanded, and the audit trail showed a reason-less ship that
         # read as reasoned. Presence, not truthiness: a metric reading of 0 is a reading.
         missing = [f for f in tr.get("requires_fields", [])
-               if f not in fields or not str(fields[f]).strip()]
+               if f not in fields or is_blank(fields[f])]
         if missing:
             return ("moving a %s to %s requires %s -- supplied on this move, not inherited from "
                     "an earlier one"
@@ -598,19 +602,9 @@ class Hub:
         # HA-3: a `duplicate_of` that names nothing, or names the item itself, let a DEV take a
         # critical out of the verdict with one legal command. The transition is DEV's by design;
         # the target was simply never checked.
-        for key, what in (("duplicate_of", "another finding"),):
-            if key in tr.get("requires_fields", []):
-                target = fields.get(key)
-                if target == item["id"]:
-                    return ("%s cannot be a duplicate of itself" % item["id"])
-                tgt = self.items.get(target)
-                if tgt is None:
-                    return ("%s names %s as %s, which does not exist in the hub. A duplicate "
-                            "must point at %s that someone can read."
-                            % (item["id"], target, key, what))
-                if tgt["type"] != item["type"]:
-                    return ("%s is a %s; %s must name another %s"
-                            % (target, tgt["type"], key, item["type"]))
+        problem = link_field_problem(self.items, item["id"], item["type"], fields)
+        if problem:
+            return problem
 
         # MG-2 / HA-14: §6 says a verdict is computed, never written -- and the dashboard said
         # NO VERDICT while this very transition wrote GREEN. The write path now asks the same
@@ -836,6 +830,27 @@ class Hub:
 # CLI
 # ---------------------------------------------------------------------------
 
+def link_field_problem(items, item_id, item_type, fields):
+    """`duplicate_of` must name a different, existing item of the same type.
+
+    Checked on add, move AND set. It was a move-only check, so `set -f duplicate_of=<a PASS case>`
+    made an open critical resolve to something the verdict counts as closed.
+    """
+    if "duplicate_of" not in (fields or {}):
+        return None
+    target = fields["duplicate_of"]
+    if target == item_id:
+        return "%s cannot be a duplicate of itself" % item_id
+    other = (items or {}).get(target)
+    if other is None:
+        return ("%s names %s as duplicate_of, which does not exist in the hub. A duplicate must "
+                "point at something someone can read." % (item_id, target))
+    if other.get("type") != item_type:
+        return ("%s is a %s; duplicate_of must name another %s"
+                % (target, other.get("type"), item_type))
+    return None
+
+
 def field_authority_problem(model, item_type, role, fields):
     """Which supplied field this role may not set. Used by add, move and set alike.
 
@@ -861,7 +876,7 @@ def create_problem(model, item_type, state, fields):
                 "in %s would bypass all of them."
                 % (item_type, tdef["initial"], state, state))
     missing = [f for f in (tdef.get("requires_fields_on_create") or [])
-               if f not in (fields or {}) or not str((fields or {})[f]).strip()]
+               if f not in (fields or {}) or is_blank((fields or {})[f])]
     if missing:
         return ("a %s cannot be created without %s"
                 % (item_type, ", ".join("-f %s=..." % m for m in missing)))
@@ -898,6 +913,20 @@ def guards_problem(fields):
                 "guards, and a row whose stake cannot be read is a row the verdict ignores."
                 % (", ".join(SEVERITIES), g.get("ceiling")))
     return None
+
+
+def is_blank(value):
+    """Present-but-empty. `0` and `False`... are not the same thing here.
+
+    `kv()` JSON-parses values, so `-f reason=null` arrived as None and `str(None).strip()` is
+    "None" -- which read as present. `0` must still count, because a metric reading of zero is a
+    reading; that was its own finding.
+    """
+    if value is None:
+        return True
+    if isinstance(value, (str, list, dict, tuple, set)):
+        return len(value) == 0 or (isinstance(value, str) and not value.strip())
+    return False
 
 
 def kv(pairs):
@@ -1054,7 +1083,8 @@ def cmd_set(args):
     fields = kv(args.field)
     for problem in (field_authority_problem(h.model, item["type"], role, fields),
                     severity_problem(h.model, item["type"], fields),
-                    guards_problem(fields)):
+                    guards_problem(fields),
+                    link_field_problem(h.items, args.id, item["type"], fields)):
         if problem:
             raise HubError(problem)
     append_event(hub, role, actor, {"op": "set", "item": args.id, "fields": fields,
