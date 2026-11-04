@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "claudeVersion": "2.1.318",
+  "startedAt": "2026-11-04T14:57:15.428Z",
+  "durationSeconds": 51,
+  "costUsd": 0.383776,
+  "partial": false,
+  "suite": {
+    "root": "E:\\Personal\\projects\\product-qa",
+    "ablation": "with-without",
+    "pluginId": "product-suite@product-suite-market",
+    "caseFilter": "trigger-none-ordinary-debugging",
+    "threshold": 1,
+    "concurrency": 1,
+    "plugins": [
+      {
+        "name": "product-suite",
+        "version": "0.1.0",
+        "path": "E:\\Personal\\projects\\product-qa"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "trigger-none-ordinary-debugging",
+      "dir": "evals\\trigger-none-ordinary-debugging",
+      "source": "prose",
+      "promptMarkdown": "Why is this regular expression not matching my input string?",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 6,
+      "graders": [
+        {
+          "name": "no-skill-fires",
+          "type": "tool_used",
+          "weight": 2,
+          "config": {
+            "tool": "Skill",
+            "min": 0,
+            "max": 0
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.074384,
+            "judgeCostUsd": 0,
+            "durationSeconds": 8,
+            "startedAt": "2026-11-04T14:57:15.566Z",
+            "error": null,
+            "tracePath": "C:\\Users\\faisal_iqbal\\AppData\\Local\\Temp\\claude-eval-IPQqSP\\out\\trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-skill-fires",
+                "passed": true,
+                "weight": 2,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.074104,
+            "judgeCostUsd": 0,
+            "durationSeconds": 9,
+            "startedAt": "2026-11-04T14:57:23.782Z",
+            "error": null,
+            "tracePath": "C:\\Users\\faisal_iqbal\\AppData\\Local\\Temp\\claude-eval-zc8gZo\\out\\trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-skill-fires",
+                "passed": true,
+                "weight": 2,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.07518799999999999,
+            "judgeCostUsd": 0,
+            "durationSeconds": 9,
+            "startedAt": "2026-11-04T14:57:32.914Z",
+            "error": null,
+            "tracePath": "C:\\Users\\faisal_iqbal\\AppData\\Local\\Temp\\claude-eval-Zg1VzP\\out\\trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-skill-fires",
+                "passed": true,
+                "weight": 2,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.053384,
+            "judgeCostUsd": 0,
+            "durationSeconds": 8,
+            "startedAt": "2026-11-04T14:57:42.330Z",
+            "error": null,
+            "tracePath": "C:\\Users\\faisal_iqbal\\AppData\\Local\\Temp\\claude-eval-oB161U\\out\\trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-skill-fires",
+                "passed": true,
+                "weight": 2,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.054784,
+            "judgeCostUsd": 0,
+            "durationSeconds": 9,
+            "startedAt": "2026-11-04T14:57:50.292Z",
+            "error": null,
+            "tracePath": "C:\\Users\\faisal_iqbal\\AppData\\Local\\Temp\\claude-eval-z0petg\\out\\trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-skill-fires",
+                "passed": true,
+                "weight": 2,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.051932,
+            "judgeCostUsd": 0,
+            "durationSeconds": 7,
+            "startedAt": "2026-11-04T14:57:58.884Z",
+            "error": null,
+            "tracePath": "C:\\Users\\faisal_iqbal\\AppData\\Local\\Temp\\claude-eval-FdK8aH\\out\\trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-skill-fires",
+                "passed": true,
+                "weight": 2,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 1,
+        "passRateWithout": 1,
+        "delta": 0
+      }
+    }
+  ],
+  "aggregates": {
+    "casesTotal": 1,
+    "casesPassed": 1,
+    "overallScore": 1,
+    "overallPassRate": 1,
+    "meanDelta": 0
+  }
+}

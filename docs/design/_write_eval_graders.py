@@ -9,7 +9,10 @@ free):
   type: tool_used      a free, deterministic grader. Runs even when a cost ceiling skips the
                        paid llm/baseline graders.
   tool: Skill          which tool to count.
-  min: / max:          bounds on the call count. `max: 0` asserts the tool was NEVER called.
+  min: / max:          bounds on the call count. BOTH are needed to assert "never called":
+                       `max: 0` alone yields the impossible range 1..0, because min defaults to
+                       1 -- so the grader fails exactly when the behaviour is correct. Found by
+                       running it.
   name:                accepted; it is the grader's label, not a skill matcher.
 
 So `tool_used` can prove that *a* skill fired, or that *none* did -- but not *which* one. For the
@@ -71,7 +74,7 @@ def main():
                    "15-skill always-on plugin that fires on unrelated requests is worse than one "
                    "that under-fires: the user gets confidently wrong guidance instead of none.\n\n"
                    "Deterministic and free: the Skill tool must not be called at all.",
-                   **{"type": "tool_used", "tool": "Skill", "max": 0, "weight": 2})
+                   **{"type": "tool_used", "tool": "Skill", "min": 0, "max": 0, "weight": 2})
         else:
             grader(os.path.join(gdir, "a-skill-fires.md"),
                    "Some skill in the suite must fire. Deterministic and free: this counts the "
