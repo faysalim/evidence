@@ -1,0 +1,24 @@
+{
+ "generated_from": {
+  "generated_by": "hub.py",
+  "generated_at": "2026-11-04T14:38:01.147507Z",
+  "event_count": 86,
+  "schema_version": 1,
+  "warning": "GENERATED FILE -- never hand-edit. The hub is the source of truth."
+ },
+ "engagement": "northwind-licensing",
+ "role": "DEV",
+ "fixes": [
+  {
+   "id": "FIX-1",
+   "state": "ACCEPTED",
+   "fixes": [
+    "F-1"
+   ],
+   "commit": "d4d4d4d",
+   "build": "4.2.2@d4d4d4d",
+   "test": "Issuer_AcceptsDocumentedEnvVarName",
+   "root_cause": "issuer read LICENCE_SELF_PATH; the published name is LICENCE_PATH"
+  }
+ ]
+}

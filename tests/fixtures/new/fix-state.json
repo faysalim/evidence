@@ -1,0 +1,12 @@
+{
+ "generated_from": {
+  "generated_by": "hub.py",
+  "generated_at": "2026-11-04T14:38:04.555186Z",
+  "event_count": 30,
+  "schema_version": 1,
+  "warning": "GENERATED FILE -- never hand-edit. The hub is the source of truth."
+ },
+ "engagement": "greenfield-intake",
+ "role": "DEV",
+ "fixes": []
+}

@@ -1,0 +1,3 @@
+{"v": 1, "event_id": "lead#1", "seq": 1, "ts": "2026-11-04T14:38:01.955666Z", "actor": "lead", "role": "PM", "op": "init", "engagement": "greenfield-intake"}
+{"v": 1, "event_id": "lead#2", "seq": 2, "ts": "2026-11-04T14:38:02.039755Z", "actor": "lead", "role": "PM", "op": "iteration", "iteration": 1, "note": "first slice of a new product"}
+{"v": 1, "event_id": "lead#3", "seq": 3, "ts": "2026-11-04T14:38:02.112473Z", "actor": "lead", "role": "PM", "op": "profile", "fields": {"mode": "new", "domains": ["multi-tenant-saas"], "methodology": "weekly", "note": "no current state exists; there is no baseline to compare to"}}

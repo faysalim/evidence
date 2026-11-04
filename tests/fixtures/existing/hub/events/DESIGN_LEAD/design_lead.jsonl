@@ -1,0 +1,1 @@
+{"v": 1, "event_id": "design_lead#1", "seq": 1, "ts": "2026-11-04T14:37:56.092159Z", "actor": "design_lead", "role": "DESIGN_LEAD", "op": "move", "after": ["designer#2"], "fields": {}, "item": "DES-1", "to": "REVIEWED"}
