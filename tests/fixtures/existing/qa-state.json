@@ -1,0 +1,148 @@
+{
+ "generated_from": {
+  "generated_by": "hub.py",
+  "generated_at": "2026-11-04T15:22:04.430652Z",
+  "event_count": 86,
+  "event_digest": "1ddbe320b583fc8b882244b3a34999dcf9058132db2012e7fe11f04ba4e8698f",
+  "schema_version": 1,
+  "warning": "GENERATED FILE -- never hand-edit. The hub is the source of truth."
+ },
+ "engagement": "northwind-licensing",
+ "iteration": 2,
+ "mandate": {
+  "role": "QA",
+  "report_only": true,
+  "owned_environments": [
+   "the three-node test cluster I stood up"
+  ],
+  "out_of_bounds": [
+   "deploys",
+   "production config"
+  ]
+ },
+ "findings": [
+  {
+   "id": "F-1",
+   "title": "Issuer reads an env var the published docs never name",
+   "severity": "blocker",
+   "scope": "documentation",
+   "status": "CLOSED",
+   "status_action": "CODE",
+   "closed_in": null,
+   "provenance": "authored"
+  },
+  {
+   "id": "F-2",
+   "title": "Trial form reports success before the licence is actually issued",
+   "severity": "major",
+   "scope": "experience",
+   "status": "DEFERRED",
+   "status_action": "CODE",
+   "closed_in": null,
+   "provenance": "authored"
+  }
+ ],
+ "cases": [
+  {
+   "id": "R-1",
+   "scope": "requirements",
+   "action": "Issue 200 trials, kill the issuer mid-stream, reconcile against my ledger",
+   "oracle": "every acknowledged issue is present in the licence store after restart",
+   "guards": {
+    "class": "acknowledged issue lost",
+    "ceiling": "critical"
+   },
+   "ran_under": null,
+   "touches": null,
+   "graded_by": "licensing",
+   "result": "NOT_RUN",
+   "provenance": "authored",
+   "finding": null
+  },
+  {
+   "id": "S5-00a",
+   "scope": "licensing",
+   "action": "Issue one trial end to end through the real form and real mailbox",
+   "oracle": "a licence that activates the real binary",
+   "guards": null,
+   "ran_under": null,
+   "touches": null,
+   "graded_by": "licensing",
+   "result": "PASS",
+   "provenance": "authored",
+   "finding": null
+  },
+  {
+   "id": "S5-00b",
+   "scope": "licensing",
+   "action": "Revoke one issued licence by hand, then re-run the activation check",
+   "oracle": "the check reports exactly one failure, not zero and not two",
+   "guards": null,
+   "ran_under": null,
+   "touches": null,
+   "graded_by": "licensing",
+   "result": "PASS",
+   "provenance": "authored",
+   "finding": null
+  },
+  {
+   "id": "S5-01",
+   "scope": "licensing",
+   "action": "POST the documented trial payload verbatim, then activate offline",
+   "oracle": "a usable licence in the real mailbox that activates the real binary",
+   "guards": {
+    "class": "documented path broken",
+    "ceiling": "blocker"
+   },
+   "ran_under": {
+    "build": "4.2.1@9f8e7d6",
+    "ran_by": "qa1"
+   },
+   "touches": [
+    "issuer",
+    "web-form"
+   ],
+   "graded_by": "licensing",
+   "result": "PASS",
+   "provenance": "authored",
+   "finding": "F-1"
+  },
+  {
+   "id": "S5-02",
+   "scope": "licensing",
+   "action": "Request a second trial for the subaddressed variant of the same mailbox",
+   "oracle": "refusal, and exactly one licence in the issuer log for that mailbox",
+   "guards": {
+    "class": "uniqueness bypass",
+    "ceiling": "major"
+   },
+   "ran_under": null,
+   "touches": [
+    "issuer"
+   ],
+   "graded_by": "licensing",
+   "result": "PASS",
+   "provenance": "authored",
+   "finding": null
+  }
+ ],
+ "not_verified": [
+  {
+   "what": "Issue 200 trials, kill the issuer mid-stream, reconcile against my ledger",
+   "why": "no second host available to kill the issuer independently",
+   "cases": [
+    "R-1"
+   ],
+   "since_iteration": 1
+  }
+ ],
+ "cleanup": [
+  {
+   "item": "three-node test cluster",
+   "removable_by": "me",
+   "cost": "billing per hour",
+   "status": "TORN_DOWN",
+   "verified_by": "re-listed instances: NONE"
+  }
+ ]
+}

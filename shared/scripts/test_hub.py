@@ -177,7 +177,10 @@ def main():
         burst = os.path.join(tmp, "burst", "hub")
         os.makedirs(os.path.join(burst, "events"), exist_ok=True)
         H.append_event(burst, "QA", "aaa_qa", {"op": "init", "engagement": "burst"})
-        add = H.append_event(burst, "zzz_qa", "zzz_qa",
+        # Actor names chosen so the QA add sorts AFTER the DEV move on the (ts, actor, seq) key;
+        # only the `after` link can order them correctly. Roles must be real ones: creation
+        # authority is now enforced on replay too, so a synthetic role name is refused.
+        add = H.append_event(burst, "QA", "zzz_qa",
                              {"op": "add", "item": "B1", "type": "finding",
                               "fields": {"title": "t", "severity": "major"}})
         H.append_event(burst, "DEV", "aaa_dev",

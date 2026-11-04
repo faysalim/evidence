@@ -1,8 +1,13 @@
 ---
-type: llm
-weight: 1
+type: tool_used
+tool: Skill
+input_match: '"skill"\s*:\s*"(?:[\w-]+:)?dev"'
+min: 1
+weight: 2
 ---
 
-The work must be routed to `product-suite:dev`, and not to a neighbouring skill. Judge from what the response actually does and names.
-
-KNOWN WEAKNESS: this grader reads the response prose, so it is weak evidence for which tool fired. The deterministic half is the sibling grader; see evals/README.md.
+The work must route to `product-suite:dev`. Deterministic: this matches the actual Skill
+tool call in the trace, including the namespaced form. The earlier version asked an llm
+judge to infer the tool call from the response prose, which voted FAIL on runs whose
+traces prove the right skill fired -- the product reporting on itself, which this
+method's own principle 3 rejects as an oracle.

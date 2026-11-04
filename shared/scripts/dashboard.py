@@ -130,8 +130,40 @@ def is_open(item):
     return item["state"] not in TERMINAL_OK.get(item["type"], set())
 
 
+SEVERITIES = ("critical", "blocker", "major", "minor", "polish")
+
+
 def sev(item):
-    return (item["fields"].get("severity") or "").lower()
+    """The graded severity, or "" when it is missing or not a recognised value.
+
+    Defensive on purpose: a list-valued severity used to crash the dashboard, and an unknown or
+    space-padded one was silently treated as harmless -- so a critical with `severity=P0` or
+    `"critical "` was invisible to the verdict. Unknown now means ungraded, and ungraded denies
+    the verdict via its own condition below.
+    """
+    value = item["fields"].get("severity")
+    if not isinstance(value, str):
+        return ""
+    value = value.strip().lower()
+    return value if value in SEVERITIES else ""
+
+
+def ceiling_of(item):
+    """The severity ceiling a case declares it guards, or None when it cannot be read."""
+    g = item["fields"].get("guards")
+    if not isinstance(g, dict):
+        return None
+    value = g.get("ceiling")
+    if not isinstance(value, str):
+        return None
+    value = value.strip().lower()
+    return value if value in SEVERITIES else None
+
+
+def guards_unreadable(item):
+    """True when a case declares guards the verdict cannot interpret."""
+    g = item["fields"].get("guards")
+    return g is not None and ceiling_of(item) is None
 
 
 # ---------------------------------------------------------------------------
@@ -183,10 +215,45 @@ def verdict(hub):
     guarding = sorted(
         c for c, i in items.items()
         if i["type"] == "case" and i["state"] in ("NOT_RUN", "BLOCKED")
-        and ((i["fields"].get("guards") or {}).get("ceiling") or "").lower()
-        in BLOCKING_SEVERITIES)
+        and ceiling_of(i) in BLOCKING_SEVERITIES)
     conditions.append(("No BLOCKED or NOT RUN case guarding a critical or blocker class",
                        not guarding, ", ".join(guarding) or "none"))
+
+    # A row whose declared stake cannot be read is not a row that guards nothing.
+    unreadable = sorted(c for c, i in items.items()
+                        if i["type"] == "case" and guards_unreadable(i))
+    conditions.append(("Every case's `guards` names a ceiling the verdict can read",
+                       not unreadable,
+                       ("unreadable guards: " + ", ".join(unreadable)) if unreadable
+                       else "all readable"))
+
+    # HA-5: a recorded FAIL is a defect the hub already knows about. The dashboard used to print
+    # "cases fail: 2" and GREEN on the same page.
+    failed = sorted(c for c, i in items.items() if i["type"] == "case" and i["state"] == "FAIL")
+    unlinked_fail = []
+    for cid in failed:
+        linked = [items.get(l["target"]) for l in items[cid]["links"]]
+        if not any(t is not None and t["type"] == "finding" and is_open(t) for t in linked):
+            unlinked_fail.append(cid)
+    conditions.append(("Every FAIL case names an open finding", not failed or not unlinked_fail,
+                       ("FAIL with no open finding: " + ", ".join(unlinked_fail))
+                       if unlinked_fail else (", ".join(failed) or "no FAIL rows")))
+
+    # HA-4: an open finding with no graded severity is unknown, not harmless.
+    ungraded = sorted(i["id"] for i in items.values()
+                      if i["type"] == "finding" and is_open(i) and not sev(i))
+    conditions.append(("Every open finding has a severity from the vocabulary", not ungraded,
+                       ("ungraded: " + ", ".join(ungraded)) if ungraded else "all graded"))
+
+    # HA-3: a duplicate pointing at nothing, or at an open blocking finding, is still open.
+    dangling_dup = sorted(
+        i["id"] for i in items.values()
+        if i["type"] == "finding" and i["state"] == "DUPLICATE"
+        and (items.get(i["fields"].get("duplicate_of")) is None
+             or is_open(items[i["fields"]["duplicate_of"]])))
+    conditions.append(("Every DUPLICATE finding points at a finding that is itself closed",
+                       not dangling_dup,
+                       ("unresolved: " + ", ".join(dangling_dup)) if dangling_dup else "none"))
 
     reqs = sorted(c for c, i in items.items() if i["type"] == "case" and c.startswith("R-"))
     req_bad = [c for c in reqs if items[c]["state"] != "PASS"]
@@ -211,10 +278,38 @@ def verdict(hub):
     conditions.append(("No open or realized risk", not risks,
                        ", ".join(risks) or "none open"))
 
+    # `OPERATORS` means only the operator can remove it -- not that it has been removed. The
+    # resource still exists and still bills, so it is open for the verdict and routed to the
+    # operator's queue.
     cleanup = sorted(i["id"] for i in items.values()
-                     if i["type"] == "cleanup" and i["state"] == "OPEN")
+                     if i["type"] == "cleanup" and i["state"] in ("OPEN", "OPERATORS"))
     conditions.append(("Cleanup ledger has nothing still billing or exposed", not cleanup,
                        ", ".join(cleanup) or "nothing open"))
+
+    # MG-3: restored. This was computed by qa_dashboard.py and dropped in the port -- and it is
+    # the condition the whole iteration gate rests on, because a verdict about a build you
+    # cannot name is a verdict about nothing.
+    builds = {}
+    for i in items.values():
+        if i["type"] == "release" and i["fields"].get("build"):
+            builds[i["id"]] = i["fields"]["build"]
+    named = sorted("%s=%s" % (k, v) for k, v in builds.items())
+    conditions.append(("Build identity established per component", bool(builds),
+                       ", ".join(named) or "no release names a build"))
+
+    # CR-3: smoke and calibration must have run on the build the verdict names, not on some
+    # earlier one. Without this the rows are name-only.
+    stale = []
+    if builds:
+        for cid, c in items.items():
+            if c["type"] != "case" or not (cid.endswith("-00a") or cid.endswith("-00b")):
+                continue
+            ran = c["fields"].get("ran_under")
+            ran_build = ran.get("build") if isinstance(ran, dict) else None
+            if ran_build and ran_build not in builds.values():
+                stale.append("%s ran on %s" % (cid, ran_build))
+    conditions.append(("Smoke and calibration rows ran on the build this verdict names",
+                       not stale, "; ".join(sorted(stale)) or "no disagreement recorded"))
 
     if hub.validate():
         conditions.append(("The hub itself validates", False,

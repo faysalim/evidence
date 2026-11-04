@@ -320,11 +320,11 @@ def build_existing(hub):
         "-f", "interpretation=first reading, so it is the baseline and not a result; a pricing "
               "page change landed in the same window and cannot be separated from it")
     run(hub, "analyst", "ANALYST", "add", "insight", "I-1",
-        "-f", "claim=Trials that activate on the first day convert far more often",
+        "-f", "claim=Trials that activate on the first day convert far more often")
+    run(hub, "analyst", "ANALYST", "move", "I-1", "EVIDENCED",
         "-f", "evidence=14 of 19 converters activated within 24h; 3 of 221 non-converters did",
         "-f", "sample_size=240 trials, one 30-day window, one product",
         "-f", "does_not_show=causation, nor anything about trials that never activated at all")
-    run(hub, "analyst", "ANALYST", "move", "I-1", "EVIDENCED")
     run(hub, "pm", "PM", "move", "I-1", "ACCEPTED")
 
     # --- cleanup verified by re-listing -----------------------------------------------------
@@ -348,11 +348,11 @@ def build_new(hub):
         "--set", "note=no current state exists; there is no baseline to compare to")
 
     run(hub, "researcher", "RESEARCHER", "add", "insight", "I-1",
-        "-f", "claim=Requests arrive by email and are lost when the handler is away",
+        "-f", "claim=Requests arrive by email and are lost when the handler is away")
+    run(hub, "researcher", "RESEARCHER", "move", "I-1", "EVIDENCED",
         "-f", "evidence=6 of 9 coordinators described losing at least one request last month",
         "-f", "sample_size=9 coordinators across 3 teams; no requesters interviewed",
         "-f", "does_not_show=how many requests are lost, nor what they were worth")
-    run(hub, "researcher", "RESEARCHER", "move", "I-1", "EVIDENCED")
     run(hub, "pm", "PM", "move", "I-1", "ACCEPTED")
 
     run(hub, "pm", "PM", "add", "prd", "PRD-1",

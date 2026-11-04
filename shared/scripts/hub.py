@@ -49,6 +49,7 @@ Standard library only. Windows and Linux.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import json
 import os
@@ -56,14 +57,29 @@ import re
 import sys
 from datetime import datetime, timezone
 
+# The read commands print JSON and tables containing whatever a user typed. On Windows a piped
+# stdout defaults to cp1252, so one arrow or check-mark in a title turned every `list`, `show`
+# and `validate` into a UnicodeEncodeError traceback -- and `python -I`, which every skill
+# prescribes, ignores PYTHONUTF8 and PYTHONIOENCODING. Reconfigure explicitly instead.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError, ValueError):
+        pass
+
 SCHEMA_VERSION = 1
+# shared/vocabulary.md. Kept here so a write can be refused rather than silently ignored
+# by the verdict later.
+SEVERITIES = ("critical", "blocker", "major", "minor", "polish")
 DEFAULT_HUB = os.path.join("qa-reports", "hub")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(os.path.dirname(HERE), "hub", "model.json")
 
 SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
-SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")
+# No ':' -- on Windows `item-A:B.html` silently becomes a 0-byte file plus an NTFS alternate
+# data stream, and the dashboard index then links to a page that does not exist.
+SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
 class HubError(Exception):
@@ -133,7 +149,13 @@ def actor_log_path(hub, role, actor):
 
 
 def read_all_events(hub):
-    """Read every actor log. Returns (events, notes). A bad line is a note, never fatal."""
+    """Read every actor log. Returns (events, notes).
+
+    A line the fold cannot read is prefixed UNREADABLE and a line whose payload disagrees with
+    the file holding it is prefixed MISATTRIBUTED; `validate` promotes both to problems. They
+    were plain notes before, so `validate` exited 0 and the verdict went GREEN over a log the
+    hub had failed to read.
+    """
     events, notes = [], []
     root = os.path.join(hub, "events")
     if not os.path.isdir(root):
@@ -152,13 +174,24 @@ def read_all_events(hub):
                     try:
                         ev = json.loads(line)
                     except ValueError as exc:
-                        notes.append("%s line %d is not JSON: %s" % (rel, lineno, exc))
+                        notes.append("UNREADABLE %s line %d is not JSON: %s"
+                                     % (rel, lineno, exc))
                         continue
                     if not isinstance(ev, dict):
-                        notes.append("%s line %d is not an object" % (rel, lineno))
+                        notes.append("UNREADABLE %s line %d is not a JSON object"
+                                     % (rel, lineno))
                         continue
                     ev["_src"] = rel
                     ev["_line"] = lineno
+                    parts = rel.split("/")
+                    if len(parts) >= 2 and name.endswith(".jsonl"):
+                        path_role, path_actor = parts[-2], name[:-len(".jsonl")]
+                        if ev.get("role") != path_role or ev.get("actor") != path_actor:
+                            notes.append(
+                                "MISATTRIBUTED %s line %d claims %s/%s but sits in %s/%s. The "
+                                "path is the attribution; the payload is only a claim about it."
+                                % (rel, lineno, ev.get("role"), ev.get("actor"),
+                                   path_role, path_actor))
                     events.append(ev)
     return events, notes
 
@@ -191,7 +224,9 @@ def append_event(hub, role, actor, event):
     event.update({
         "v": SCHEMA_VERSION,
         "seq": seq,
-        "event_id": "%s#%d" % (actor, seq),
+        # Namespaced by role: `seq` counts within one (role, actor) FILE, so one person wearing
+        # two hats produced two `actor#1` events and the fold silently dropped the second.
+        "event_id": "%s/%s#%d" % (role, actor, seq),
         "actor": actor,
         "role": role,
         "ts": event.get("ts") or now_iso(),
@@ -305,14 +340,25 @@ class Hub:
         op = ev.get("op")
         handler = getattr(self, "_op_" + str(op).lower(), None)
         if handler is None:
-            self.notes.append("unknown op %r (%s line %d)"
-                              % (op, ev.get("_src"), ev.get("_line")))
+            self.problems.append(
+                "%s line %d has op %r, which this hub.py cannot apply -- the folded state is "
+                "missing whatever that event did" % (ev.get("_src"), ev.get("_line"), op))
             return
+        if not isinstance(ev.get("fields", {}), dict):
+            self.problems.append("%s line %d has a non-object `fields`, so the folded state is "
+                                 "missing it" % (ev.get("_src"), ev.get("_line")))
+            ev = dict(ev, fields={})
         try:
             handler(ev)
         except HubError as exc:
             self.problems.append("%s line %d rejected on replay: %s"
                                  % (ev.get("_src"), ev.get("_line"), exc))
+        except (AttributeError, TypeError, ValueError, KeyError) as exc:
+            # A malformed payload is reported, never raised: one bad line must not make the
+            # whole hub unreadable.
+            self.problems.append("%s line %d could not be applied (%s: %s)"
+                                 % (ev.get("_src"), ev.get("_line"),
+                                    type(exc).__name__, exc))
 
     def _hist(self, item, ev, **extra):
         entry = {"ts": ev.get("ts"), "actor": ev.get("actor"), "role": ev.get("role"),
@@ -341,6 +387,27 @@ class Hub:
             return
         tdef = type_def(self.model, ev.get("type"))
         state = ev.get("state") or tdef["initial"]
+        # A hand-written or forged line must not reach what the CLI refuses.
+        creators = tdef.get("create") or []
+        if creators and ev.get("role") not in creators:
+            self.problems.append("%s line %d: role %s may not create a %s"
+                                 % (ev.get("_src"), ev.get("_line"), ev.get("role"),
+                                    ev.get("type")))
+            return
+        if state != tdef["initial"]:
+            self.problems.append(
+                "%s line %d creates %s directly in %s, bypassing every transition rule. A %s is "
+                "created in %s." % (ev.get("_src"), ev.get("_line"), iid, state,
+                                    ev.get("type"), tdef["initial"]))
+            return
+        for problem in (field_authority_problem(self.model, ev.get("type"), ev.get("role"),
+                                                ev.get("fields")),
+                        severity_problem(self.model, ev.get("type"), ev.get("fields")),
+                        guards_problem(ev.get("fields"))):
+            if problem:
+                self.problems.append("%s line %d: %s"
+                                     % (ev.get("_src"), ev.get("_line"), problem))
+                return
         self.items[iid] = {
             "id": iid, "type": ev.get("type"), "state": state,
             "owner_role": ev.get("owner") or ev.get("role"),
@@ -361,7 +428,7 @@ class Hub:
             return
         to = ev.get("to")
         self.check_transition(item, to, ev.get("role"), ev.get("actor"),
-                              dict(ev.get("fields") or {}))
+                              dict(ev.get("fields") or {}), replaying=True)
         item["fields"].update(ev.get("fields") or {})
         frm, item["state"] = item["state"], to
         self._hist(item, ev, **{"from": frm, "to": to})
@@ -403,6 +470,21 @@ class Hub:
         item["links"].append({"rel": rel, "target": target})
         self._hist(item, ev, rel=rel, target=target)
 
+    def _op_unlink(self, ev):
+        iid, target, rel = ev.get("item"), ev.get("target"), ev.get("rel")
+        item = self.items.get(iid)
+        if item is None:
+            self.problems.append("%s line %d unlinks from unknown item %s"
+                                 % (ev.get("_src"), ev.get("_line"), iid))
+            return
+        before = len(item["links"])
+        item["links"] = [l for l in item["links"]
+                         if not (l["target"] == target and l["rel"] == rel)]
+        if len(item["links"]) == before:
+            self.problems.append("%s line %d retracts a link %s --%s--> %s that does not exist"
+                                 % (ev.get("_src"), ev.get("_line"), iid, rel, target))
+        self._hist(item, ev, rel=rel, target=target)
+
     def _op_note(self, ev):
         item = self.items.get(ev.get("item"))
         if item is None:
@@ -415,8 +497,18 @@ class Hub:
 
     # -- the rules --------------------------------------------------------
 
-    def check_transition(self, item, to, role, actor, fields):
-        """Raise HubError naming the rule that refuses this move."""
+    def check_transition(self, item, to, role, actor, fields, replaying=False):
+        """Raise HubError naming the rule that refuses this move.
+
+        `replaying` distinguishes an invariant from a precondition. Role, required fields and
+        different-actor are invariants: they were true when written and must still be true, so
+        they are re-checked on every fold. "The computed verdict agreed" is a PRECONDITION --
+        true at write time and not re-evaluable later, because by then the hub has moved on. The
+        first version re-checked it during replay, which made a recorded GREEN permanently
+        unreplayable the moment a generated view existed: the mid-fold hub looked stale to its
+        own view, so the verdict came out NO VERDICT and refused an event that was already a
+        fact.
+        """
         tdef = type_def(self.model, item["type"])
         known = states_of(tdef)
         if to not in known:
@@ -425,6 +517,7 @@ class Hub:
 
         candidates = [tr for tr in tdef.get("transitions", [])
                       if item["state"] in tr.get("from", []) and tr["to"] == to]
+        self._replaying = replaying
         if not candidates:
             legal = sorted({tr["to"] for tr in tdef.get("transitions", [])
                             if item["state"] in tr.get("from", [])})
@@ -435,24 +528,38 @@ class Hub:
 
         errors = []
         for tr in candidates:
-            problem = self._transition_problem(item, tr, role, actor, fields)
+            problem = self._transition_problem(item, tr, role, actor, fields, replaying)
             if problem is None:
                 return tr
             errors.append(problem)
         raise HubError(errors[0])
 
-    def _transition_problem(self, item, tr, role, actor, fields):
+    def _transition_problem(self, item, tr, role, actor, fields, replaying=False):
         roles = tr.get("roles") or []
         if roles and role not in roles:
             return ("role %s may not move a %s from %s to %s -- that transition belongs to %s. "
                     "The producer claims; a different role accepts."
                     % (role, item["type"], item["state"], tr["to"], " or ".join(roles)))
 
-        missing = [f for f in tr.get("requires_fields", [])
-                   if not (fields.get(f) or item["fields"].get(f))]
+        # Required fields are checked against the fields supplied ON THIS EVENT, not against
+        # whatever is already on the item. The earlier version OR-ed with item["fields"], which
+        # made the guard dead on every path that mattered: a release reaching SHIPPED already
+        # carried QA's `reason` from NO_VERDICT, so the operator's reason -- the one the method
+        # insists on -- was never demanded, and the audit trail showed a reason-less ship that
+        # read as reasoned. Presence, not truthiness: a metric reading of 0 is a reading.
+        missing = [f for f in tr.get("requires_fields", []) if f not in fields]
         if missing:
-            return ("moving a %s to %s requires %s"
+            return ("moving a %s to %s requires %s -- supplied on this move, not inherited from "
+                    "an earlier one"
                     % (item["type"], tr["to"], ", ".join("-f %s=..." % m for m in missing)))
+
+        owned = (type_def(self.model, item["type"]).get("fields_owned_by") or {})
+        for key in fields:
+            allowed = owned.get(key)
+            if allowed and role not in allowed:
+                return ("role %s may not set %r on a %s -- that field belongs to %s. "
+                        "A move carries fields too; the owner rule applies to every write path."
+                        % (role, key, item["type"], " or ".join(allowed)))
 
         for prior_state in tr.get("different_actor_from", []):
             for h in item["history"]:
@@ -460,6 +567,40 @@ class Hub:
                     return ("%s set %s to %s and may not also move it to %s. "
                             "The author does not grade their own work."
                             % (actor, item["id"], prior_state, tr["to"]))
+
+        # HA-3: a `duplicate_of` that names nothing, or names the item itself, let a DEV take a
+        # critical out of the verdict with one legal command. The transition is DEV's by design;
+        # the target was simply never checked.
+        for key, what in (("duplicate_of", "another finding"),):
+            if key in tr.get("requires_fields", []):
+                target = fields.get(key)
+                if target == item["id"]:
+                    return ("%s cannot be a duplicate of itself" % item["id"])
+                tgt = self.items.get(target)
+                if tgt is None:
+                    return ("%s names %s as %s, which does not exist in the hub. A duplicate "
+                            "must point at %s that someone can read."
+                            % (item["id"], target, key, what))
+                if tgt["type"] != item["type"]:
+                    return ("%s is a %s; %s must name another %s"
+                            % (target, tgt["type"], key, item["type"]))
+
+        # MG-2 / HA-14: §6 says a verdict is computed, never written -- and the dashboard said
+        # NO VERDICT while this very transition wrote GREEN. The write path now asks the same
+        # function the page does, so the two cannot disagree.
+        if tr.get("requires_computed_verdict") and not replaying:
+            try:
+                sys.path.insert(0, HERE)
+                import dashboard as _dash
+                label, first_gap, _conditions = _dash.verdict(self)
+            except Exception as exc:                       # noqa: BLE001
+                return ("the verdict could not be computed, so it cannot be recorded (%s: %s)"
+                        % (type(exc).__name__, exc))
+            if label != tr["requires_computed_verdict"]:
+                return ("the computed verdict is %r, not %r, so %s cannot be recorded as %s. "
+                        "First condition without rows: %s. A verdict is computed, never written."
+                        % (label, tr["requires_computed_verdict"], item["id"], tr["to"],
+                           first_gap))
 
         if tr.get("requires_linked_cases_pass"):
             cases = [self.items.get(l["target"]) for l in item["links"]
@@ -482,10 +623,20 @@ class Hub:
     # -- queries ----------------------------------------------------------
 
     def waiting_on(self, item):
-        """Which role the item is currently waiting for, from the model alone."""
+        """Which role the item is currently waiting for, from the model alone.
+
+        Escape hatches do not count. The earlier version unioned the roles on *every* outgoing
+        transition, so a SHIPPED release was reported as awaiting the operator (because it can
+        still be rolled back) and an AGREED requirement as awaiting the PO (because it can still
+        be superseded). That made the delivery report's first and most-read section -- "blocked
+        on a human" -- wrong by construction, in a tool whose own rule is to quote states rather
+        than paraphrase them.
+        """
         tdef = type_def(self.model, item["type"])
         roles = set()
         for tr in tdef.get("transitions", []):
+            if tr.get("escape"):
+                continue
             if item["state"] in tr.get("from", []):
                 roles.update(tr.get("roles") or [])
         return sorted(roles)
@@ -493,6 +644,8 @@ class Hub:
     def validate(self):
         """Structural problems plus the invariants that are not single-transition rules."""
         out = list(self.problems)
+        out += [n for n in self.notes
+                if n.startswith("UNREADABLE") or n.startswith("MISATTRIBUTED")]
 
         for item in self.items.values():
             tdef = type_def(self.model, item["type"])
@@ -521,7 +674,16 @@ class Hub:
             except (OSError, ValueError) as exc:
                 out.append("generated view %s cannot be read: %s" % (name, exc))
                 continue
-            stamp = (view.get("generated_from") or {}).get("event_count")
+            header = view.get("generated_from") or {}
+            stamp = header.get("event_count")
+            digest = self._event_digest()
+            if header.get("event_digest") not in (None, digest):
+                out.append("%s carries a digest that does not match the hub's events. A row "
+                           "count alone could not tell a hand-edited view from a current one; "
+                           "regenerate it with `hub.py views`." % name)
+            elif header.get("event_digest") is None and stamp is not None:
+                out.append("%s predates digest stamping, so it cannot be told apart from a "
+                           "hand-edited file. Regenerate it with `hub.py views`." % name)
             if stamp is None:
                 out.append("%s has no generated_from header, so it cannot be told apart from a "
                            "hand-edited file. Regenerate it with `hub.py views`." % name)
@@ -539,9 +701,21 @@ class Hub:
 
     # -- generated views --------------------------------------------------
 
+    def _event_digest(self):
+        """A digest over the applied event ids.
+
+        A row count alone could not tell a hand-edited view from a current one: editing the view
+        while leaving its header intact passed `validate` clean, and so did fabricating a file
+        with a forged `event_count`.
+        """
+        joined = "\n".join(e.get("event_id", "") for e in self.applied)
+        return hashlib.sha256(joined.encode("utf-8")).hexdigest()
+
     def _view_header(self):
+        digest = self._event_digest()
         return {"generated_by": "hub.py", "generated_at": now_iso(),
-                "event_count": len(self.applied), "schema_version": SCHEMA_VERSION,
+                "event_count": len(self.applied), "event_digest": digest,
+                "schema_version": SCHEMA_VERSION,
                 "warning": "GENERATED FILE -- never hand-edit. The hub is the source of truth."}
 
     def qa_state(self):
@@ -628,6 +802,69 @@ class Hub:
 # CLI
 # ---------------------------------------------------------------------------
 
+def field_authority_problem(model, item_type, role, fields):
+    """Which supplied field this role may not set. Used by add, move and set alike.
+
+    The earlier version applied `fields_owned_by` only in `set`, so `move -f severity=polish`
+    and `add -f severity=polish` both walked past it -- which let a DEV un-block a release while
+    the dashboard reported "no open critical" and the hub validated clean.
+    """
+    owned = (type_def(model, item_type).get("fields_owned_by") or {})
+    for key in fields or {}:
+        allowed = owned.get(key)
+        if allowed and role not in allowed:
+            return ("role %s may not set %r on a %s -- that field belongs to %s"
+                    % (role, key, item_type, " or ".join(allowed)))
+    return None
+
+
+def create_problem(model, item_type, state, fields):
+    """Create-time rules: the initial state only, and the fields a type cannot exist without."""
+    tdef = type_def(model, item_type)
+    if state is not None and state != tdef["initial"]:
+        return ("a %s is created in %s and reaches %s only through a transition, which is where "
+                "the role, required-field and different-actor rules live. Creating it directly "
+                "in %s would bypass all of them."
+                % (item_type, tdef["initial"], state, state))
+    missing = [f for f in (tdef.get("requires_fields_on_create") or []) if f not in (fields or {})]
+    if missing:
+        return ("a %s cannot be created without %s"
+                % (item_type, ", ".join("-f %s=..." % m for m in missing)))
+    return None
+
+
+def severity_problem(model, item_type, fields):
+    """A severity outside the vocabulary is worse than none: the verdict cannot see it."""
+    if "severity" not in (fields or {}):
+        return None
+    value = fields["severity"]
+    if not isinstance(value, str):
+        return ("severity must be one of %s, not %r"
+                % (", ".join(SEVERITIES), value))
+    if value.strip().lower() not in SEVERITIES:
+        return ("%r is not a severity. shared/vocabulary.md defines %s. An unrecognised value is "
+                "invisible to the verdict, which is worse than no value at all."
+                % (value, ", ".join(SEVERITIES)))
+    return None
+
+
+def guards_problem(fields):
+    """`guards` must be an object with a known ceiling, or the verdict cannot read the stake."""
+    if "guards" not in (fields or {}):
+        return None
+    g = fields["guards"]
+    if not isinstance(g, dict):
+        return ("guards must be an object, e.g. -f 'guards={\"class\":\"acked-write loss\","
+                "\"ceiling\":\"critical\"}'. A prose guards value cannot be read by the "
+                "verdict, and used to crash the dashboard outright. Got %r" % (g,))
+    ceiling = (g.get("ceiling") or "")
+    if not isinstance(ceiling, str) or ceiling.strip().lower() not in SEVERITIES:
+        return ("guards.ceiling must be one of %s; got %r. The ceiling is the stake the row "
+                "guards, and a row whose stake cannot be read is a row the verdict ignores."
+                % (", ".join(SEVERITIES), g.get("ceiling")))
+    return None
+
+
 def kv(pairs):
     out = {}
     for pair in pairs or []:
@@ -638,6 +875,31 @@ def kv(pairs):
             out[k] = json.loads(v)
         except ValueError:
             out[k] = v
+    return out
+
+
+def depends_on(hub_state, item, to_state):
+    """Event ids this transition's checks depend on, beyond the item's own history."""
+    out = []
+    try:
+        tdef = type_def(hub_state.model, item["type"])
+    except HubError:
+        return out
+    relevant = [tr for tr in tdef.get("transitions", [])
+                if item["state"] in tr.get("from", []) and tr["to"] == to_state]
+    for tr in relevant:
+        if tr.get("requires_linked_cases_pass"):
+            for other in hub_state.items.values():
+                if other["type"] != "case":
+                    continue
+                if any(l["target"] == item["id"] for l in other["links"]):
+                    out += last_event_for(hub_state, other["id"])
+            for link in item["links"]:
+                out += last_event_for(hub_state, link["target"])
+        if tr.get("requires_computed_verdict"):
+            # The verdict reads the whole hub, so it depends on every item's latest event.
+            for other in hub_state.items.values():
+                out += last_event_for(hub_state, other["id"])
     return out
 
 
@@ -707,13 +969,18 @@ def cmd_add(args):
     if creators and role not in creators:
         raise HubError("role %s may not create a %s -- that belongs to %s"
                        % (role, args.type, " or ".join(creators)))
-    state = args.state or tdef["initial"]
-    if state not in states_of(tdef):
-        raise HubError("%s is not a state a %s can be in" % (state, args.type))
+    fields = kv(args.field)
+    for problem in (create_problem(h.model, args.type, args.state, fields),
+                    field_authority_problem(h.model, args.type, role, fields),
+                    severity_problem(h.model, args.type, fields),
+                    guards_problem(fields)):
+        if problem:
+            raise HubError(problem)
+    state = tdef["initial"]
     append_event(hub, role, actor, {
         "op": "add", "item": args.id, "type": args.type, "state": state,
         "owner": args.owner or role, "provenance": args.provenance,
-        "fields": kv(args.field)})
+        "fields": fields})
     print("added %s %s in %s" % (args.type, args.id, state))
     return 0
 
@@ -726,9 +993,18 @@ def cmd_move(args):
     if item is None:
         raise HubError("no item %s in the hub" % args.id)
     fields = kv(args.field)
+    for problem in (severity_problem(h.model, item["type"], fields),
+                    guards_problem(fields)):
+        if problem:
+            raise HubError(problem)
     h.check_transition(item, args.state, role, actor, fields)
+    # The CLI checked this against the live state. If the check read OTHER items -- linked cases,
+    # a duplicate target, the computed verdict -- those items' last events go in `after` too, or
+    # the fold re-checks it against a state they had not reached yet and blames the wrong party.
+    # Two machines ten minutes apart is normal, and that is exactly when it happened.
+    after = last_event_for(h, args.id) + depends_on(h, item, args.state)
     append_event(hub, role, actor, {"op": "move", "item": args.id, "to": args.state,
-                                    "fields": fields, "after": last_event_for(h, args.id)})
+                                    "fields": fields, "after": sorted(set(after))})
     print("%s: %s -> %s" % (args.id, item["state"], args.state))
     return 0
 
@@ -740,14 +1016,12 @@ def cmd_set(args):
     if args.id not in h.items:
         raise HubError("no item %s in the hub" % args.id)
     item = h.items[args.id]
-    tdef = type_def(h.model, item["type"])
-    owned = tdef.get("fields_owned_by") or {}
     fields = kv(args.field)
-    for key in fields:
-        allowed = owned.get(key)
-        if allowed and role not in allowed:
-            raise HubError("role %s may not set %r on a %s -- that field belongs to %s"
-                           % (role, key, item["type"], " or ".join(allowed)))
+    for problem in (field_authority_problem(h.model, item["type"], role, fields),
+                    severity_problem(h.model, item["type"], fields),
+                    guards_problem(fields)):
+        if problem:
+            raise HubError(problem)
     append_event(hub, role, actor, {"op": "set", "item": args.id, "fields": fields,
                                     "after": last_event_for(h, args.id)})
     print("%s updated" % args.id)
@@ -766,6 +1040,23 @@ def cmd_link(args):
                                     "after": last_event_for(h, args.id)
                                              + last_event_for(h, args.target)})
     print("%s --%s--> %s" % (args.id, args.rel, args.target))
+    return 0
+
+
+def cmd_unlink(args):
+    """Retract a link. An event, not an erasure: `show` still records that it was retracted."""
+    hub = resolve_hub(args)
+    actor, role = identity(args)
+    h = Hub(hub)
+    item = h.items.get(args.id)
+    if item is None:
+        raise HubError("no item %s in the hub" % args.id)
+    if not any(l["target"] == args.target and l["rel"] == args.rel for l in item["links"]):
+        raise HubError("%s has no %s link to %s to retract" % (args.id, args.rel, args.target))
+    append_event(hub, role, actor, {"op": "unlink", "item": args.id, "rel": args.rel,
+                                    "target": args.target, "reason": args.reason,
+                                    "after": last_event_for(h, args.id)})
+    print("%s --%s--> %s retracted" % (args.id, args.rel, args.target))
     return 0
 
 
@@ -980,6 +1271,9 @@ def build_parser():
 
     p = sub.add_parser("link"); p.add_argument("id"); p.add_argument("rel")
     p.add_argument("target"); p.set_defaults(fn=cmd_link)
+
+    p = sub.add_parser("unlink"); p.add_argument("id"); p.add_argument("rel")
+    p.add_argument("target"); p.add_argument("--reason"); p.set_defaults(fn=cmd_unlink)
 
     p = sub.add_parser("note"); p.add_argument("id"); p.add_argument("text")
     p.set_defaults(fn=cmd_note)

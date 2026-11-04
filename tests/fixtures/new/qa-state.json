@@ -1,0 +1,74 @@
+{
+ "generated_from": {
+  "generated_by": "hub.py",
+  "generated_at": "2026-11-04T15:22:07.806699Z",
+  "event_count": 30,
+  "event_digest": "aa0fc10603bde1194b6603b576a5a255ee77489a65d265a2b06accd5de385d26",
+  "schema_version": 1,
+  "warning": "GENERATED FILE -- never hand-edit. The hub is the source of truth."
+ },
+ "engagement": "greenfield-intake",
+ "iteration": 1,
+ "mandate": null,
+ "findings": [
+  {
+   "id": "F-1",
+   "title": "CSV export ignores team scoping and returns other teams rows",
+   "severity": "critical",
+   "scope": "security",
+   "status": "NEW",
+   "status_action": "CODE",
+   "closed_in": null,
+   "provenance": "authored"
+  }
+ ],
+ "cases": [
+  {
+   "id": "S3-00a",
+   "scope": "control-plane",
+   "action": "Create one request and read it back as a second coordinator",
+   "oracle": "same owner and state, read by a different session",
+   "guards": null,
+   "ran_under": null,
+   "touches": null,
+   "graded_by": "control-plane",
+   "result": "PASS",
+   "provenance": "authored",
+   "finding": null
+  },
+  {
+   "id": "S3-00b",
+   "scope": "control-plane",
+   "action": "Reassign one request directly in the store, then re-read",
+   "oracle": "the read-back reports exactly the one changed owner",
+   "guards": null,
+   "ran_under": null,
+   "touches": null,
+   "graded_by": "control-plane",
+   "result": "PASS",
+   "provenance": "authored",
+   "finding": null
+  },
+  {
+   "id": "S3-01",
+   "scope": "control-plane",
+   "action": "Read a request as a coordinator from another team, via UI and via export",
+   "oracle": "neither channel returns the row",
+   "guards": {
+    "class": "cross-team leak",
+    "ceiling": "critical"
+   },
+   "ran_under": null,
+   "touches": [
+    "api",
+    "export"
+   ],
+   "graded_by": "control-plane",
+   "result": "FAIL",
+   "provenance": "authored",
+   "finding": "F-1"
+  }
+ ],
+ "not_verified": [],
+ "cleanup": []
+}

@@ -1,7 +1,6 @@
 {
   "schema_version": 1,
   "doc": "The work-item model. One source of truth for item types, their states, who may create them and who may move them. Adding a role or a type means adding rows here, never new code paths in hub.py. The general invariant is that the producer claims and a DIFFERENT role accepts: encoded as `roles` on each transition, plus `different_actor_from` where the same person must not grade their own work.",
-
   "roles": {
     "PM": "Product manager",
     "HEAD_OF_PRODUCT": "Head of product / sponsor",
@@ -19,224 +18,1421 @@
     "ANALYST": "Data / product analyst",
     "OPERATOR": "The operator: the human who owns the decision, the budget and the release"
   },
-
   "link_types": [
-    "realizes", "refines", "implements", "verifies", "fixes", "ships",
-    "measures", "introduced_by", "supersedes", "blocks", "graded_by", "derived_from"
+    "realizes",
+    "refines",
+    "implements",
+    "verifies",
+    "fixes",
+    "ships",
+    "measures",
+    "introduced_by",
+    "supersedes",
+    "blocks",
+    "graded_by",
+    "derived_from"
   ],
-
-  "chain": ["initiative", "prd", "requirement", "story", "design", "adr", "case", "finding", "fix", "release", "metric"],
-
+  "chain": [
+    "initiative",
+    "prd",
+    "requirement",
+    "story",
+    "design",
+    "adr",
+    "case",
+    "finding",
+    "fix",
+    "release",
+    "metric"
+  ],
   "types": {
     "initiative": {
       "initial": "PROPOSED",
-      "create": ["PM", "HEAD_OF_PRODUCT", "OPERATOR"],
+      "create": [
+        "PM",
+        "HEAD_OF_PRODUCT",
+        "OPERATOR"
+      ],
       "transitions": [
-        { "from": ["PROPOSED"], "to": "APPROVED", "roles": ["HEAD_OF_PRODUCT", "OPERATOR"], "different_actor_from": ["PROPOSED"] },
-        { "from": ["PROPOSED"], "to": "DECLINED", "roles": ["HEAD_OF_PRODUCT", "OPERATOR"], "requires_fields": ["reason"] },
-        { "from": ["APPROVED"], "to": "DELIVERED", "roles": ["DELIVERY", "PM"] }
+        {
+          "from": [
+            "PROPOSED"
+          ],
+          "to": "APPROVED",
+          "roles": [
+            "HEAD_OF_PRODUCT",
+            "OPERATOR"
+          ],
+          "different_actor_from": [
+            "PROPOSED"
+          ]
+        },
+        {
+          "from": [
+            "PROPOSED"
+          ],
+          "to": "DECLINED",
+          "roles": [
+            "HEAD_OF_PRODUCT",
+            "OPERATOR"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "APPROVED"
+          ],
+          "to": "DELIVERED",
+          "roles": [
+            "DELIVERY",
+            "PM"
+          ],
+          "escape": true
+        }
       ]
     },
-
     "insight": {
       "initial": "DRAFT",
-      "create": ["RESEARCHER", "PM", "ANALYST"],
+      "create": [
+        "RESEARCHER",
+        "PM",
+        "ANALYST"
+      ],
       "transitions": [
-        { "from": ["DRAFT"], "to": "EVIDENCED", "roles": ["RESEARCHER", "PM", "ANALYST"], "requires_fields": ["evidence", "sample_size", "does_not_show"] },
-        { "from": ["EVIDENCED"], "to": "ACCEPTED", "roles": ["PM", "HEAD_OF_PRODUCT"], "different_actor_from": ["EVIDENCED"] },
-        { "from": ["DRAFT", "EVIDENCED"], "to": "WITHDRAWN", "roles": ["RESEARCHER", "PM", "ANALYST"], "requires_fields": ["reason"] }
+        {
+          "from": [
+            "DRAFT"
+          ],
+          "to": "EVIDENCED",
+          "roles": [
+            "RESEARCHER",
+            "PM",
+            "ANALYST"
+          ],
+          "requires_fields": [
+            "evidence",
+            "sample_size",
+            "does_not_show"
+          ]
+        },
+        {
+          "from": [
+            "EVIDENCED"
+          ],
+          "to": "ACCEPTED",
+          "roles": [
+            "PM",
+            "HEAD_OF_PRODUCT"
+          ],
+          "different_actor_from": [
+            "EVIDENCED"
+          ]
+        },
+        {
+          "from": [
+            "DRAFT",
+            "EVIDENCED"
+          ],
+          "to": "WITHDRAWN",
+          "roles": [
+            "RESEARCHER",
+            "PM",
+            "ANALYST"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        }
       ]
     },
-
     "prd": {
       "initial": "DRAFT",
-      "create": ["PM"],
+      "create": [
+        "PM"
+      ],
       "transitions": [
-        { "from": ["DRAFT"], "to": "REVIEW", "roles": ["PM"] },
-        { "from": ["REVIEW"], "to": "APPROVED", "roles": ["HEAD_OF_PRODUCT", "OPERATOR"], "different_actor_from": ["DRAFT", "REVIEW"] },
-        { "from": ["REVIEW"], "to": "CHANGES_REQUESTED", "roles": ["HEAD_OF_PRODUCT", "OPERATOR"], "requires_fields": ["reason"] },
-        { "from": ["CHANGES_REQUESTED"], "to": "REVIEW", "roles": ["PM"] },
-        { "from": ["APPROVED"], "to": "SUPERSEDED", "roles": ["PM", "HEAD_OF_PRODUCT"] }
+        {
+          "from": [
+            "DRAFT"
+          ],
+          "to": "REVIEW",
+          "roles": [
+            "PM"
+          ]
+        },
+        {
+          "from": [
+            "REVIEW"
+          ],
+          "to": "APPROVED",
+          "roles": [
+            "HEAD_OF_PRODUCT",
+            "OPERATOR"
+          ],
+          "different_actor_from": [
+            "DRAFT",
+            "REVIEW"
+          ]
+        },
+        {
+          "from": [
+            "REVIEW"
+          ],
+          "to": "CHANGES_REQUESTED",
+          "roles": [
+            "HEAD_OF_PRODUCT",
+            "OPERATOR"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "CHANGES_REQUESTED"
+          ],
+          "to": "REVIEW",
+          "roles": [
+            "PM"
+          ]
+        },
+        {
+          "from": [
+            "APPROVED"
+          ],
+          "to": "SUPERSEDED",
+          "roles": [
+            "PM",
+            "HEAD_OF_PRODUCT"
+          ],
+          "escape": true
+        }
       ]
     },
-
     "requirement": {
       "initial": "SPECIFIED",
-      "create": ["BA"],
+      "create": [
+        "BA"
+      ],
       "transitions": [
-        { "from": ["SPECIFIED"], "to": "AGREED", "roles": ["PO", "PM", "HEAD_OF_PRODUCT", "OPERATOR"], "different_actor_from": ["SPECIFIED"] },
-        { "from": ["SPECIFIED"], "to": "CONFLICTED", "roles": ["BA", "PO", "PM"], "requires_fields": ["reason"] },
-        { "from": ["CONFLICTED"], "to": "AGREED", "roles": ["OPERATOR"], "requires_fields": ["reason"] },
-        { "from": ["AGREED"], "to": "SUPERSEDED", "roles": ["BA", "PO"] }
+        {
+          "from": [
+            "SPECIFIED"
+          ],
+          "to": "AGREED",
+          "roles": [
+            "PO",
+            "PM",
+            "HEAD_OF_PRODUCT",
+            "OPERATOR"
+          ],
+          "different_actor_from": [
+            "SPECIFIED"
+          ]
+        },
+        {
+          "from": [
+            "SPECIFIED"
+          ],
+          "to": "CONFLICTED",
+          "roles": [
+            "BA",
+            "PO",
+            "PM"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "CONFLICTED"
+          ],
+          "to": "AGREED",
+          "roles": [
+            "OPERATOR"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "AGREED"
+          ],
+          "to": "SUPERSEDED",
+          "roles": [
+            "BA",
+            "PO"
+          ],
+          "escape": true
+        }
       ]
     },
-
     "decision": {
       "initial": "OPEN",
-      "create": ["BA", "PM", "PO", "QA", "DEV", "TECH_LEAD", "DESIGNER", "DELIVERY", "ANALYST"],
+      "create": [
+        "BA",
+        "PM",
+        "PO",
+        "QA",
+        "DEV",
+        "TECH_LEAD",
+        "DESIGNER",
+        "DELIVERY",
+        "ANALYST"
+      ],
       "transitions": [
-        { "from": ["OPEN"], "to": "ANSWERED", "roles": ["OPERATOR", "HEAD_OF_PRODUCT"], "requires_fields": ["answer"] },
-        { "from": ["OPEN"], "to": "WITHDRAWN", "roles": ["BA", "PM", "PO", "QA", "DEV", "TECH_LEAD", "DESIGNER", "DELIVERY", "ANALYST"], "requires_fields": ["reason"] }
+        {
+          "from": [
+            "OPEN"
+          ],
+          "to": "ANSWERED",
+          "roles": [
+            "OPERATOR",
+            "HEAD_OF_PRODUCT"
+          ],
+          "requires_fields": [
+            "answer"
+          ]
+        },
+        {
+          "from": [
+            "OPEN"
+          ],
+          "to": "WITHDRAWN",
+          "roles": [
+            "BA",
+            "PM",
+            "PO",
+            "QA",
+            "DEV",
+            "TECH_LEAD",
+            "DESIGNER",
+            "DELIVERY",
+            "ANALYST"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        }
       ]
     },
-
     "story": {
       "initial": "DRAFT",
-      "create": ["PO", "BA"],
+      "create": [
+        "PO",
+        "BA"
+      ],
       "transitions": [
-        { "from": ["DRAFT"], "to": "READY", "roles": ["PO"], "requires_fields": ["acceptance_criteria"] },
-        { "from": ["READY"], "to": "IN_PROGRESS", "roles": ["DEV"] },
-        { "from": ["IN_PROGRESS"], "to": "DONE", "roles": ["DEV"], "requires_fields": ["commit"] },
-        { "from": ["DONE"], "to": "ACCEPTED", "roles": ["PO"], "different_actor_from": ["DONE"], "requires_linked_cases_pass": true },
-        { "from": ["DONE"], "to": "REJECTED", "roles": ["PO"], "requires_fields": ["reason"] },
-        { "from": ["REJECTED"], "to": "IN_PROGRESS", "roles": ["DEV"] },
-        { "from": ["READY", "DRAFT"], "to": "DROPPED", "roles": ["PO"], "requires_fields": ["reason"] }
+        {
+          "from": [
+            "DRAFT"
+          ],
+          "to": "READY",
+          "roles": [
+            "PO"
+          ],
+          "requires_fields": [
+            "acceptance_criteria"
+          ]
+        },
+        {
+          "from": [
+            "READY"
+          ],
+          "to": "IN_PROGRESS",
+          "roles": [
+            "DEV"
+          ]
+        },
+        {
+          "from": [
+            "IN_PROGRESS"
+          ],
+          "to": "DONE",
+          "roles": [
+            "DEV"
+          ],
+          "requires_fields": [
+            "commit"
+          ]
+        },
+        {
+          "from": [
+            "DONE"
+          ],
+          "to": "ACCEPTED",
+          "roles": [
+            "PO"
+          ],
+          "different_actor_from": [
+            "DONE"
+          ],
+          "requires_linked_cases_pass": true
+        },
+        {
+          "from": [
+            "DONE"
+          ],
+          "to": "REJECTED",
+          "roles": [
+            "PO"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "REJECTED"
+          ],
+          "to": "IN_PROGRESS",
+          "roles": [
+            "DEV"
+          ],
+          "escape": true
+        },
+        {
+          "from": [
+            "READY",
+            "DRAFT"
+          ],
+          "to": "DROPPED",
+          "roles": [
+            "PO"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        }
       ]
     },
-
     "design": {
       "initial": "PROPOSED",
-      "create": ["DESIGNER"],
+      "create": [
+        "DESIGNER"
+      ],
       "transitions": [
-        { "from": ["PROPOSED"], "to": "REVIEWED", "roles": ["DESIGN_LEAD"], "different_actor_from": ["PROPOSED"] },
-        { "from": ["REVIEWED"], "to": "ACCEPTED", "roles": ["PO", "DESIGN_LEAD"], "different_actor_from": ["PROPOSED"] },
-        { "from": ["PROPOSED", "REVIEWED"], "to": "CHANGES_REQUESTED", "roles": ["DESIGN_LEAD", "PO"], "requires_fields": ["reason"] },
-        { "from": ["CHANGES_REQUESTED"], "to": "PROPOSED", "roles": ["DESIGNER"] }
+        {
+          "from": [
+            "PROPOSED"
+          ],
+          "to": "REVIEWED",
+          "roles": [
+            "DESIGN_LEAD"
+          ],
+          "different_actor_from": [
+            "PROPOSED"
+          ]
+        },
+        {
+          "from": [
+            "REVIEWED"
+          ],
+          "to": "ACCEPTED",
+          "roles": [
+            "PO",
+            "DESIGN_LEAD"
+          ],
+          "different_actor_from": [
+            "PROPOSED"
+          ]
+        },
+        {
+          "from": [
+            "PROPOSED",
+            "REVIEWED"
+          ],
+          "to": "CHANGES_REQUESTED",
+          "roles": [
+            "DESIGN_LEAD",
+            "PO"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "CHANGES_REQUESTED"
+          ],
+          "to": "PROPOSED",
+          "roles": [
+            "DESIGNER"
+          ]
+        }
       ]
     },
-
     "adr": {
       "initial": "PROPOSED",
-      "create": ["TECH_LEAD", "DEV"],
+      "create": [
+        "TECH_LEAD",
+        "DEV"
+      ],
       "transitions": [
-        { "from": ["PROPOSED"], "to": "ACCEPTED", "roles": ["TECH_LEAD"], "different_actor_from": ["PROPOSED"] },
-        { "from": ["PROPOSED"], "to": "REJECTED", "roles": ["TECH_LEAD"], "requires_fields": ["reason"] },
-        { "from": ["ACCEPTED"], "to": "SUPERSEDED", "roles": ["TECH_LEAD", "DEV"], "requires_fields": ["reason"] }
+        {
+          "from": [
+            "PROPOSED"
+          ],
+          "to": "ACCEPTED",
+          "roles": [
+            "TECH_LEAD"
+          ],
+          "different_actor_from": [
+            "PROPOSED"
+          ]
+        },
+        {
+          "from": [
+            "PROPOSED"
+          ],
+          "to": "REJECTED",
+          "roles": [
+            "TECH_LEAD"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "ACCEPTED"
+          ],
+          "to": "SUPERSEDED",
+          "roles": [
+            "TECH_LEAD",
+            "DEV"
+          ],
+          "requires_fields": [
+            "reason"
+          ],
+          "escape": true
+        }
       ]
     },
-
     "case": {
-      "doc": "A test case. Its oracle is the field that makes it a case; a case whose oracle is the product's own report of itself is not a case.",
+      "doc": "A test case. Its oracle is the field that makes it a case; a case whose oracle is the product's own report of itself is not a case. Both action and oracle are required at creation -- principles.md claimed this was enforced before it was.",
       "initial": "DESIGNED",
-      "create": ["QA", "DEV", "DESIGNER", "ANALYST"],
+      "create": [
+        "QA",
+        "DEV",
+        "DESIGNER",
+        "ANALYST"
+      ],
       "transitions": [
-        { "from": ["DESIGNED"], "to": "PASS", "roles": ["QA", "DESIGNER", "ANALYST"], "requires_fields": ["evidence"] },
-        { "from": ["DESIGNED"], "to": "PASS_SHORT", "roles": ["QA"], "requires_fields": ["evidence"] },
-        { "from": ["DESIGNED"], "to": "FAIL", "roles": ["QA", "DESIGNER", "ANALYST"], "requires_fields": ["evidence"] },
-        { "from": ["DESIGNED"], "to": "BLOCKED", "roles": ["QA", "DESIGNER", "ANALYST"], "requires_fields": ["reason"] },
-        { "from": ["DESIGNED"], "to": "NOT_RUN", "roles": ["QA", "DESIGNER", "ANALYST"], "requires_fields": ["reason"] },
-        { "from": ["DESIGNED"], "to": "LONG", "roles": ["QA"], "requires_fields": ["cutoff"] },
-        { "from": ["LONG"], "to": "PASS", "roles": ["QA"], "requires_fields": ["evidence"] },
-        { "from": ["LONG"], "to": "FAIL", "roles": ["QA"], "requires_fields": ["evidence"] },
-        { "from": ["PASS", "PASS_SHORT", "FAIL", "BLOCKED", "NOT_RUN", "LONG"], "to": "DESIGNED", "roles": ["QA"], "doc": "Re-arm for the next iteration. A case is never retired for passing." },
-        { "from": ["NOT_RUN", "BLOCKED"], "to": "NOT_RUN", "roles": ["QA"], "requires_fields": ["reason"] }
+        {
+          "from": [
+            "DESIGNED"
+          ],
+          "to": "PASS",
+          "roles": [
+            "QA",
+            "DESIGNER",
+            "ANALYST"
+          ],
+          "requires_fields": [
+            "evidence"
+          ]
+        },
+        {
+          "from": [
+            "DESIGNED"
+          ],
+          "to": "PASS_SHORT",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "evidence"
+          ]
+        },
+        {
+          "from": [
+            "DESIGNED"
+          ],
+          "to": "FAIL",
+          "roles": [
+            "QA",
+            "DESIGNER",
+            "ANALYST"
+          ],
+          "requires_fields": [
+            "evidence"
+          ]
+        },
+        {
+          "from": [
+            "DESIGNED"
+          ],
+          "to": "BLOCKED",
+          "roles": [
+            "QA",
+            "DESIGNER",
+            "ANALYST"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "DESIGNED"
+          ],
+          "to": "NOT_RUN",
+          "roles": [
+            "QA",
+            "DESIGNER",
+            "ANALYST"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "DESIGNED"
+          ],
+          "to": "LONG",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "cutoff"
+          ]
+        },
+        {
+          "from": [
+            "LONG"
+          ],
+          "to": "PASS",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "evidence"
+          ]
+        },
+        {
+          "from": [
+            "LONG"
+          ],
+          "to": "FAIL",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "evidence"
+          ]
+        },
+        {
+          "from": [
+            "PASS",
+            "PASS_SHORT",
+            "FAIL",
+            "BLOCKED",
+            "NOT_RUN",
+            "LONG"
+          ],
+          "to": "DESIGNED",
+          "roles": [
+            "QA"
+          ],
+          "doc": "Re-arm for the next iteration. A case is never retired for passing.",
+          "escape": true
+        },
+        {
+          "from": [
+            "NOT_RUN",
+            "BLOCKED"
+          ],
+          "to": "NOT_RUN",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        }
+      ],
+      "requires_fields_on_create": [
+        "action",
+        "oracle"
       ]
     },
-
     "finding": {
       "doc": "The four invariants of shared/contracts/qa-dev.md map onto this type exactly. NEW is not a resting state; DEV claims FIXED and only QA may CLOSE; a reopen keeps its id while a regression gets a new one; severity is QA's call and priority is the operator's.",
       "initial": "NEW",
-      "create": ["QA", "DESIGNER", "WRITER", "ANALYST"],
-      "fields_owned_by": { "severity": ["QA"], "priority": ["OPERATOR"] },
+      "create": [
+        "QA",
+        "DESIGNER",
+        "WRITER",
+        "ANALYST"
+      ],
+      "fields_owned_by": {
+        "severity": [
+          "QA",
+          "DESIGNER",
+          "WRITER",
+          "ANALYST"
+        ],
+        "priority": [
+          "OPERATOR"
+        ]
+      },
       "transitions": [
-        { "from": ["NEW"], "to": "ACCEPTED", "roles": ["DEV", "TECH_LEAD"] },
-        { "from": ["NEW"], "to": "REJECTED", "roles": ["DEV", "TECH_LEAD"], "requires_fields": ["reason"] },
-        { "from": ["NEW"], "to": "DEFERRED", "roles": ["DEV", "TECH_LEAD", "OPERATOR"], "requires_fields": ["reason", "deferred_to"] },
-        { "from": ["NEW"], "to": "DUPLICATE", "roles": ["DEV", "TECH_LEAD", "QA"], "requires_fields": ["duplicate_of"] },
-        { "from": ["NEW"], "to": "DISPUTED", "roles": ["DEV", "TECH_LEAD"], "requires_fields": ["reason"] },
-        { "from": ["ACCEPTED"], "to": "IN_PROGRESS", "roles": ["DEV"] },
-        { "from": ["ACCEPTED", "IN_PROGRESS"], "to": "FIXED", "roles": ["DEV"], "requires_fields": ["commit", "build"], "doc": "A claim about the code, not a verdict about the product." },
-        { "from": ["FIXED"], "to": "VERIFIED", "roles": ["QA"], "different_actor_from": ["FIXED"], "requires_fields": ["evidence", "variant_used"] },
-        { "from": ["FIXED"], "to": "PARTIAL", "roles": ["QA"], "different_actor_from": ["FIXED"], "requires_fields": ["evidence", "variant_used"] },
-        { "from": ["FIXED"], "to": "STILL_PRESENT", "roles": ["QA"], "different_actor_from": ["FIXED"], "requires_fields": ["evidence"] },
-        { "from": ["FIXED"], "to": "NOT_IN_BUILD", "roles": ["QA"], "requires_fields": ["evidence"] },
-        { "from": ["FIXED"], "to": "CANNOT_RETEST", "roles": ["QA"], "requires_fields": ["reason"] },
-        { "from": ["NOT_IN_BUILD", "CANNOT_RETEST", "PARTIAL", "STILL_PRESENT"], "to": "ACCEPTED", "roles": ["DEV", "TECH_LEAD"] },
-        { "from": ["VERIFIED"], "to": "CLOSED", "roles": ["QA"], "doc": "Only QA may CLOSE." },
-        { "from": ["REJECTED"], "to": "CONVERTED", "roles": ["QA"], "requires_fields": ["reason"], "doc": "Working-as-designed with no operator-accepted contract: becomes a docs finding, or DECIDE at its consequence severity. It does not close." },
-        { "from": ["NEW", "ACCEPTED"], "to": "WITHDRAWN", "roles": ["QA"], "requires_fields": ["reason"] },
-        { "from": ["CLOSED"], "to": "REOPENED", "roles": ["QA"], "requires_fields": ["evidence"], "doc": "Same id. A regression introduced by a fix is a NEW id linked introduced_by." },
-        { "from": ["REOPENED"], "to": "ACCEPTED", "roles": ["DEV", "TECH_LEAD"] },
-        { "from": ["DISPUTED"], "to": "ACCEPTED", "roles": ["DEV", "TECH_LEAD"] },
-        { "from": ["DISPUTED"], "to": "WITHDRAWN", "roles": ["QA"], "requires_fields": ["reason"] }
+        {
+          "from": [
+            "NEW"
+          ],
+          "to": "ACCEPTED",
+          "roles": [
+            "DEV",
+            "TECH_LEAD"
+          ]
+        },
+        {
+          "from": [
+            "NEW"
+          ],
+          "to": "REJECTED",
+          "roles": [
+            "DEV",
+            "TECH_LEAD"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "NEW"
+          ],
+          "to": "DEFERRED",
+          "roles": [
+            "DEV",
+            "TECH_LEAD",
+            "OPERATOR"
+          ],
+          "requires_fields": [
+            "reason",
+            "deferred_to"
+          ]
+        },
+        {
+          "from": [
+            "NEW"
+          ],
+          "to": "DUPLICATE",
+          "roles": [
+            "DEV",
+            "TECH_LEAD",
+            "QA"
+          ],
+          "requires_fields": [
+            "duplicate_of"
+          ],
+          "doc": "`duplicate_of` must name a different finding that exists. Unchecked, this was a one-command way for DEV to take a critical out of the verdict."
+        },
+        {
+          "from": [
+            "NEW"
+          ],
+          "to": "DISPUTED",
+          "roles": [
+            "DEV",
+            "TECH_LEAD"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "ACCEPTED"
+          ],
+          "to": "IN_PROGRESS",
+          "roles": [
+            "DEV"
+          ]
+        },
+        {
+          "from": [
+            "ACCEPTED",
+            "IN_PROGRESS"
+          ],
+          "to": "FIXED",
+          "roles": [
+            "DEV"
+          ],
+          "requires_fields": [
+            "commit",
+            "build"
+          ],
+          "doc": "A claim about the code, not a verdict about the product."
+        },
+        {
+          "from": [
+            "FIXED"
+          ],
+          "to": "VERIFIED",
+          "roles": [
+            "QA"
+          ],
+          "different_actor_from": [
+            "FIXED"
+          ],
+          "requires_fields": [
+            "evidence",
+            "variant_used"
+          ]
+        },
+        {
+          "from": [
+            "FIXED"
+          ],
+          "to": "PARTIAL",
+          "roles": [
+            "QA"
+          ],
+          "different_actor_from": [
+            "FIXED"
+          ],
+          "requires_fields": [
+            "evidence",
+            "variant_used"
+          ]
+        },
+        {
+          "from": [
+            "FIXED"
+          ],
+          "to": "STILL_PRESENT",
+          "roles": [
+            "QA"
+          ],
+          "different_actor_from": [
+            "FIXED"
+          ],
+          "requires_fields": [
+            "evidence"
+          ]
+        },
+        {
+          "from": [
+            "FIXED"
+          ],
+          "to": "NOT_IN_BUILD",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "evidence"
+          ]
+        },
+        {
+          "from": [
+            "FIXED"
+          ],
+          "to": "CANNOT_RETEST",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "NOT_IN_BUILD",
+            "CANNOT_RETEST",
+            "PARTIAL",
+            "STILL_PRESENT"
+          ],
+          "to": "ACCEPTED",
+          "roles": [
+            "DEV",
+            "TECH_LEAD"
+          ]
+        },
+        {
+          "from": [
+            "VERIFIED"
+          ],
+          "to": "CLOSED",
+          "roles": [
+            "QA"
+          ],
+          "doc": "Only QA may CLOSE."
+        },
+        {
+          "from": [
+            "REJECTED"
+          ],
+          "to": "CONVERTED",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "reason"
+          ],
+          "doc": "Working-as-designed with no operator-accepted contract: becomes a docs finding, or DECIDE at its consequence severity. It does not close."
+        },
+        {
+          "from": [
+            "NEW",
+            "ACCEPTED"
+          ],
+          "to": "WITHDRAWN",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "CLOSED"
+          ],
+          "to": "REOPENED",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "evidence"
+          ],
+          "doc": "Same id. A regression introduced by a fix is a NEW id linked introduced_by.",
+          "escape": true
+        },
+        {
+          "from": [
+            "REOPENED"
+          ],
+          "to": "ACCEPTED",
+          "roles": [
+            "DEV",
+            "TECH_LEAD"
+          ]
+        },
+        {
+          "from": [
+            "DISPUTED"
+          ],
+          "to": "ACCEPTED",
+          "roles": [
+            "DEV",
+            "TECH_LEAD"
+          ]
+        },
+        {
+          "from": [
+            "DISPUTED"
+          ],
+          "to": "WITHDRAWN",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "DEFERRED"
+          ],
+          "to": "ACCEPTED",
+          "roles": [
+            "DEV",
+            "TECH_LEAD"
+          ],
+          "doc": "The deferred build arrives. Without this edge every deferral silently became a closed-without-fix, and qa-dev.md forbids recycling the id."
+        }
+      ],
+      "requires_fields_on_create": [
+        "title"
       ]
     },
-
     "fix": {
       "initial": "PROPOSED",
-      "create": ["DEV"],
+      "create": [
+        "DEV"
+      ],
       "transitions": [
-        { "from": ["PROPOSED"], "to": "TEST_FAILS_FIRST", "roles": ["DEV"], "requires_fields": ["test", "evidence"], "doc": "A test that passes before the fix asserts nothing." },
-        { "from": ["TEST_FAILS_FIRST"], "to": "DELIVERED", "roles": ["DEV"], "requires_fields": ["commit", "build"] },
-        { "from": ["DELIVERED"], "to": "ACCEPTED", "roles": ["QA"], "different_actor_from": ["DELIVERED"] },
-        { "from": ["DELIVERED"], "to": "RETURNED", "roles": ["QA"], "requires_fields": ["reason"], "doc": "Handback incomplete: no digest, an id QA never issued, a finding left NEW, or missing fail-first evidence." }
+        {
+          "from": [
+            "PROPOSED"
+          ],
+          "to": "TEST_FAILS_FIRST",
+          "roles": [
+            "DEV"
+          ],
+          "requires_fields": [
+            "test",
+            "evidence"
+          ],
+          "doc": "A test that passes before the fix asserts nothing."
+        },
+        {
+          "from": [
+            "TEST_FAILS_FIRST"
+          ],
+          "to": "DELIVERED",
+          "roles": [
+            "DEV"
+          ],
+          "requires_fields": [
+            "commit",
+            "build"
+          ]
+        },
+        {
+          "from": [
+            "DELIVERED"
+          ],
+          "to": "ACCEPTED",
+          "roles": [
+            "QA"
+          ],
+          "different_actor_from": [
+            "DELIVERED"
+          ]
+        },
+        {
+          "from": [
+            "DELIVERED"
+          ],
+          "to": "RETURNED",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "reason"
+          ],
+          "doc": "Handback incomplete: no digest, an id QA never issued, a finding left NEW, or missing fail-first evidence."
+        }
       ]
     },
-
     "release": {
       "initial": "PLANNED",
-      "create": ["DELIVERY", "PM", "TECH_LEAD"],
+      "create": [
+        "DELIVERY",
+        "PM",
+        "TECH_LEAD"
+      ],
       "transitions": [
-        { "from": ["PLANNED"], "to": "CANDIDATE", "roles": ["DEV", "TECH_LEAD", "DELIVERY"], "requires_fields": ["build"] },
-        { "from": ["CANDIDATE"], "to": "NO_VERDICT", "roles": ["QA"], "requires_fields": ["reason"], "doc": "The default. Named condition had no rows." },
-        { "from": ["CANDIDATE", "NO_VERDICT"], "to": "GREEN", "roles": ["QA"], "requires_fields": ["bounds", "does_not_cover"], "doc": "Computed from the hub, never written. See shared/principles.md." },
-        { "from": ["CANDIDATE", "NO_VERDICT"], "to": "NOT_GREEN", "roles": ["QA"], "requires_fields": ["reason"] },
-        { "from": ["GREEN"], "to": "SHIPPED", "roles": ["OPERATOR"], "different_actor_from": ["GREEN"] },
-        { "from": ["NOT_GREEN", "NO_VERDICT"], "to": "SHIPPED", "roles": ["OPERATOR"], "requires_fields": ["reason"], "doc": "Shipping without a green verdict is the operator's call, in writing." },
-        { "from": ["SHIPPED"], "to": "ROLLED_BACK", "roles": ["OPERATOR", "TECH_LEAD"], "requires_fields": ["reason"] }
+        {
+          "from": [
+            "PLANNED"
+          ],
+          "to": "CANDIDATE",
+          "roles": [
+            "DEV",
+            "TECH_LEAD",
+            "DELIVERY"
+          ],
+          "requires_fields": [
+            "build"
+          ]
+        },
+        {
+          "from": [
+            "CANDIDATE"
+          ],
+          "to": "NO_VERDICT",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "reason"
+          ],
+          "doc": "The default. Named condition had no rows."
+        },
+        {
+          "from": [
+            "CANDIDATE",
+            "NO_VERDICT"
+          ],
+          "to": "GREEN",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "bounds",
+            "does_not_cover"
+          ],
+          "doc": "Computed from the hub, never written -- and now enforced: hub.py asks the same verdict function the dashboard renders, so the two cannot disagree.",
+          "requires_computed_verdict": "GREEN within stated bounds"
+        },
+        {
+          "from": [
+            "CANDIDATE",
+            "NO_VERDICT"
+          ],
+          "to": "NOT_GREEN",
+          "roles": [
+            "QA"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "GREEN"
+          ],
+          "to": "SHIPPED",
+          "roles": [
+            "OPERATOR"
+          ],
+          "different_actor_from": [
+            "GREEN"
+          ]
+        },
+        {
+          "from": [
+            "NOT_GREEN",
+            "NO_VERDICT"
+          ],
+          "to": "SHIPPED",
+          "roles": [
+            "OPERATOR"
+          ],
+          "requires_fields": [
+            "reason"
+          ],
+          "doc": "Shipping without a green verdict is the operator's call, in writing."
+        },
+        {
+          "from": [
+            "SHIPPED"
+          ],
+          "to": "ROLLED_BACK",
+          "roles": [
+            "OPERATOR",
+            "TECH_LEAD"
+          ],
+          "requires_fields": [
+            "reason"
+          ],
+          "escape": true
+        }
       ]
     },
-
     "doc": {
       "initial": "DRAFT",
-      "create": ["WRITER"],
+      "create": [
+        "WRITER"
+      ],
       "transitions": [
-        { "from": ["DRAFT"], "to": "VERIFIED_AGAINST_PRODUCT", "roles": ["WRITER"], "requires_fields": ["evidence"], "doc": "Every claim executed verbatim. docs-conformance in reverse." },
-        { "from": ["VERIFIED_AGAINST_PRODUCT"], "to": "PUBLISHED", "roles": ["PM", "WRITER", "OPERATOR"], "different_actor_from": ["DRAFT"] },
-        { "from": ["DRAFT", "VERIFIED_AGAINST_PRODUCT"], "to": "CHANGES_REQUESTED", "roles": ["PM", "QA", "TECH_LEAD"], "requires_fields": ["reason"] }
+        {
+          "from": [
+            "DRAFT"
+          ],
+          "to": "VERIFIED_AGAINST_PRODUCT",
+          "roles": [
+            "WRITER"
+          ],
+          "requires_fields": [
+            "evidence"
+          ],
+          "doc": "Every claim executed verbatim. docs-conformance in reverse."
+        },
+        {
+          "from": [
+            "VERIFIED_AGAINST_PRODUCT"
+          ],
+          "to": "PUBLISHED",
+          "roles": [
+            "PM",
+            "WRITER",
+            "OPERATOR"
+          ],
+          "different_actor_from": [
+            "DRAFT"
+          ]
+        },
+        {
+          "from": [
+            "DRAFT",
+            "VERIFIED_AGAINST_PRODUCT"
+          ],
+          "to": "CHANGES_REQUESTED",
+          "roles": [
+            "PM",
+            "QA",
+            "TECH_LEAD"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "CHANGES_REQUESTED"
+          ],
+          "to": "DRAFT",
+          "roles": [
+            "WRITER"
+          ],
+          "doc": "As launch: a writer whose page was sent back must be able to resubmit it."
+        }
       ]
     },
-
     "launch": {
       "initial": "DRAFT",
-      "create": ["PMM"],
+      "create": [
+        "PMM"
+      ],
       "transitions": [
-        { "from": ["DRAFT"], "to": "CLAIMS_CHECKED", "roles": ["PMM"], "requires_fields": ["evidence"], "doc": "Every product claim links to a passing case or is flagged unverified." },
-        { "from": ["CLAIMS_CHECKED"], "to": "APPROVED", "roles": ["PM", "HEAD_OF_PRODUCT", "OPERATOR"], "different_actor_from": ["DRAFT"] },
-        { "from": ["DRAFT", "CLAIMS_CHECKED"], "to": "CHANGES_REQUESTED", "roles": ["PM", "QA", "OPERATOR"], "requires_fields": ["reason"] },
-        { "from": ["APPROVED"], "to": "LIVE", "roles": ["PMM", "OPERATOR"] }
+        {
+          "from": [
+            "DRAFT"
+          ],
+          "to": "CLAIMS_CHECKED",
+          "roles": [
+            "PMM"
+          ],
+          "requires_fields": [
+            "evidence"
+          ],
+          "doc": "Every product claim links to a passing case or is flagged unverified."
+        },
+        {
+          "from": [
+            "CLAIMS_CHECKED"
+          ],
+          "to": "APPROVED",
+          "roles": [
+            "PM",
+            "HEAD_OF_PRODUCT",
+            "OPERATOR"
+          ],
+          "different_actor_from": [
+            "DRAFT"
+          ]
+        },
+        {
+          "from": [
+            "DRAFT",
+            "CLAIMS_CHECKED"
+          ],
+          "to": "CHANGES_REQUESTED",
+          "roles": [
+            "PM",
+            "QA",
+            "OPERATOR"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "APPROVED"
+          ],
+          "to": "LIVE",
+          "roles": [
+            "PMM",
+            "OPERATOR"
+          ]
+        },
+        {
+          "from": [
+            "CHANGES_REQUESTED"
+          ],
+          "to": "DRAFT",
+          "roles": [
+            "PMM"
+          ],
+          "doc": "Send-back, fix, resubmit is the normal review loop. Without this edge the only exit was a new id, which severs derived_from and the history time-in-state is built on."
+        }
       ]
     },
-
     "metric": {
       "initial": "DEFINED",
-      "create": ["PM", "ANALYST"],
+      "create": [
+        "PM",
+        "ANALYST"
+      ],
       "transitions": [
-        { "from": ["DEFINED"], "to": "BASELINED", "roles": ["ANALYST"], "requires_fields": ["denominator", "baseline"] },
-        { "from": ["BASELINED"], "to": "READ", "roles": ["ANALYST"], "requires_fields": ["value", "denominator", "evidence"] },
-        { "from": ["READ"], "to": "INTERPRETED", "roles": ["PM", "HEAD_OF_PRODUCT"], "different_actor_from": ["READ"], "requires_fields": ["interpretation"] },
-        { "from": ["DEFINED", "BASELINED"], "to": "NOT_MEASURABLE", "roles": ["ANALYST"], "requires_fields": ["reason"] }
+        {
+          "from": [
+            "DEFINED"
+          ],
+          "to": "BASELINED",
+          "roles": [
+            "ANALYST"
+          ],
+          "requires_fields": [
+            "denominator",
+            "baseline"
+          ]
+        },
+        {
+          "from": [
+            "BASELINED"
+          ],
+          "to": "READ",
+          "roles": [
+            "ANALYST"
+          ],
+          "requires_fields": [
+            "value",
+            "denominator",
+            "evidence"
+          ]
+        },
+        {
+          "from": [
+            "READ"
+          ],
+          "to": "INTERPRETED",
+          "roles": [
+            "PM",
+            "HEAD_OF_PRODUCT"
+          ],
+          "different_actor_from": [
+            "READ"
+          ],
+          "requires_fields": [
+            "interpretation"
+          ]
+        },
+        {
+          "from": [
+            "DEFINED",
+            "BASELINED"
+          ],
+          "to": "NOT_MEASURABLE",
+          "roles": [
+            "ANALYST"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "NOT_MEASURABLE"
+          ],
+          "to": "DEFINED",
+          "roles": [
+            "ANALYST"
+          ],
+          "requires_fields": [
+            "reason"
+          ],
+          "doc": "Instrumentation arrives later. Without this edge the PRD's `measures` link pointed at a dead item the week the events shipped -- which for a new product is the normal path."
+        }
       ]
     },
-
     "risk": {
       "initial": "OPEN",
-      "create": ["DELIVERY", "TECH_LEAD", "PM", "QA"],
+      "create": [
+        "DELIVERY",
+        "TECH_LEAD",
+        "PM",
+        "QA"
+      ],
       "transitions": [
-        { "from": ["OPEN"], "to": "MITIGATED", "roles": ["DELIVERY", "TECH_LEAD"], "requires_fields": ["mitigation", "evidence"] },
-        { "from": ["OPEN"], "to": "ACCEPTED", "roles": ["OPERATOR"], "requires_fields": ["reason"] },
-        { "from": ["OPEN"], "to": "REALIZED", "roles": ["DELIVERY", "TECH_LEAD", "QA"], "requires_fields": ["evidence"] },
-        { "from": ["MITIGATED"], "to": "CLOSED", "roles": ["DELIVERY"], "different_actor_from": ["MITIGATED"] }
+        {
+          "from": [
+            "OPEN"
+          ],
+          "to": "MITIGATED",
+          "roles": [
+            "DELIVERY",
+            "TECH_LEAD"
+          ],
+          "requires_fields": [
+            "mitigation",
+            "evidence"
+          ]
+        },
+        {
+          "from": [
+            "OPEN"
+          ],
+          "to": "ACCEPTED",
+          "roles": [
+            "OPERATOR"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "OPEN"
+          ],
+          "to": "REALIZED",
+          "roles": [
+            "DELIVERY",
+            "TECH_LEAD",
+            "QA"
+          ],
+          "requires_fields": [
+            "evidence"
+          ]
+        },
+        {
+          "from": [
+            "MITIGATED"
+          ],
+          "to": "CLOSED",
+          "roles": [
+            "DELIVERY"
+          ],
+          "different_actor_from": [
+            "MITIGATED"
+          ]
+        }
       ]
     },
-
     "cleanup": {
       "doc": "The cleanup ledger. Ordered by what is billing or exposed NOW. Teardown is verified by re-listing, never by a delete call's exit code.",
       "initial": "OPEN",
-      "create": ["QA", "DEV", "DELIVERY", "TECH_LEAD"],
+      "create": [
+        "QA",
+        "DEV",
+        "DELIVERY",
+        "TECH_LEAD"
+      ],
       "transitions": [
-        { "from": ["OPEN"], "to": "TORN_DOWN", "roles": ["QA", "DEV", "DELIVERY", "TECH_LEAD"], "requires_fields": ["verified_by"], "doc": "verified_by must be a re-listing, e.g. 'billable instances: NONE'." },
-        { "from": ["OPEN"], "to": "OPERATORS", "roles": ["QA", "DEV", "DELIVERY"], "requires_fields": ["reason"], "doc": "Only the operator can remove it." }
+        {
+          "from": [
+            "OPEN"
+          ],
+          "to": "TORN_DOWN",
+          "roles": [
+            "QA",
+            "DEV",
+            "DELIVERY",
+            "TECH_LEAD"
+          ],
+          "requires_fields": [
+            "verified_by"
+          ],
+          "doc": "verified_by must be a re-listing, e.g. 'billable instances: NONE'."
+        },
+        {
+          "from": [
+            "OPEN"
+          ],
+          "to": "OPERATORS",
+          "roles": [
+            "QA",
+            "DEV",
+            "DELIVERY"
+          ],
+          "requires_fields": [
+            "reason"
+          ],
+          "doc": "Only the operator can remove it."
+        }
       ]
     }
   }

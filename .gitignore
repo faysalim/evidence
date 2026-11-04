@@ -5,6 +5,15 @@ Thumbs.db
 
 # QA run artefacts must never be committed to a public skill repo:
 # findings reference real builds, hosts, tenants and keys.
-qa-state.json
+# Scoped to the repo root: a QA engagement's own register must never be committed, but the
+# fixtures' GENERATED views under tests/fixtures/ are deliberate artifacts. Unscoped, this
+# rule silently excluded them and a clone got half a fixture.
+/qa-state.json
 *-findings.md
 .qa-secrets/
+
+# Eval run artefacts: reports and per-run JSON are outputs, not source.
+evals/results/
+
+# The secrets directory the method actually names (principles.md section 8).
+.product-secrets/

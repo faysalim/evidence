@@ -37,9 +37,20 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLUGIN = "product-suite"
 
-ALWAYS_ON_CEILING = 2500      # tokens, measured by `claude plugin details`
+# The binding constraint is the SKILL LISTING budget, which the docs put at 1% of the model's
+# context window and which is shared across EVERY skill the user has -- not this plugin's own
+# always-on cost. On a 200k-window model that budget is 8,000 characters in total. This plugin's
+# descriptions alone are ~7,650 characters, i.e. ~96% of it before any other plugin exists, and
+# in a real session with other plugins installed 7 of the 15 descriptions were dropped outright
+# while the earlier version of this test printed "ok".
+#
+# So the ceiling here is the listing budget, not a token count, and the earlier comment's
+# arithmetic was wrong by 5x: a quarter of a 200k window's 1% is 500 tokens, not 2,500.
+LISTING_BUDGET_200K = 8000    # characters; 1% of a 200k-token window
+OTHER_SKILLS_ALLOWANCE = 0.5  # leave half the budget for the skills the user already has
+TOTAL_CHAR_CEILING = int(LISTING_BUDGET_200K * OTHER_SKILLS_ALLOWANCE)
+ALWAYS_ON_CEILING = 2500      # tokens, measured by `claude plugin details`; secondary
 PER_SKILL_CHAR_CEILING = 700  # characters per description; docs/design/plugin.md D-8
-TOTAL_CHAR_CEILING = 7500     # characters across all descriptions
 
 FAILURES = []
 NOT_RUN = []
@@ -75,9 +86,14 @@ def main():
     over = {k: len(v) for k, v in desc.items() if len(v) > PER_SKILL_CHAR_CEILING}
     check("no description over %d chars" % PER_SKILL_CHAR_CEILING, not over, over)
 
-    total = sum(len(v) for v in desc.values())
-    check("descriptions total <= %d chars" % TOTAL_CHAR_CEILING,
-          total <= TOTAL_CHAR_CEILING, "total=%d" % total)
+    total = sum(len(v) for v in desc.values()) + sum(len(k) for k in desc)
+    check("listing cost %d chars <= %d (half of a 200k window's 1%% budget, leaving room for "
+          "the skills the user already has)" % (total, TOTAL_CHAR_CEILING),
+          total <= TOTAL_CHAR_CEILING,
+          "total=%d of the %d-char budget; in a real session the overflow DROPS descriptions, "
+          "starting with the least-invoked skills -- which here are the drafts. Trim, reduce the "
+          "always-on skill count, or set skillOverrides to name-only for the drafts."
+          % (total, LISTING_BUDGET_200K))
 
     missing_not_for = [k for k, v in desc.items() if "not for" not in v.lower()]
     check("every description has a \"Not for\" line", not missing_not_for, missing_not_for)

@@ -145,18 +145,25 @@ def check_refs():
 def check_lint():
     """The variables rule, and namespaced invocation only."""
     bad = 0
+    # The unbraced form resolves NOWHERE: substitution happens only on the ${...} form in
+    # skill text, and none of these names is in the environment of a model-run command
+    # (verified by probe: printenv CLAUDE_PLUGIN_ROOT after invoking a skill exits 1 with no
+    # output). So it is a defect in prose, in a shell block, and in a powershell or python
+    # block alike. The earlier version looked only inside bash-family fences, so it could not
+    # see the other three.
+    unbraced = re.compile(
+        r"[$](CLAUDE_PLUGIN_ROOT|CLAUDE_SKILL_DIR|CLAUDE_PLUGIN_DATA|CLAUDE_PROJECT_DIR)")
     for path in md_files():
-        text = read(path)
-        _prose, blocks = strip_code_blocks(text)
-        for lang, lines in blocks:
-            if lang not in ("bash", "sh", "shell", "console", "zsh", ""):
-                continue
-            for n, line in lines:
-                if re.search(r'\$CLAUDE_PLUGIN_ROOT|\$CLAUDE_SKILL_DIR|\$CLAUDE_PLUGIN_DATA', line):
-                    fail("lint", "%s:%d uses a bare $CLAUDE_* variable in a shell block. These "
-                                 "are substituted into skill TEXT at load; they are not in the "
-                                 "environment of a model-run Bash command." % (rel(path), n))
-                    bad += 1
+        # docs/ discusses the rules, so it quotes the forbidden forms on purpose.
+        if rel(path).startswith("docs/"):
+            continue
+        for n, line in enumerate(read(path).splitlines(), 1):
+            for m in unbraced.finditer(line):
+                fail("lint", "%s:%d writes the unbraced $%s. Only the ${...} form is"
+                             " substituted into skill text, and the name is not in the"
+                             " environment of a model-run command, so this resolves nowhere."
+                     % (rel(path), n, m.group(1)))
+                bad += 1
     # bare slash-command form in our own docs
     skill_names = sorted(os.listdir(os.path.join(ROOT, "skills"))) \
         if os.path.isdir(os.path.join(ROOT, "skills")) else []
