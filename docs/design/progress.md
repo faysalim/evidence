@@ -10,38 +10,44 @@ rewrite history or delete branches.
 
 ## Where we are
 
-**Step 2 of 9 complete.** (Step numbering follows the brief's "Order of work".)
+**Steps 1-6 complete.** 4 of 15 skills built.
 
 | Step | What | State |
 |---|---|---|
-| 1 | Snapshot commit | **DONE** — `306816a`, 24 files, +2901/−93, clean tree |
-| 2 | `docs/design/plugin.md` | **DONE** — approval stop replaced by its Decisions section |
-| 3 | `shared/hub` + `hub.py` + dashboard + tests | **NEXT** |
-| 4 | File moves and splits; migrate `qa`, trim SKILL.md to ≤300 | not started |
-| 5 | `skills/dev` | not started |
-| 6 | `skills/hub`, `skills/orient` | not started |
-| 7 | The remaining 11 skills, lifecycle order | not started |
+| 1 | Snapshot commit | **DONE** `306816a` |
+| 2 | `docs/design/plugin.md` | **DONE** `e5dc138` |
+| 3 | `shared/hub` + `hub.py` + dashboard + tests | **DONE** `ead6091` |
+| 4 | File moves, splits, QA trimmed 470 -> 263 | **DONE** `624cc2e` |
+| 5 | `skills/dev` | **DONE** `b31b755` |
+| 6 | `skills/hub`, `skills/orient` | **DONE** `3a61b17` |
+| 7 | The remaining 11 skills | **IN PROGRESS** |
 | 8 | Trigger evals + both fixtures | not started |
-| 9 | README, CONTRIBUTING, manifest; full test and cross-reference run | not started |
-| 10 | 5-agent review council, consolidate, apply, fresh verification agent (max 2 rounds) | not started |
-| 11 | `docs/design/final-report.md` | not started |
+| 9 | README, CONTRIBUTING, migration; full run | not started |
+| 10 | 5-agent council, apply, verify (max 2 rounds) | not started |
+| 11 | `final-report.md` | not started |
+
+Skills built: `qa` (263 lines), `dev`, `hub`, `orient`.
+Remaining: `discovery` `prd` `requirements` `backlog` `delivery` `design` `architecture`
+`release` `docs-authoring` `launch` `analytics`.
 
 ## Next
 
-Build `shared/hub/` and `shared/scripts/hub.py`: item model, ownership table, append-only per-actor event
-logs, deterministic fold, generated views with `generated_from`, `validate`. Then port the dashboard onto
-the hub, keeping `qa_dashboard.py`'s computed-verdict logic, its `NO VERDICT` default and its 25 tests.
+Write the remaining 11 skills in lifecycle order, each <=300 lines, `status: draft` in its own
+README, concrete field lists and templates, open questions at the end. Commit in small groups.
 
 ## Test status
 
 | Suite | Count | State |
 |---|---|---|
-| `scripts/test_safe_edit.py` | 25 checks | PASS (at `306816a`) |
-| `scripts/test_qa_dashboard.py` | 25 checks | PASS (at `306816a`) |
-| hub tests | — | not written |
-| cross-reference / domain-registry / variables / description-budget checks | — | not written |
-| `claude plugin validate` | — | passes on the throwaway scaffold only |
-| `claude plugin test` / `claude plugin eval` | — | not run |
+| `shared/scripts/test_safe_edit.py` | 25 checks | PASS |
+| `shared/scripts/test_qa_dashboard.py` | 25 checks | PASS |
+| `shared/scripts/test_hub.py` | 70 checks | PASS |
+| `shared/scripts/check_repo.py` | 7 checks | PASS |
+| `claude plugin validate .` | — | PASS (warns: no icon; README rewrite due in step 9) |
+| trigger evals / `claude plugin test` | — | not written (step 8) |
+| description-budget test | — | not written (step 8) |
+
+**120 automated checks passing.**
 
 ## Scaffold evidence (kept — the design rests on it)
 
