@@ -184,14 +184,23 @@ def read_all_events(hub):
                     ev["_src"] = rel
                     ev["_line"] = lineno
                     parts = rel.split("/")
-                    if len(parts) >= 2 and name.endswith(".jsonl"):
-                        path_role, path_actor = parts[-2], name[:-len(".jsonl")]
-                        if ev.get("role") != path_role or ev.get("actor") != path_actor:
-                            notes.append(
-                                "MISATTRIBUTED %s line %d claims %s/%s but sits in %s/%s. The "
-                                "path is the attribution; the payload is only a claim about it."
-                                % (rel, lineno, ev.get("role"), ev.get("actor"),
-                                   path_role, path_actor))
+                    if len(parts) < 2:
+                        # A log must live under events/<ROLE>/<actor>.jsonl. One sitting directly
+                        # under events/ has no attribution to check, so it is not folded at all.
+                        notes.append(
+                            "UNREADABLE %s line %d is not inside an events/<ROLE>/<actor>.jsonl "
+                            "path, so it carries no attribution and is not applied." % (rel, lineno))
+                        continue
+                    path_role, path_actor = parts[-2], name[:-len(".jsonl")]
+                    if ev.get("role") != path_role or ev.get("actor") != path_actor:
+                        notes.append(
+                            "MISATTRIBUTED %s line %d claims %s/%s but sits in %s/%s. The path "
+                            "is the attribution, so the event is applied as %s/%s -- the payload "
+                            "is only a claim about who wrote it."
+                            % (rel, lineno, ev.get("role"), ev.get("actor"),
+                               path_role, path_actor, path_role, path_actor))
+                    # The path wins. Otherwise a line could claim any role simply by saying so.
+                    ev["role"], ev["actor"] = path_role, path_actor
                     events.append(ev)
     return events, notes
 
@@ -394,6 +403,17 @@ class Hub:
                                  % (ev.get("_src"), ev.get("_line"), ev.get("role"),
                                     ev.get("type")))
             return
+        if not SAFE_ID.match(str(iid or "")):
+            self.problems.append(
+                "%s line %d creates an id %r the CLI would refuse. A path separator or colon in "
+                "an id escapes or mangles the dashboard's output filenames."
+                % (ev.get("_src"), ev.get("_line"), iid))
+            return
+        problem = create_problem(self.model, ev.get("type"), None, ev.get("fields"))
+        if problem:
+            self.problems.append("%s line %d: %s"
+                                 % (ev.get("_src"), ev.get("_line"), problem))
+            return
         if state != tdef["initial"]:
             self.problems.append(
                 "%s line %d creates %s directly in %s, bypassing every transition rule. A %s is "
@@ -440,6 +460,12 @@ class Hub:
             self.problems.append("%s line %d sets fields on unknown item %s"
                                  % (ev.get("_src"), ev.get("_line"), iid))
             return
+        for problem in (severity_problem(self.model, item["type"], ev.get("fields")),
+                        guards_problem(ev.get("fields"))):
+            if problem:
+                self.problems.append("%s line %d: %s"
+                                     % (ev.get("_src"), ev.get("_line"), problem))
+                return
         tdef = type_def(self.model, item["type"])
         owned = tdef.get("fields_owned_by") or {}
         for key in (ev.get("fields") or {}):
@@ -547,7 +573,8 @@ class Hub:
         # carried QA's `reason` from NO_VERDICT, so the operator's reason -- the one the method
         # insists on -- was never demanded, and the audit trail showed a reason-less ship that
         # read as reasoned. Presence, not truthiness: a metric reading of 0 is a reading.
-        missing = [f for f in tr.get("requires_fields", []) if f not in fields]
+        missing = [f for f in tr.get("requires_fields", [])
+               if f not in fields or not str(fields[f]).strip()]
         if missing:
             return ("moving a %s to %s requires %s -- supplied on this move, not inherited from "
                     "an earlier one"
@@ -677,6 +704,13 @@ class Hub:
             header = view.get("generated_from") or {}
             stamp = header.get("event_count")
             digest = self._event_digest()
+            body = {k: v for k, v in view.items() if k != "generated_from"}
+            current = self.qa_state() if name == "qa-state.json" else self.fix_state()
+            expected = {k: v for k, v in current.items() if k != "generated_from"}
+            if body != expected:
+                out.append("%s does not match what the hub would generate. A digest over event "
+                           "ids could not see a hand-edited body; this compares the body itself. "
+                           "Regenerate it with `hub.py views`." % name)
             if header.get("event_digest") not in (None, digest):
                 out.append("%s carries a digest that does not match the hub's events. A row "
                            "count alone could not tell a hand-edited view from a current one; "
@@ -826,7 +860,8 @@ def create_problem(model, item_type, state, fields):
                 "the role, required-field and different-actor rules live. Creating it directly "
                 "in %s would bypass all of them."
                 % (item_type, tdef["initial"], state, state))
-    missing = [f for f in (tdef.get("requires_fields_on_create") or []) if f not in (fields or {})]
+    missing = [f for f in (tdef.get("requires_fields_on_create") or [])
+               if f not in (fields or {}) or not str((fields or {})[f]).strip()]
     if missing:
         return ("a %s cannot be created without %s"
                 % (item_type, ", ".join("-f %s=..." % m for m in missing)))

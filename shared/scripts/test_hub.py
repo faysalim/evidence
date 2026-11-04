@@ -330,11 +330,16 @@ def main():
         try:
             g("init", "--engagement", "green")
             g("iteration", "1")
+            # A gate row records the build it ran on. Without that the row cannot be shown to
+            # have run on the build the verdict names, which is the whole point of the condition
+            # -- and an unstamped row used to read as agreement.
             g("add", "case", "S5-00a", "-f", "scope=licensing", "-f", "action=smoke",
-              "-f", "oracle=first success through the real client")
+              "-f", "oracle=first success through the real client",
+              "-f", 'ran_under={"build":"sha256:abc"}')
             g("move", "S5-00a", "PASS", "-f", "evidence=ok")
             g("add", "case", "S5-00b", "-f", "scope=licensing", "-f", "action=inject one",
-              "-f", "oracle=reports exactly one", "-f", "graded_by=licensing")
+              "-f", "oracle=reports exactly one", "-f", "graded_by=licensing",
+              "-f", 'ran_under={"build":"sha256:abc"}')
             g("move", "S5-00b", "PASS", "-f", "evidence=exactly 1")
             g("add", "case", "R-1", "-f", "scope=requirements", "-f", "graded_by=licensing",
               "-f", "action=contract 4.2", "-f", "oracle=independent recompute")

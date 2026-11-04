@@ -246,12 +246,25 @@ def verdict(hub):
                        ("ungraded: " + ", ".join(ungraded)) if ungraded else "all graded"))
 
     # HA-3: a duplicate pointing at nothing, or at an open blocking finding, is still open.
-    dangling_dup = sorted(
-        i["id"] for i in items.values()
-        if i["type"] == "finding" and i["state"] == "DUPLICATE"
-        and (items.get(i["fields"].get("duplicate_of")) is None
-             or is_open(items[i["fields"]["duplicate_of"]])))
-    conditions.append(("Every DUPLICATE finding points at a finding that is itself closed",
+    def duplicate_resolves(item):
+        """Follow duplicate_of to a non-DUPLICATE finding. A cycle resolves to nothing."""
+        seen, cur = set(), item
+        while cur is not None and cur["state"] == "DUPLICATE":
+            if cur["id"] in seen:
+                return None                      # cycle: resolves to nothing
+            seen.add(cur["id"])
+            cur = items.get(cur["fields"].get("duplicate_of"))
+        return cur
+
+    dangling_dup = []
+    for i in items.values():
+        if i["type"] != "finding" or i["state"] != "DUPLICATE":
+            continue
+        target = duplicate_resolves(i)
+        if target is None or is_open(target):
+            dangling_dup.append(i["id"])
+    dangling_dup.sort()
+    conditions.append(("Every DUPLICATE finding resolves to a finding that is itself closed",
                        not dangling_dup,
                        ("unresolved: " + ", ".join(dangling_dup)) if dangling_dup else "none"))
 
@@ -299,17 +312,25 @@ def verdict(hub):
 
     # CR-3: smoke and calibration must have run on the build the verdict names, not on some
     # earlier one. Without this the rows are name-only.
-    stale = []
+    stale, unstamped = [], []
+    gate_rows = [cid for cid, c in items.items()
+                 if c["type"] == "case" and (cid.endswith("-00a") or cid.endswith("-00b"))]
     if builds:
-        for cid, c in items.items():
-            if c["type"] != "case" or not (cid.endswith("-00a") or cid.endswith("-00b")):
-                continue
-            ran = c["fields"].get("ran_under")
+        for cid in gate_rows:
+            ran = items[cid]["fields"].get("ran_under")
             ran_build = ran.get("build") if isinstance(ran, dict) else None
-            if ran_build and ran_build not in builds.values():
+            if not ran_build:
+                # No build recorded means the row cannot be shown to have run on this one, which
+                # is the whole point of the condition. Silence is not agreement.
+                unstamped.append(cid)
+            elif ran_build not in builds.values():
                 stale.append("%s ran on %s" % (cid, ran_build))
+    detail = "; ".join(sorted(stale))
+    if unstamped:
+        detail = ((detail + "; ") if detail else "") +             "no ran_under.build on " + ", ".join(sorted(unstamped))
     conditions.append(("Smoke and calibration rows ran on the build this verdict names",
-                       not stale, "; ".join(sorted(stale)) or "no disagreement recorded"))
+                       bool(gate_rows) and not stale and not unstamped,
+                       detail or (", ".join(sorted(gate_rows)) or "no gate rows")))
 
     if hub.validate():
         conditions.append(("The hub itself validates", False,

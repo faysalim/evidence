@@ -1013,6 +1013,20 @@
             "reason"
           ],
           "doc": "Handback incomplete: no digest, an id QA never issued, a finding left NEW, or missing fail-first evidence."
+        },
+        {
+          "from": [
+            "RETURNED"
+          ],
+          "to": "DELIVERED",
+          "roles": [
+            "DEV"
+          ],
+          "requires_fields": [
+            "commit",
+            "build"
+          ],
+          "doc": "A returned handback is redelivered under the same id. Without this edge RETURNED was terminal, so 'handback incomplete' forced a new id -- the same dead end as launch and doc CHANGES_REQUESTED, missed in round 1."
         }
       ]
     },
@@ -1433,6 +1447,19 @@
             "reason"
           ],
           "doc": "Only the operator can remove it."
+        },
+        {
+          "from": [
+            "OPERATORS"
+          ],
+          "to": "TORN_DOWN",
+          "roles": [
+            "OPERATOR"
+          ],
+          "requires_fields": [
+            "verified_by"
+          ],
+          "doc": "OPERATORS means only the operator can remove it, so the item must appear in THEIR queue. With no outgoing transition, waiting_on returned nothing and the queue never showed it."
         }
       ]
     }
