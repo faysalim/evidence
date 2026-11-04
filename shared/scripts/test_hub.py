@@ -163,10 +163,13 @@ def main():
                  actor="po1", role="PO", needle="not PASS")
         accepted("re-arm the case", "move", "S5-01", "DESIGNED")
         accepted("case PASSes", "move", "S5-01", "PASS", "-f", "evidence=key activated")
-        accepted("now the PO may accept", "move", "S1", "ACCEPTED", actor="po1", role="PO")
-        rejected("the DEV who claimed DONE may not accept it",
+        # Order matters here: once the PO has accepted, ACCEPTED -> ACCEPTED is simply not a
+        # transition, so a later attempt is refused for the wrong reason and proves nothing.
+        rejected("the DEV who claimed DONE may not accept it, even wearing the PO hat",
                  "move", "S1", "ACCEPTED", actor="dev1", role="PO",
                  needle="does not grade their own work")
+        accepted("a different actor as PO may accept", "move", "S1", "ACCEPTED",
+                 actor="po1", role="PO")
 
         print("\nconcurrency, duplicates and fold stability")
         # [REGRESSION] two actors inside one clock tick: a DEV move must not fold before the
