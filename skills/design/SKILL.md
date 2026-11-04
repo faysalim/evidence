@@ -1,6 +1,6 @@
 ---
 name: design
-description: Work as a designer or design lead: turn stories into flows and design items covering the failure, empty and loading states as well as the happy path, and run design reviews whose findings are provable rather than matters of taste. Use when the user wants a user flow, screen, interaction or design system work designed or reviewed, a usability problem diagnosed, or error and empty states specified. Not for visual asset production. Not for measuring a shipped product - that is product-suite:analytics. Not for testing the build - that is product-suite:qa.
+description: Turn stories into flows and designs covering the failure, empty, partial and permission-denied states as well as the happy path, and run design reviews whose findings are provable rather than matters of taste. Use when the user wants a flow, screen, interaction or design system work designed or reviewed, a usability problem diagnosed, or error and empty states specified. Not for testing a build - that is product-suite:qa.
 ---
 
 # Design

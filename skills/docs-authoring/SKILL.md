@@ -1,6 +1,6 @@
 ---
 name: docs-authoring
-description: Write user and admin documentation as a technical writer, from the product's observed behaviour rather than from tickets, then verify every claim by running it verbatim the way a customer would. Covers the reverse direction too: enumerating the product's real surface and finding what is undocumented. Use when the user wants user docs, admin guides, API reference, release documentation or a quickstart written, reviewed or verified against the product. Not for checking docs as part of a QA sweep - that is product-suite:qa scope 9. Not for marketing copy - that is product-suite:launch.
+description: Write user and admin documentation from the product's observed behaviour rather than from tickets, then verify every claim by running it verbatim as a customer would, and enumerate the real surface to find what is undocumented. Use when the user wants user docs, admin guides, API reference or a quickstart written, reviewed or verified against the product. Not for marketing copy - that is product-suite:launch.
 ---
 
 # Docs authoring

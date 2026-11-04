@@ -1,6 +1,6 @@
 ---
 name: discovery
-description: Run product discovery as a researcher or PM: write interview guides, synthesise what users actually said into insight items that each carry their evidence, sample size and what they do not show, and separate what was observed from what was inferred. Use when the user wants user research planned or synthesised, interviews or usability sessions prepared, findings turned into insights, or a demand or problem validated before a PRD. Not for writing the PRD itself - that is product-suite:prd. Not for measuring a shipped product - that is product-suite:analytics.
+description: Plan and synthesise product research: interview guides, and insight items that each carry their evidence, sample size and what they do not show, separating observed from reported from inferred. Use when the user wants user research planned or synthesised, interviews or usability sessions prepared, findings turned into insights, or a problem validated before a PRD. Not for writing the PRD - that is product-suite:prd.
 ---
 
 # Discovery

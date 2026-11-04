@@ -1,6 +1,6 @@
 ---
 name: backlog
-description: Turn a PRD and requirements into stories with acceptance criteria written as oracles - each criterion something a different person could grade the same way, which QA can turn directly into a test case. For an existing product it imports the current backlog, adds the missing criteria and flags the stories that are untestable as written. Use when the user wants stories or tickets written, a backlog groomed or prioritised, acceptance criteria written or reviewed, or a feature split into deliverable slices. Not for deciding what to build - that is product-suite:prd. Not for testing - that is product-suite:qa.
+description: Turn a PRD and requirements into stories whose acceptance criteria are oracles - each gradeable the same way by a different person, so QA can turn it straight into a test case. For an existing product it imports the backlog, adds missing criteria and flags untestable stories. Use when the user wants stories or tickets written, a backlog groomed or prioritised, or acceptance criteria written or reviewed. Not for deciding what to build - that is product-suite:prd.
 ---
 
 # Backlog

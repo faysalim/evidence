@@ -1,6 +1,6 @@
 ---
 name: qa
-description: Evidence-first end-to-end QA of a real product: prove every finding by doing the thing rather than checking that it responds, publish the test cases and the coverage denominator, and compute a bounded release verdict instead of asserting one. Use when the user wants a product, release, website, app, API, SaaS or deployment tested or QA'd; wants bugs found, verified or ranked before shipping; wants test cases or a test matrix written; wants the docs checked against the product; or wants a findings report. Not for fixing what QA found - that is product-suite:dev. Not for a single function or a unit-test question - that is ordinary debugging.
+description: Evidence-first end-to-end QA: prove every finding by doing the thing rather than checking that it responds, publish the test cases and the coverage denominator, and compute a bounded release verdict instead of asserting one. Use when the user wants a product, release, website, app, API, SaaS or deployment tested or QA'd; bugs found, verified or ranked before shipping; test cases or a test matrix written; or the docs checked against the product. Not for fixing what QA found - that is product-suite:dev.
 ---
 
 # QA

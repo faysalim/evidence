@@ -1,6 +1,6 @@
 ---
 name: release
-description: Call a release as an engineering manager, QA lead or PM: compute the go/no-go from the hub rather than asserting it, state the bounds the verdict covers and what it explicitly does not, write release notes from what actually shipped, and record the operator's decision when they ship without a green. Use when the user asks whether something is ready to ship, wants a go/no-go or release-readiness assessment, release notes written, or a release recorded. Not for testing the build - that is product-suite:qa. Not for launch messaging - that is product-suite:launch.
+description: Call a release: compute the go/no-go from the hub rather than asserting it, state the bounds the verdict covers and what it does not, write release notes from what actually shipped, and record the operator's decision when they ship without a green. Use when the user asks whether something is ready to ship, or wants a go/no-go, release-readiness assessment or release notes. Not for testing the build - that is product-suite:qa.
 ---
 
 # Release

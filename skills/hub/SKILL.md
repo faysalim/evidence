@@ -1,6 +1,6 @@
 ---
 name: hub
-description: Answer status questions about product work from the shared work-item hub and render its dashboard: what is the status, what is waiting on me or on a role, what is blocked, show me the traceability, validate the hub, and create or move items for roles that have no skill of their own. Use when the user asks where something stands, what is waiting on whom, what changed, or wants the dashboard opened. Not for doing the work of a role - use that role's skill. Not for inventing status: every answer is folded from the event logs, and a question the hub cannot answer gets "the hub does not know" rather than a guess.
+description: Answer status questions from the shared work-item hub and render its dashboard: what is the status, what is waiting on me or on a role, what is blocked, show the traceability, validate the hub, and create items for roles with no skill of their own. Use when the user asks where something stands, what is waiting on whom, or wants the dashboard. Not for doing a role's work - use that role's skill, and a question the hub cannot answer gets a plain does-not-know.
 ---
 
 # Hub

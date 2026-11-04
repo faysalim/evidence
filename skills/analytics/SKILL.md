@@ -1,6 +1,6 @@
 ---
 name: analytics
-description: Work as a product analyst: read the metrics a PRD defined, against the denominator and baseline it stated, compare to that baseline rather than to a feeling, write the post-launch review including the metrics that did not move, and feed what you learned back as new insights. Use when the user wants metrics read or defined, a launch or experiment assessed, a funnel or retention analysed, or a post-launch review written. Not for defining success criteria in the first place - that is product-suite:prd. Not for instrumenting the code - that is product-suite:dev.
+description: Read product metrics against the denominator and baseline the PRD stated, compare to that baseline rather than a feeling, write the post-launch review including the metrics that did not move, and feed findings back as insights. Use when the user wants metrics read or defined, a launch or experiment assessed, a funnel or retention analysed, or a post-launch review. Not for defining success criteria - that is product-suite:prd. Not for instrumenting code - that is product-suite:dev.
 ---
 
 # Analytics

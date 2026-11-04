@@ -1,6 +1,6 @@
 ---
 name: delivery
-description: Work as a project or delivery manager: generate status from the hub instead of collecting it, maintain the RAID risk log, surface what is blocked and on whom, and plan milestones against the dependencies the hub already knows about. Use when the user wants a status report, a delivery plan or milestones, a RAID or risk log, dependencies tracked across teams, or an answer to why something is late. Not for prioritising the backlog - that is product-suite:backlog. Not for calling a release - that is product-suite:release.
+description: Generate delivery status from the work-item hub instead of collecting it, maintain the RAID risk log, surface what is blocked and on whom, and plan milestones against dependencies the hub already knows. Use when the user wants a status report, delivery plan or milestones, a RAID or risk log, cross-team dependencies tracked, or an answer to why something is late. Not for prioritising the backlog - that is product-suite:backlog.
 ---
 
 # Delivery

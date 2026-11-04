@@ -1,6 +1,6 @@
 ---
 name: dev
-description: Build a story or fix a reported finding, as the engineer in a product team: learn an existing repo's real conventions and deploy branch before touching it, work in an isolated worktree, write the test first and prove it fails against the unfixed code, copy the case's oracle into that test, and hand back a packet that names the build digest. Use when the user wants a story implemented, a bug or QA finding fixed, a fix handed back for verification, or a repo's conventions learned before a change. Not for finding or verifying bugs - that is product-suite:qa, and you never grade your own fix. Not for architecture decisions - that is product-suite:architecture.
+description: Build a story or fix a reported finding: learn an existing repo's real conventions and deploy branch first, work in an isolated worktree, write the test before the fix and prove it fails, copy the case's oracle into that test, and hand back a packet naming the build digest. Use when the user wants a story implemented, a bug or QA finding fixed, a fix handed back for verification, or a repo's conventions learned before a change. Not for finding or verifying bugs - that is product-suite:qa, and you never grade your own fix.
 ---
 
 # Dev
