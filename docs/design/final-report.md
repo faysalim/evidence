@@ -32,15 +32,17 @@ real session 7 of its 15 skills have no description (`PE-2`). Both are in §4.
 | `shared/scripts/test_qa_dashboard.py` | 25 | **PASS** |
 | `tests/test_fixtures.py` | 24 | **PASS** |
 | `tests/test_enforcement_claims.py` | 30 | **PASS** |
+| `tests/test_round2_regressions.py` | 36 | **PASS** |
 | `tests/triggers/check_overlap.py` | overlap + corpus | **PASS** |
 | `shared/scripts/check_repo.py` | 7 checks | **PASS** |
 | `claude plugin validate .` | — | **PASS** (one warning: no icon) |
+| `tests/fixtures/build.py --all` | both fixtures | **PASS**, validate clean |
 | `tests/test_description_budget.py` | 6 | **FAILS, deliberately** — see `PE-2` |
 
-~200 automated checks. The one failure is real and intended: the test used to measure this
-plugin's own always-on cost and printed `ok` while half the suite's descriptions were being
-dropped. It now measures the actual skill-listing budget and fails at 7,442 chars against a 4,000
-allowance.
+**215 checks across six suites, plus 7 repo checks.** The one failure is real and intended: the
+test used to measure this plugin's own always-on cost and printed `ok` while half the suite's
+descriptions were being dropped. It now measures the actual skill-listing budget and fails at
+7,442 chars against a 4,000 allowance.
 
 **Evals:** 6 cases, run 4 times, ~$10. The result that holds up: **no skill fires on ordinary
 debugging**, proven from the tool calls rather than from prose, in all six runs. Which skill fires
@@ -70,11 +72,16 @@ should not be green**, two available to DEV alone. All seven are closed. And the
 found that three of the ten principles claimed *"Enforced: X"* where X did not enforce it — the
 exact failure this method exists to prevent, in the commit that claimed to make it enforceable.
 
-- **Applied:** 51, across nine root-cause clusters. Independent verification in §6.
+- **Applied and independently verified:** 51 council findings plus 8 round-2 fixes.
+- **Applied but NOT verified:** 4, found by round-2 verification after the round limit was reached.
 - **Rejected or reclassified:** 6, with reasons — including `PP-12` (1 of 8 prompts triggering),
   reclassified as evidence for `PE-2` rather than a separate defect, because in that environment
   the descriptions were absent so the prompts *could not* route.
-- **Still open:** 2, both NEEDS FAISAL.
+- **Open and documented:** 3 LOW defects plus 4 design limits.
+- **NEEDS FAISAL:** 2 blockers and 5 smaller items.
+
+Counting honestly: **66 defects found, 63 fixed, 3 left open.** Of the 63, four have no
+independent verification.
 
 The durable fix for the worst cluster is `tests/test_enforcement_claims.py`: every "Enforced:" line
 now has a probe that attempts the forbidden thing and asserts the refusal. Verified both ways — it
@@ -160,12 +167,41 @@ Shell quoting corrupted content three times in this run — two heredocs and one
 repo's own `gotchas.md` names the class; I should have used a file-writing tool each time rather
 than re-learning it.
 
-## 6. Independent verification
+## 6. Independent verification — two rounds, and it earned its keep both times
 
-A fresh agent re-ran every applied finding's repro against the new state, plus one adversarial
-neighbour each, and was asked to report anything a fix made worse.
+**Round 1.** A fresh agent re-ran all 25 applied fixes with adversarial neighbours. Most verified.
+Nine came back PARTIAL or STILL PRESENT — **including a new critical defect my own fix had
+created**: marking two findings as duplicates *of each other* took two open criticals out of the
+verdict and produced GREEN, in two legal DEV commands. It also found that my `HA-12` fix had
+digested the wrong thing entirely (event ids, not the view body), so the reported hand-edit still
+validated clean. All nine were fixed.
 
-*(Results appended below when that agent reports.)*
+**Round 2.** A second fresh agent re-ran those eight fixes: **all eight verified.** It then
+attacked the new code and found **seven more defects**, one HIGH — `set duplicate_of` bypassed the
+round-1 duplicate fix completely, because the check lived in only one write path. That is the same
+shape as the very first critical I fixed, which is the lesson: a guard belongs in a function every
+write path calls, not at a call site.
+
+**Four of those seven are fixed and three are open**, because the two-round limit was reached.
+**The four fixes are NOT independently verified** — stating that plainly rather than letting the
+"215 checks passing" line imply otherwise. They have regressions, and the regressions run against
+a genuinely green base, but no cold agent has tried to break them.
+
+The single most useful line in either report was about my tests, not my code:
+
+> `test_round2_regressions.py`'s HA-3 check only asserts `label != GREEN` on a hub that is not
+> otherwise green, so it would pass even if the duplicate condition were missing.
+
+Correct, and a worse failure than the defect it covered — it is the "test that passes before the
+fix" this method names explicitly. Every regression now builds a green base and asserts it is
+green before attacking it.
+
+**Still open after two rounds**, all LOW, all documented in `council-review.md`: `validate` exits 0
+over a hub with no `events/` directory; a view whose header is not an object and a non-UTF-8 byte
+in a log both raise rather than report; ids differing only in case collide on NTFS. Plus four
+design limits recorded rather than fixed, the most notable being that a hand-written `GREEN` line
+replays without a problem — the computed-verdict check is a write-time precondition and cannot be
+re-evaluated later, though the dashboard still shows `NOT GREEN` so the disagreement is visible.
 
 ## 7. Install and try it
 

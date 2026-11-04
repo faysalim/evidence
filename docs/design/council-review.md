@@ -233,3 +233,57 @@ different enforcers and got four corresponding failures.
 - The legacy `shared/scripts/qa_dashboard.py` still crashes on a view containing a prose `guards`
   value, reachable only via a hand-written `set`. No skill invokes that script.
 - `UNREADABLE` lines print twice in `validate` (once as a problem, once as a note). Cosmetic.
+
+---
+
+# Round 2 verification — and the seven defects it found
+
+A second fresh agent re-ran all eight round-2 fixes with adversarial neighbours. **All eight
+verified.** It then attacked the new code and found **seven more defects**, one HIGH.
+
+**The two-round limit was reached here, so four were fixed WITHOUT independent verification and
+three are left open.** Both facts are stated in the final report rather than implied.
+
+| id | Severity | Defect | State |
+|---|---|---|---|
+| `NEW-1` | **HIGH** | **`set duplicate_of` bypassed the round-2 `HA-3` fix entirely.** The check lived only in the move path, so two legal DEV commands pointed an open critical at a `PASS` case — which the verdict counts as closed — and produced **GREEN**. The same shape as `HA-1`: validation in one write path only | **FIXED**, unverified |
+| `NEW-2` | MEDIUM | `events/DEV/QA/x.jsonl` folded as `QA`, silently: `parts[-2]` with no depth check refused depth-1 and accepted depth-3 | **FIXED**, unverified |
+| `NEW-3` | MEDIUM | The gate-row build check asked "is this row's build *some* release's build", so a fresh candidate inherited the previous release's smoke and calibration rows. "The build this verdict names" had become "any build in the hub" | **FIXED**, unverified — and the first attempt was still wrong |
+| `NEW-4` | LOW | `kv()` JSON-parses, so `-f reason=null` arrived as `None` and `str(None).strip()` read as present | **FIXED**, unverified |
+| `NEW-5` | LOW | `validate` exits 0 over a hub with no `events/` directory — the message is a note, not a problem. `status` and the verdict are both safe; `validate` alone is not | **OPEN** |
+| `NEW-6` | LOW | A view whose `generated_from` is not an object, and a single non-UTF-8 byte in any log, both **raise** instead of reporting — contradicting "one bad line must not make the whole hub unreadable". Fails closed (rc=1), but a hand-edited view can take the dashboard down | **OPEN** |
+| `NEW-7` | LOW | Ids differing only in case (`F-1`, `f-1`) collide on NTFS: one dashboard page overwrites the other and the index links both to it | **OPEN** |
+
+## The most useful thing in that report was about my tests
+
+> `tests/test_round2_regressions.py`'s HA-3 check only asserts `label != GREEN` on a hub that is
+> not otherwise green, so it would pass even if the duplicate condition were missing. The suite
+> does not prove the fix.
+
+Correct, and a worse failure than the defect it was meant to cover: a regression test that cannot
+fail is the "test that passes before the fix" this method names explicitly. Every regression in
+that file now builds a **genuinely GREEN base and asserts it is green before the attack**.
+
+## Also confirmed, and better than claimed
+
+`PE-3` survives a real cp437 `cmd.exe` pipe and unicode on stderr. `HA-10` reports legacy
+un-namespaced ids as duplicates rather than dropping them. All 68 documented `hub.py` examples
+parse. The enforcement test is **real**: the agent broke four different enforcers and got four
+corresponding failures. And an empty hub — no events, only an `init`, or every log truncated —
+could not be made to produce GREEN.
+
+## Left open deliberately, after two rounds
+
+`NEW-5`, `NEW-6`, `NEW-7` above, plus from round 1:
+
+- `MG-2`/`HA-14` — a hand-written `GREEN` line replays without a problem, because "the computed
+  verdict agreed" is a write-time precondition that cannot be re-evaluated later. The dashboard
+  still computes and shows `NOT GREEN`, so the disagreement is visible rather than hidden. A
+  documented limit of the design.
+- A `duplicate_of` pointing at a `WITHDRAWN` finding is accepted, so a DEV can retire a critical by
+  pointing it at anything QA withdrew. Consistent with `WITHDRAWN` being terminal; arguably wrong.
+- `link`/`unlink` carry no role authority: any role may retract any link. Attributed, so visible,
+  but not gated.
+- The legacy `shared/scripts/qa_dashboard.py` still crashes on a view containing a prose `guards`
+  value, reachable only via a hand-written `set`. No skill invokes that script.
+- `UNREADABLE` lines print twice in `validate`. Cosmetic.
