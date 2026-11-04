@@ -194,3 +194,42 @@ order independence, a log concatenated twice, role-string variants, and every di
 
 So the restructure moved the method without weakening it. What it got wrong was its own
 bookkeeping — which is the part the method says to check first.
+
+---
+
+# Round 2 — what independent verification found still open
+
+A fresh agent re-ran all 25 applied round-1 fixes, each with an adversarial neighbour, and was
+asked to report anything a fix had made worse. **Most verified. Nine came back PARTIAL or STILL
+PRESENT, and one of those was a new critical defect created by a round-1 fix** — which is exactly
+why the verification step exists and why the author does not grade their own work.
+
+| id | Round-1 verdict | What was still wrong | Round-2 fix |
+|---|---|---|---|
+| `HA-3` | **PARTIAL — new critical** | **A DUPLICATE cycle.** `C-1 duplicate_of C-2` and `C-2 duplicate_of C-1`, two legal DEV commands, took two open criticals out of the verdict and produced **GREEN**. My condition treated `DUPLICATE` as closed | the verdict follows `duplicate_of` to a non-DUPLICATE terminal; a cycle resolves to nothing, which denies |
+| `HA-12` | **STILL PRESENT** | My digest covered applied event **ids**, not the view **body** — so hand-editing `qa-state.json` with its header intact still validated clean. The reported case, unchanged | `validate` regenerates the view and compares the body |
+| `MG-1`, `HA-18`, part of `HA-4`/`HA-6` | **PARTIAL** | **The CLI refused and the fold did not.** `_op_add` skipped `create_problem` and `SAFE_ID`; `_op_set` skipped severity and guards validation. A hand-written id with a colon reproduced the original 0-byte-file-plus-NTFS-stream symptom | both applied on replay. Same class as the `--state` bypass, which *was* closed on replay in round 1 — these were simply missed |
+| `HA-13` | **PARTIAL** | A misattributed line was reported but **still applied under the role it claimed**, and a `.jsonl` directly under `events/` was never attribution-checked at all | the path is the attribution; the payload is only a claim about it. A log outside `events/<ROLE>/` is not folded |
+| `MG-3` | **PARTIAL** | A gate row with **no** `ran_under` read as "no disagreement recorded", so the rows stayed name-only — which was the finding | an unstamped gate row fails the condition |
+| `PP-2` class | **PARTIAL** | `fix` in `RETURNED` was terminal, so "handback incomplete" forced a new id — the same dead end as `launch` and `doc`, missed in round 1 | `RETURNED → DELIVERED` |
+| `HA-8` | **PARTIAL** | A cleanup item in `OPERATORS` never appeared in `list --waiting-on OPERATOR`, because the state had no outgoing transition — contradicting my own fix comment claiming it was routed there | `OPERATORS → TORN_DOWN`, operator-only |
+| minor | — | `-f reason=`, `-f verified_by=`, `-f oracle=` — empty strings satisfied a presence check | non-empty after strip, with a regression that a metric reading of **0** is still accepted |
+
+`tests/test_round2_regressions.py` is all 22 of those repros, kept.
+
+**Also reported, and better than claimed:** `PE-3` survives a real cp437 `cmd.exe` pipe and unicode
+on stderr; `HA-10` reports legacy un-namespaced ids as duplicates rather than dropping them; all 68
+documented `hub.py` examples parse; and the enforcement test is **real** — the agent broke four
+different enforcers and got four corresponding failures.
+
+**Left open deliberately after round 2**, per the two-round limit:
+
+- `MG-2`/`HA-14` — a hand-written `GREEN` line replays with no problem, because "the computed
+  verdict agreed" is a write-time precondition and cannot be re-evaluated later. The dashboard
+  still computes and displays `NOT GREEN`, so the disagreement is visible rather than hidden. This
+  is a documented limit of the design, not an oversight.
+- `link`/`unlink` carry no role authority: any role may retract any link. The event is attributed,
+  so it is visible, but it is not gated.
+- The legacy `shared/scripts/qa_dashboard.py` still crashes on a view containing a prose `guards`
+  value, reachable only via a hand-written `set`. No skill invokes that script.
+- `UNREADABLE` lines print twice in `validate` (once as a problem, once as a note). Cosmetic.
