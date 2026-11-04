@@ -10,32 +10,27 @@ rewrite history or delete branches.
 
 ## Where we are
 
-**Steps 1-9 complete. All 15 skills built. The 5-agent review council is running.**
+**Build complete. Council round 1 applied. Independent verification in flight.**
 
 | Step | What | Commit |
 |---|---|---|
-| 1 | Snapshot | `306816a` |
-| 2 | `docs/design/plugin.md` | `e5dc138` |
-| 3 | hub, hub.py, dashboard, tests | `ead6091` |
-| 4 | File moves and splits; QA trimmed 470 -> 263 | `624cc2e` |
-| 5 | `skills/dev` | `b31b755` |
-| 6 | `skills/hub`, `skills/orient` | `3a61b17` |
-| 7a | discovery, prd, backlog | `7d4fbd6` |
-| 7b | requirements, architecture, design | `877eb52` |
-| 7c | release, docs-authoring, launch, analytics, delivery | `1339e02` |
-| 7d | descriptions trimmed to the measured budget | `26232d5` |
-| 8a | both fixtures + dashboards | `fa352e0` |
-| 8b/9 | trigger evals, fixture test, README, CONTRIBUTING | `43695c0` |
-| 10 | 5-agent council -> consolidate -> apply -> verify | **IN PROGRESS** |
-| 11 | `final-report.md` | not started |
+| 1-9 | snapshot through README/CONTRIBUTING | `306816a` .. `43695c0` |
+| 9b | eval graders, deterministic where they decide | `22bfc74` |
+| 10a | council round 1: code fixes, 8 criticals closed | `0d4c25f` |
+| 10b | the intended message for 0d4c25f | `32d13fe` |
+| 10c | council round 1: docs + the enforcement-claims test | `78346ef` |
+| 10d | consolidated council review, 59 findings | `5955316` |
+| 10e | verification agent | IN FLIGHT |
+| 11 | `final-report.md` | drafted, awaiting §6 |
+
+**Two findings cannot be closed from here** and are the final report's §4: `PE-1` (the README's
+install path needs a push, which was forbidden) and `PE-2` (the plugin exceeds the skill-listing
+budget, which needs a product decision, not a code change).
 
 ## Next
 
-The council's five reports arrive as task notifications. Then: consolidate into
-`docs/design/council-review.md` de-duplicated by root cause and ranked; apply or reject each with
-a reason; anything that would change a product-qa rule goes to NEEDS FAISAL rather than being
-applied; commit fixes in groups referencing finding ids; then ONE fresh verification agent re-runs
-every applied finding's repro. At most two rounds. Then the final report.
+Append the verification agent's results to `final-report.md` §6, fix anything it returns PARTIAL or
+STILL PRESENT, verify once more, then stop. At most two rounds, and this is round one.
 
 ## Test status
 
