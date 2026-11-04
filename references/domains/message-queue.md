@@ -39,6 +39,11 @@ skew against time-based retention · an ACL revoked mid-stream · a rolling upgr
 consumer group reset to earliest and to latest · a producer with `acks=1` against a documented durability
 claim.
 
+- **Published performance claim under saturation** (scope 8b): reproduce the claimed number on a
+  stated rig, then measure the degradation curve at 10x and 100x that load. At saturation, establish
+  whether it sheds load, queues unboundedly or loses data — queueing to out-of-memory is a
+  durability defect wearing a performance costume.
+
 ## Defect classes to look for by name
 
 **An acknowledged publish lost on leader failover** · ordering broken within a partition or key under

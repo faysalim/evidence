@@ -38,6 +38,11 @@ condition that flaps · an alert evaluated **during** an ingest outage · a p99 
 where data has been downsampled · a scheduled report across a DST change · a team member removed while
 their dashboard is shared · ingest quota exceeded.
 
+- **Published performance claim under saturation** (scope 8b): reproduce the claimed number on a
+  stated rig, then measure the degradation curve at 10x and 100x that load. At saturation, establish
+  whether it sheds load, queues unboundedly or loses data — queueing to out-of-memory is a
+  durability defect wearing a performance costume.
+
 ## Defect classes to look for by name
 
 **Missing data treated as "condition not met", so an outage silences the alert that should catch it** —

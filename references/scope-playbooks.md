@@ -41,7 +41,8 @@ one place:
 - [5. Licensing and entitlement lifecycle](#5-licensing-and-entitlement-lifecycle)
 - [6. Secondary and free products](#6-secondary-and-free-products)
 - [7. Telemetry and privacy](#7-telemetry-and-privacy)
-- [8. Security and abuse, non-destructive](#8-security-and-abuse-non-destructive)
+- [8. Security and abuse](#8-security-and-abuse)
+- [8b. Performance, capacity and degradation](#8b-performance-capacity-and-degradation)
 - [9. Documentation conformance](#9-documentation-conformance)
 - [10. State: correctness and durability under fault, time and concurrency](#10-state-correctness-and-durability-under-fault-time-and-concurrency)
 - [11. Upgrade, migration and rollback](#11-upgrade-migration-and-rollback)
@@ -164,9 +165,29 @@ Free products get the least QA and carry the most reputational weight, because t
 - Per-brand or per-tenant separation, if claimed.
 - State the boundary of what you could verify without backend read access.
 
-## 8. Security and abuse, non-destructive
+## 8. Security and abuse
 
-Read-only and non-destructive throughout. The aim is to find what a bored attacker finds in an hour.
+The aim is to find what a bored attacker finds in an hour — and to say so in the verdict, because an hour
+of this is not a penetration test and must never be reported as one.
+
+**Scope by whose state it destroys, not by the verb.** "Read-only throughout" contradicted Step 0 and cost
+real coverage: in an environment *you* stood up, with data *you* generated, the write side is where the
+defects that matter live. Read-only is the rule on shared or production systems only. In an owned
+environment, test:
+
+- **Write-side authorization**, which is where the severe ones are: IDOR on *mutating* endpoints (not just
+  `GET /orders/{id}` but `PATCH` and `DELETE`), cross-tenant writes, privilege escalation through a role
+  or membership edit, mass-assignment of fields the UI never exposes, and whether an authorization check
+  that holds on the read path also holds on the write path. A role matrix correct on the settings page and
+  wrong in the export is the classic; the write-side version is worse.
+- **Server-side request forgery** on anything that fetches a URL you supply — webhooks, avatar imports,
+  PDF renderers, link previews — including redirect chains and cloud metadata endpoints.
+- **File upload**: content type versus content, path traversal in the filename, archive expansion, and
+  where the stored file is served from.
+- **Supply chain**, which nothing else in this method covers: dependency CVEs against the *lockfile* that
+  actually shipped, base-image age and known CVEs in the published digest, an SBOM if one is claimed, and
+  whether the build pulls anything unpinned. A product with no code defects and a three-year-old base
+  image is not secure, and this is the cheapest scope to run per defect found.
 
 - Input handling on every public form: script payloads, template syntax, SQL metacharacters, oversized
   input, Unicode. Check reflection in the response *and* in whatever downstream artifact it reaches
@@ -178,7 +199,33 @@ Read-only and non-destructive throughout. The aim is to find what a bored attack
 - Security headers on authenticated surfaces, and session token storage.
 - Artifact integrity: are the downloads the expected files, correctly signed.
 
-Stop at proof of reachability. Do not escalate, pivot, or exfiltrate; report the surface.
+Stop at proof of reachability. Do not escalate, pivot, or exfiltrate; report the surface. That limit is
+about restraint, not about read-only: proving a cross-tenant write landed in *your own* second test tenant
+is the proof, and stopping before you touch anyone else's data is the restraint.
+
+## 8b. Performance, capacity and degradation
+
+This had no owner, and "works for one user, falls over at fifty" passes every do-the-thing test while
+failing customers. It is not cross-cutting the way accessibility is — it has its own oracle (a rig and a
+number), its own fault population, and its own severity map — so it lives here, merged into family 8's
+agent unless the product *sells* a number, in which case it earns its own.
+
+- **Reproduce every published performance claim** on a stated rig, and report the rig, the workload and
+  the number. A claim with no stated conditions is itself a documentation defect (scope 9).
+- **The degradation curve, not the peak.** Measure at 1, 10, 50 and 100× the expected concurrency and
+  report where latency turns. A product that serves p99 10 ms at one user and 40 s at fifty has a capacity
+  defect that no single-user test can see.
+- **Find the real limit and what partitions it** — connection pools, worker counts, per-tenant quotas,
+  lock contention. The ceiling is usually a configured number nobody documented.
+- **Fail the right way.** At saturation, does it shed load, queue unboundedly, or lose data? Queueing
+  until out-of-memory is a durability defect wearing a performance costume, which is why this scope reports
+  to family 10 whenever the product keeps state.
+- **Resource trend over time**: memory and handle growth under sustained load. A leak is a scope-10 finding
+  found by a scope-8b run.
+- **Cold versus warm**: first request after a deploy, after a scale-up, after a cache flush.
+
+Severity by consequence as everywhere else: breaching a contractual SLA is `blocker` whatever the cause,
+and losing data at saturation is `critical`.
 
 ## 9. Documentation conformance
 

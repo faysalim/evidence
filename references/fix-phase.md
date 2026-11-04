@@ -4,6 +4,11 @@ Read this once the operator lifts report-only. A fix phase is more dangerous tha
 it: you are now writing to repositories someone else depends on, under a mandate that was almost certainly
 given in one sentence.
 
+**If you are a separate dev session fixing what another session found, read `references/dev-handoff.md`
+first.** Everything below applies to you unchanged; that file adds what the second session makes necessary
+— the ledger you own and the one you must not write, the state you may set (`FIXED`) and the one you may
+not (`CLOSED`), and what your handback must contain to be accepted at all.
+
 ## Confirm the delivery contract first
 
 Get these four answers before the first edit, because each one changes the mechanics:

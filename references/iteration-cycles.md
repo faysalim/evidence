@@ -18,10 +18,20 @@ deliverable; this file is what makes the run resumable.
 ```json
 {
   "engagement": "acme-full-business",
-  "report_dir": "E:/Personal/projects/progress-reports",
+  "report_dir": "<report-dir>",
   "iteration": 2,
+  "mandate": {
+    "role": "QA",
+    "report_only": true,
+    "owned_environments": ["the three-node cluster I stood up", "test tenant <id>"],
+    "out_of_bounds": ["deploys", "merges", "production config", "the shared staging cluster"],
+    "credentials": "test tenant only; no production token was supplied",
+    "time_bombs": ["Release builds self-obfuscate under a trial licence"],
+    "acceptance_requirements": "<path to the operator's written requirements>"
+  },
   "scopes": ["website", "app-windows", "saas", "selfhosted", "licensing",
-             "secondary", "telemetry", "security", "docs"],
+             "secondary", "telemetry", "security", "docs", "state", "upgrade",
+             "experience"],
   "builds_tested": {
     "1": { "website": "dfd358b", "service": "2.5.0-ui6 @ faec816" },
     "2": { "website": "a1b2c3d", "service": "2.5.1 @ 9f8e7d6" }
@@ -34,14 +44,68 @@ deliverable; this file is what makes the run resumable.
       "severity": "major", "scope": "licensing",
       "status": { "1": "OPEN", "2": "PARTIAL" }, "closed_in": null }
   ],
+  "cases": [
+    { "id": "S5-01", "scope": "licensing",
+      "action": "POST /v1/trial with the documented payload, verbatim",
+      "oracle": "a usable key arrives in the real mailbox and activates a real binary",
+      "result": { "1": "FAIL", "2": "PASS" }, "finding": "K1" },
+    { "id": "S5-03", "scope": "licensing",
+      "action": "tag-only local part, e.g. +tag@a.com",
+      "oracle": "whether a second trial mints for the same mailbox",
+      "result": { "2": "FAIL" }, "finding": "L5",
+      "note": "adversarial variant of L5; permanent from iteration 2" },
+    { "id": "S10-04", "scope": "state",
+      "action": "partition one node for 60s under write load, heal, read back both sides",
+      "oracle": "both sides agree with my own acknowledged-write ledger after heal",
+      "guards": { "class": "divergence after heal", "ceiling": "critical" },
+      "touches": ["membership", "replication"],
+      "provenance": "derived", "source": "fault-catalogue",
+      "ran_under": { "topology": "3 nodes listed, RF2, 64 partitions", "n": 20000,
+                     "duration": "20m", "load": "2k ops/s",
+                     "ran_by": "scope-10-agent", "at": "2026-11-04T09:12:00Z" },
+      "result": { "1": "NOT RUN", "2": "NOT RUN" },
+      "blocked_by": "only two hosts available on this machine" }
+  ],
+  "not_verified": [
+    { "what": "macOS installer and Gatekeeper", "why": "no macOS host in this engagement",
+      "unblocked_by": "any current macOS host", "cases": ["S2-11"], "since_iteration": 1 }
+  ],
+  "cleanup": [
+    { "item": "3-node cluster, region <r>", "created_by": "iteration 1",
+      "removable_by": "me", "cost": "billing per hour", "status": "TORN DOWN",
+      "verified_by": "re-listed instances: NONE" },
+    { "item": "test tenant <id>", "created_by": "iteration 1",
+      "removable_by": "operator", "cost": "consumes a seat", "status": "OPEN" }
+  ],
   "stopped": null
 }
 ```
 
+Four of those fields exist because a resumed run cannot work without them and nothing else carries them:
+
+- **`mandate`** — otherwise iteration 2 re-asks the operator what it may touch, or worse, guesses. Which
+  environments are *yours to break* is the field that decides whether the state scope can run at all.
+- **`cleanup`** — this is the one that bills money if a run dies mid-sweep. A ledger that lives only in a
+  markdown report is a ledger nobody inherits. Status stays `OPEN` until a **re-listing** verifies it.
+- **`not_verified`** — Phase 3 calls these the highest-value targets of the next iteration, so they have to
+  survive the session that found them. `since_iteration` is what makes "this has been blocked for three
+  rounds" visible, which is itself a `PROCURE` finding.
+- **`findings[].status_action`** — the closing action (`CODE` / `DEPLOY` / `RELEASE` / `DATA` / `PROCURE` /
+  `DECIDE` / `INVESTIGATE`), because "22 bugs" of which nine are deploy lag is not a plan.
+
+The `cases` array is the run's denominator and carries forward exactly as `findings` does: ids are names,
+never positions, and a case is never retired for passing — it is the regression suite.
+`references/test-cases.md` has the contract. Phase 2's selection is computed from this array, which is why
+it is cheap: the `PASS`
+cases whose subject falls in the diff's blast radius, rather than a guess at what the fix might have
+disturbed. A `NOT RUN` row whose `blocked_by` has not changed in three iterations is itself a finding about
+the test environment, usually `PROCURE`; promote it into `findings` rather than letting it ride.
+
 **The lead's decision procedure, in order:**
 
-1. Look for `qa-state.json` in the report directory. Ask the operator where reports live if you do not
-   know; do not assume the working directory.
+1. Look for `qa-state.json`. Check `./qa-reports/` first — that is the default convention, so an
+   ordinary first run costs no question — then anywhere the operator has named. Ask only if neither exists
+   and the operator has described a prior run.
 2. **Found it** → this is `iteration + 1`. Run Phases 0–2 before anything else.
 3. **Not found, but prior report files exist** (ranked index, findings files) → this is still a later
    iteration. Reconstruct the register from those reports, write `qa-state.json` from it, and say in the
@@ -75,8 +139,32 @@ that finds a new unrelated issue should **report it as an observation, not chase
 cheap phase quietly becomes a sweep and the gate's cost asymmetry is lost. Observations get triaged by the
 lead and go into Phase 3's target list.
 
+## The case review — the lead's first act of every iteration
+
+Before Phase 0, and before anyone is briefed, the lead revisits the case set. Zero agents, minutes of work,
+and it is not optional: **there is always more to add, and the previous round is what generates it.**
+`references/test-cases.md` has the contract; the five steps are:
+
+1. **Promote last round's `discovered` cases** to permanent `derived` ones, and ask which source should
+   have predicted each. Where the answer is a domain file's fault catalogue, that file is wrong — a PR to
+   the skill is part of this engagement's output.
+2. **Add every new finding's repro** as a permanent case, plus every adversarial variant Phase 1 will
+   require as a separate permanent case. This is how last round's missing coverage stops being missing.
+3. **Derive against the diff.** Fixes create surface — new environment variables, flags, endpoints, config
+   keys, migration paths. Re-run the reverse enumeration over the changed components and add a case per new
+   thing; a fix is the most common way untested surface enters a product.
+4. **Re-check every `NOT RUN`** for access that has since arrived. Known blind spots are the round's
+   highest-value targets.
+5. **Never prune.** `PASS` cases are the regression suite, `NOT RUN` cases are the blind-spot list, and a
+   case removed for tidiness is coverage silently withdrawn.
+
+Report the growth: `cases 214 → 238 (+19 from the diff, +5 promoted)`. A set that stops growing while
+findings keep arriving means the findings come from somewhere the set cannot see — a conversation, not
+another cycle.
+
 ```
 Iteration N (N > 1)
+  Case review                   — the denominator, before anything else
   Phase 0   Build identity      — does this build actually contain the fixes?
   Phase 1   Fix verification    — does each reported finding now behave correctly?
   Phase 2   Regression          — did the fixes break anything adjacent?
@@ -108,6 +196,13 @@ The prior engagement is the cautionary tale in both directions: a merged fix was
 image, and a published `2.5.0` image predated its own `release/2.5.0` branch tip. Had the next iteration
 trusted the tag, it would have reported a correct fix as broken.
 
+**When a separate dev session delivered the build, Phase 0 has a cheaper predecessor:** check the handback
+packet is complete before briefing anyone. No build digest per component, any finding still `NEW`, or
+missing fail-first evidence → return it unread (`references/dev-handoff.md`). A returned handback costs one
+message; the alternative is a verification round whose result is `NOT IN BUILD` for half the register.
+Phase 0 still runs — the handback is a claim about which build contains what, and Phase 0 is the
+independent check of that claim. A complete handback does not excuse it.
+
 For each fix you are about to verify, establish that its code is present:
 
 - Compare the deployed build's commit or digest against the commit that carried the fix.
@@ -119,6 +214,25 @@ For each fix you are about to verify, establish that its code is present:
 Classify anything not present as `NOT IN BUILD` and exclude it from the Phase 1 pass/fail arithmetic — it
 is a deploy question, not a fix question. Say so explicitly so the number is honest: "7 of 9 fixes were
 present and testable; 2 are not in this build."
+
+Where a dev session claims a test automates a case, Phase 0 also **greps the build for that test**. A named
+test that is not in the artifact is `NOT IN BUILD` like any other claim.
+
+## Phase 0b — Prove the build serves
+
+Build identity says the right bytes are deployed. It does not say the product starts, and nothing else here
+checks before three agents enter Phase 1 and discover it one finding at a time — recording `STILL PRESENT`
+against every fix when the real answer is that the build is dead.
+
+So after Phase 0 and **before anyone is briefed**: one smoke row per component, `S0-<component>`, whose
+oracle is that component's first-success milestone through the real client. Zero agents, minutes.
+
+A `FAIL` here briefs nobody. Classify it `DEPLOY` / `RELEASE` / `INVESTIGATE`, deliver a one-page
+turnaround, and stop — it is not a finding against the product until the environment has been shown to be
+what the brief says it is. Re-run it after any environment reschedule: a pod that moved can lose the config
+that made the listing true, and an environment addressed by the wrong name reports zero instances with no
+error at all. Three and a half hours of a churn test were once spent on an environment that was not what it
+was believed to be.
 
 ## Phase 1 — Fix verification
 
@@ -205,6 +319,13 @@ the other direction. Two changes, and only two:
    at hour eleven on what the one-hour run would have shown cost eleven hours; a run that stalls at hour
    two unnoticed until morning cost more. Every long run has a progress signal and exits itself when that
    signal freezes.
+3. **A `LONG` row is a lien on the report.** The report may be *delivered* with `LONG` rows open; it cannot
+   carry a verdict while one is, and its first line says how many are open and when they read back. A
+   `LONG` row past its cutoff with no read-back is **not** `NOT RUN` — it is `FAIL → INVESTIGATE` against
+   the harness or the environment, because a run that cannot finish is a result. Whoever reads the long
+   form back amends the verdict in writing under *Corrections*, even when the answer is "still green". The
+   12-hour run that would have shown 39,760 missing keys was started, never read back, and the index said
+   no blockers.
 
 **Probabilistic findings** verify at the original rate's denominator or more: a finding reproduced at 3/50
 needs at least 50 clean runs — preferably 150 — before `VERIFIED FIXED`. One clean verbatim run is
@@ -219,8 +340,8 @@ baseline catches it.
 
 ## Phase 3 — Full sweep
 
-Past the gate, run the full nine-scope sweep from `scope-playbooks.md` as if it were iteration 1, with two
-differences:
+Past the gate, run the full sweep over every applicable family from `scope-playbooks.md` as if it were
+iteration 1, with two differences:
 
 - **Carry the register forward.** Previously-closed findings stay in the document as closed, with the
   iteration that closed them. The operator needs to see the arc, and a finding that re-opens three
@@ -250,10 +371,12 @@ Phases 0–2 are narrow, so they are cheap, which is the other half of the gate'
 
 | Phase | Agents | Why |
 |---|---|---|
+| Case review | 0 | The lead updates the denominator. Minutes, inline, never skipped. |
+| 0b — Build serves | 0 | One smoke row per component, through the real client. A `FAIL` here briefs nobody. |
 | 0 — Build identity | 0 | A handful of greps and digest comparisons. Do it inline. |
 | 1 — Fix verification | 0–3 | One per repo or per surface family. Often inline for fewer than ten findings. |
 | 2 — Regression | 1–3 | Scoped by blast radius, so it is small by construction. |
-| 3 — Full sweep | up to the 9-scope / 11-agent budget | Only past the gate. |
+| 3 — Full sweep | up to the applicable-family / 11-agent ceiling | Only past the gate. |
 
 A failed gate therefore costs a small fraction of a full iteration. That is the design.
 
@@ -261,7 +384,9 @@ A failed gate therefore costs a small fraction of a full iteration. That is the 
 
 Convergence, not perfection. Stop when any of these is true, and say which:
 
-- A full sweep comes back with no blockers and no majors, and the minors are accepted or scheduled.
+- The verdict computes to `GREEN within stated bounds` and the minors are accepted or scheduled. A sweep
+  with no blockers but with a `critical` class unexercised, a `LONG` row still open, or a data finding held
+  at `DECIDE` has not converged — it has stopped looking.
 - The finding count stops falling across two iterations — that is thrash, and it means something
   structural needs discussion, not another cycle.
 - Everything still open is `DECIDE`, `PROCURE`, `DEPLOY`, `RELEASE` or `DATA` — none of which a QA

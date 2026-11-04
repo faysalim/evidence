@@ -7,6 +7,10 @@ The two fields people leave out are the two that cause the most waste: **Phase**
 is sweeping will sweep) and **Out of scope this phase** (without it, a verification agent drifts into a
 sweep and the gate's cost advantage evaporates).
 
+The field that must not be softened is **Cases**. The scope's finalized case set is the agent's first
+deliverable and a gate on it starting — an agent that is merely encouraged to keep a register will produce
+one from memory at the end, which defaults to green and loses every `NOT RUN` row.
+
 ---
 
 ## Iteration and phase
@@ -58,6 +62,21 @@ Domain file:     references/domains/<domain>.md   — read this first; it maps t
                  onto this product class and defines what "first success" means here
 Playbook:        references/scope-playbooks.md §<n>  — read it before starting
 Standard:        references/evidence-standard.md     — read it before the first finding
+Cases:           references/test-cases.md  — YOUR FIRST DELIVERABLE, before any test runs:
+                 the finalized case set for this scope, each case with its action and its
+                 ORACLE. Derive it from the domain file's fault catalogue (one case per
+                 entry), its named defect classes (each needs a case that would catch it, or
+                 say so), and your playbook's steps. Return the set, then execute it. Cases
+                 you find during execution are added and marked `discovered`; none is ever
+                 deleted — an inapplicable one resolves as NOT RUN with that reason.
+                 Then run `S<n>-00a` (smoke: first success, no faults, real client) and
+                 `S<n>-00b` (calibration: inject ONE known defect, show the oracle reports
+                 exactly one) BEFORE any other row. A scope without a passed `00b` has no
+                 PASS rows — every PASS in it is NOT RUN (uncalibrated).
+                 Execute in DESCENDING severity ceiling of the class each row guards, so a
+                 budget that runs out leaves cheap rows undone rather than fault runs.
+                 When something smells wrong, follow it BEFORE finishing the list, then add
+                 the row as `discovered`. The list is the floor, not the ceiling
 Docs rule:       read your surface's documentation and run what it tells a customer to run,
                  verbatim. Report divergences to the docs owner (scope 9), do not file them.
 First contact:   <YES — you are the first to touch this surface. Time and trace the path to
@@ -69,9 +88,14 @@ Error inventory: <return every error message, WARN-or-above log line and exit co
                   provoked, verbatim, with the action that caused it>
 ```
 
-You are the only cold party for your surface and nobody can retake that measurement later — which is why
-the first-run trace is delegated to you rather than to a dedicated experience agent, who would be warm by
-definition.
+You are the coldest party available for your surface and nobody can retake that measurement later — which
+is why the first-run trace is delegated to you rather than to a dedicated experience agent, who would be
+warm by definition. You are **agent-cold**, not a genuine first-time user: you already know this class of
+product. Say so in the trace.
+
+**The trace is exempt from the case gate and precedes it.** On `First contact: YES`, take it with the
+quickstart only and record it as a row, *then* read the domain file and finalize your set. An agent that
+has just read a fault catalogue is no longer discovering anything.
 
 ## Open findings in your scope (verification and regression phases only)
 
@@ -83,14 +107,28 @@ definition.
 ```
 
 For each: run the original repro **verbatim**, then **one adversarial variant** — the neighbours of the
-reported input, not the input itself. Return a status from this vocabulary and nothing else:
+reported input, not the input itself. Return a status per finding from this vocabulary:
 
 `VERIFIED FIXED` · `PARTIAL` (original fixed, variant still fails) · `STILL PRESENT` ·
-`NOT IN BUILD` · `CANNOT RETEST` (say what would unblock it) · `FIXED DIFFERENTLY`
+`NOT IN BUILD` · `CANNOT RETEST` (say what would unblock it) · `FIXED DIFFERENTLY` ·
+`VERIFIED (SHORT)` (short form reconciled, long form still running — passes the gate for
+proceeding, does not close the finding)
+
+Report the variant you actually used, **verbatim**, with your verdict. A `PARTIAL` the other side cannot
+reproduce becomes an argument instead of a status.
 
 ## What to return
 
 ```
+FIRST, before you execute anything:     the finalized case set — id, action, oracle, and
+                                        which source each case was derived from. This is a
+                                        gate on starting, not a formality
+THEN, the same rows filled in:          result (PASS / FAIL / BLOCKED / NOT RUN / LONG),
+                                        evidence, and `derived` or `discovered` per case.
+                                        A PASS with no evidence is a NOT RUN — write NOT RUN.
+                                        An oracle that is the product's own report of itself
+                                        (health endpoint, green build, the product's own
+                                        counters) is not an oracle; the row is not a case
 Per finding (verification/regression):  id, status, evidence, the exact invocation used
 Per new finding (sweep):                the assets/finding.md template
 First-run trace (first contact only):   time and steps per milestone, exits from the product,

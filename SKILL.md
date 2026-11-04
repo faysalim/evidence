@@ -1,6 +1,6 @@
 ---
 name: product-qa
-description: Evidence-first methodology for end-to-end QA of a real product, release, or whole business — orienting on what is actually deployed before testing it, splitting scopes across parallel agents, proving every finding by exercising the flow rather than checking that it responds, verifying the documentation claim by claim in both directions for a defensible coverage number, ranking findings with exact repro and evidence, and (if the operator lifts report-only) fixing in isolated worktrees behind tests that fail first. Use this whenever the user wants a product, release, website, desktop app, API, SaaS or self-hosted deployment tested or QA'd; asks to find, verify or rank bugs before shipping; wants the docs checked against what the product really does, or asks about documentation coverage or gaps; mentions QA agents or a multi-agent test sweep; wants a findings or bug report written up; or asks to fix what a QA run found. Use it even when they only say "test my product", "check everything works", "give it a full QA pass", "make sure the docs are right" or "find what's broken", without the word QA.
+description: Evidence-first end-to-end QA of a real product: prove every finding by doing the thing rather than checking that it responds, publish the test cases and the coverage denominator, and compute a bounded release verdict instead of asserting one. Use whenever the user wants a product, release, website, app, API, SaaS or deployment tested or QA'd; wants bugs found, verified or ranked before shipping; wants test cases, a test plan or a test matrix written; wants the docs checked against what the product really does; mentions QA agents or a multi-agent test sweep; wants a findings or bug report written up; or asks to fix, triage or hand back what a QA run found. Use it even for "test my product", "check everything works", "give it a full QA pass" or "find what's broken". Not for a single function or a unit-test question - that is ordinary debugging.
 ---
 
 # Product QA
@@ -60,6 +60,13 @@ Then pin the mandate:
 Ambiguity here is expensive in both directions: fixing under a report-only mandate is unforgivable, and
 reporting a one-line fix you were authorised to make wastes the operator's time. Establish, in writing:
 
+- **Which role are you?** If a separate dev session or team fixes what this run finds, say which side you
+  are on, because the two have opposite permissions: `QA` finds, ranks, verifies and closes, and writes no
+  product code; `DEV` triages, fixes and hands back, and **never closes a finding or grades its own fix**.
+  A session that assumes it is `DEV` when it is `QA` starts editing a repository under a report-only
+  mandate, which is the one unforgivable error here. Not stated → ask. Then read
+  `references/dev-handoff.md`, which defines the ledger each side owns, the defect lifecycle and who may
+  move it, and how a dispute resolves instead of continuing.
 - **Report-only, or fix?** If fix, what is the delivery mode — pushed branches, PRs, commits in place?
   Default to the least irreversible option available and confirm it.
 - **What is out of bounds?** Deploys, merges, production config, and any destructive operation against
@@ -68,9 +75,22 @@ reporting a one-line fix you were authorised to make wastes the operator's time.
   data you generated* is testing — and for a stateful product it is the only testing that matters.
   Revoking a real licence, deleting a production row or restarting a shared cluster is not. Establish in
   writing which environments are yours to break, and put that answer in every brief.
+- **What must be true for this release to ship?** Get the operator's **acceptance requirements** in
+  writing — SLAs, contractual guarantees, regulatory obligations, the release's own exit criteria —
+  each as a sentence that can fail. These become cases *ahead of* the domain file (`references/test-cases.md`,
+  source 0), because a product can be green against its own documentation and red against the purchase
+  order: docs promising "survives loss of a single node" are satisfied by a single-node kill while a
+  contractual RPO of zero across an availability zone was never a case. Where the operator has none, say so
+  in the verdict — green is then green against the docs only.
 - **Which credentials, and which tenant?** Admin and licensing APIs get a *test* tenant's token, never a
   production one. Ask for what you need; if it does not arrive, state the blocked test rather than
-  improvising around it.
+  improvising around it. **If any test environment is seeded from production data, that data is production
+  data**: no copying it out, no pasting it into a provider, and it goes in the cleanup ledger.
+- **Where do the credential values live?** Real values go in one gitignored directory — `.qa-secrets/` by
+  convention — referenced from briefs and reports **by role only** ("the test tenant's admin token"). An
+  agent is told the role and the path, never the value, because a value in a brief is a value in a
+  transcript and in every report that quotes it. The directory goes in the cleanup ledger as plaintext
+  credentials, which is the second thing the ledger is ordered by.
 - **Any time bombs?** Products that self-destruct, self-obfuscate, consume seats, or bill per hour. Ask
   directly: "is there anything that breaks if I build, activate or run it?" The prior run surfaced a
   self-obfuscating Release build that bakes a self-destruct when built under a trial licence — producing a
@@ -115,22 +135,32 @@ nothing about what to do on Monday.
 ## Step 2 — Split the scopes
 
 Scope by **surface the user touches**, not by repository, because a single customer journey crosses repos
-and the defects live in the seams. There are twelve scope *families*. Which apply is a per-product
-decision made in Step 0 — a database has no acquisition funnel, a static site has no durability scope —
-and the inapplicable ones are listed in the report as N/A with one line of reasoning, so a reader can see
-the omission was chosen rather than missed.
+and the defects live in the seams. **So the seams get owners**: the journeys in `references/test-cases.md`
+(source 7) are cases in their own right, each run end to end by one actor with no operator-supplied
+shortcut at any step. This is what a spare agent buys before any family is un-merged — the origin
+engagement's trial flow was broken while every individual surface on it passed.
+
+There are twelve scope *families*. Which apply is decided **provisionally in Step 0 and re-confirmed after
+Step 1**, because the hosting config and the route table are where a "stateless" surface turns out to write
+to a CRM — one marketing site's lead POST was the only fulfilment trigger for a product and ended in
+`.catch(() => {})`, which is a durability defect on a surface declared N/A for durability. Any agent may
+contest an `N/A` with a one-line observation, and the lead answers it in the index. Inapplicable families
+are listed as N/A with one line of reasoning, so a reader can see the omission was chosen rather than
+missed.
 
 1. Acquisition surface (website, store listing, funnel) · 2. Primary product, per platform or device ·
 3. Control plane (SaaS, console, admin / management API) · 4. Deployment (container, Helm, cluster,
 install) · 5. Entitlement lifecycle · 6. Secondary products, SDKs, compatibility layers ·
-7. Telemetry & privacy · 8. Security & abuse · 9. Documentation conformance ·
+7. Telemetry & privacy · 8. Security & abuse, **with performance, capacity and degradation (8b)** ·
+9. Documentation conformance ·
 **10. State: correctness and durability under fault, time and concurrency** ·
 **11. Upgrade, migration and rollback** · **12. Experience & diagnosability**
 
 `references/scope-playbooks.md` has the generic playbook per family. `references/domains/` maps the
 families onto twenty-seven product classes, grouped in its README as data and state, applications,
-education, money and commerce, and platform and infrastructure — each file carrying that domain's version of "do the thing", its fault
-catalogue, the evidence it needs, and its severity notes. **Read the closest one before briefing, and read
+education, money and commerce, and platform and infrastructure — each file carrying that domain's
+version of "do the thing", its fault catalogue, the evidence it needs, and its severity notes. **Read the
+closest one before briefing, and read
 every file that applies when the product is two things at once** — a SaaS CRM, an API-fronted licensing
 platform, an AI tutor inside a school platform. Take the union of the fault catalogues and reconcile the
 scope maps once against the cap. If none is close, say so in the report, work from the families, and write
@@ -143,19 +173,46 @@ iteration 1) the round, the phase and that scope's open findings. An agent given
 reports that the page loads; an agent not told which phase it is in will sweep when it should be
 verifying.
 
-**Agent budget: one agent per *applicable* scope family, 11 maximum.** The cap is on agents, not on
-families. Three rules keep it honest as scopes grow: inapplicable families cost zero agents and are listed
-as N/A rather than silently absent; long-running runs (a durability certification, a backfill, a
-device-matrix sweep) are background jobs the lead starts and reads back — never an agent sitting idle on a
-12-hour wait, which is billed and holds a slot a scope needs; and when scope 10 is the core of the product
-it is the usual recipient of the spare agents, split by fault class (kill/partition vs
-membership/migration), not by product. Each domain file declares its usual applicable set and default
-merges; the sum must fit the cap before the operator is asked for more.
+**Agent budget: one agent per *applicable* scope family, 11 as the default ceiling.** The cap is on agents,
+not on families, and it is a budget rather than a boundary — but **an agent is added only for a named
+journey, a fault-class split, or an un-merge whose coverage loss is named; never for breadth.** Three rules
+keep it honest as scopes grow: inapplicable families cost zero agents and are listed as N/A rather than
+silently absent; long-running runs (a durability certification, a backfill, a device-matrix sweep) are
+background jobs the lead starts and reads back — never an agent sitting idle on a 12-hour wait, which is
+billed and holds a slot a scope needs; and **every agent in the run is named in the index with its family,
+fault class or journey — an agent with none is unaccountable.** Each domain file declares its usual
+applicable set and default merges; `references/scope-playbooks.md` says what the next three agents buy, in
+order, when the ceiling is raised.
 
 Name up front every platform × scope cell you cannot execute on this machine. That list is a deliverable,
 not an apology.
 
-## Step 3 — Test by doing
+## Step 3 — Design the cases, then test by doing
+
+### Design the cases first, and publish the register
+
+A report of findings alone tells the reader what broke and nothing about what held, so they cannot tell a
+surface that was exercised hard from one nobody opened. This skill refuses a documentation-coverage number
+without its denominator; **the register is that rule applied to the whole run**, and it is what makes a
+multi-agent sweep auditable rather than a pile of opinions. `references/test-cases.md` carries the field
+list, the eight derivation sources and the honesty rules; `assets/test-case-register.md` is the template.
+Four things must survive any summary of it:
+
+- **A case is an action, an oracle, a result and its evidence — and a case whose oracle is the product's
+  own report of itself is not a case.** `/health: ok`, a green build and the cluster's own `missing: 0`
+  grade nothing. The oracle must **predate the run and exist outside both the product and your own
+  judgement**: the operator's price list, your ledger written at ack time, the published spec, a count.
+  "Looks right" names no reference and is not an oracle.
+- **A `PASS` with no evidence is a `NOT RUN`**, and is recorded as one. `NOT RUN` and `BLOCKED` are
+  first-class results; in an honest run they are not zero, and they are ordered by the severity of the
+  class each one guards, not by scope.
+- **Each scope's finalized case set is its first deliverable, and it is a gate** — the method's only entry
+  criterion, since everything else here gates an exit. A list alone does not satisfy it: the scope's smoke
+  row and its **calibration row** run before any other, and **a scope whose calibration did not run has no
+  `PASS` rows.** A harness that has never failed has never been shown to work.
+- **Cases are derived, not invented**, and the derivation is published with the count, because a bare count
+  is a boast. The set is then closed to deletion and open to addition — `derived` before execution,
+  `discovered` during it, and nothing is ever deleted.
 
 Read the matching `references/domains/` file first — it names this product class's fault catalogue and its
 defect classes, and an unnamed defect class is one nobody looks for. Then read
@@ -232,11 +289,21 @@ first encounter with a product. It is also a regression baseline — a rising ti
 fix is a finding that no correctness test can see.
 
 Because it is perishable, the trace belongs to **whoever arrives at a surface first**, not to a dedicated
-experience agent who would be warm by definition. A freshly briefed scope agent is a genuine first-time
-user by construction; the lead, warm from Step 1's hosting config and code greps, is not. So in a parallel
-sweep every scope captures its own first-run trace and error inventory on first contact and returns them
-to family 12's owner, who holds the baseline across iterations and runs the deliberate audits. In a solo
-run, do the primary surface's first run *before* Step 1, or label the trace warm.
+experience agent who would be warm by definition. A freshly briefed scope agent is **agent-cold** — not a
+genuine first-time user, since any model knows a well-known product class before it arrives, but the
+coldest party available; prefer a human where one is. The lead, warm from Step 1's hosting config and code
+greps, is not even that. So in a parallel sweep every scope captures its own first-run trace and error
+inventory on first contact and returns them to family 12's owner, who holds the baseline across iterations
+and runs the deliberate audits. In a solo run the ordering is a real conflict: Step 0 asks the operator
+several questions and Step 1 greps the
+hosting config, so a solo run that follows the steps in order can never be cold. Resolve it explicitly —
+**take the primary surface's first run immediately after the Step 0 safety questions and before Step 1**,
+or label the trace warm and say which. Do not leave it implied.
+
+**The trace is exempt from the case gate and precedes it.** On first contact the agent takes it with the
+quickstart only, records it as a row (oracle: time, steps and exits against the docs' own claimed
+duration), and *then* reads the domain file and finalizes its set. That order is the only one in which the
+trace is cold at all — an agent that has just read a fault catalogue is no longer discovering anything.
 
 For operator-facing products the sibling measurement matters more: **time to diagnose**. Every fault run
 in scope 10 supplies it for free — inject the fault, then time how long until someone reading only the
@@ -246,7 +313,34 @@ reconciliation" is a usability blocker that is also an outage.
 ## Step 5 — Rank, de-duplicate, consolidate
 
 One ranked index, most severe first, product bugs separated from usability, each row carrying a Step 1
-status and a pointer to the per-scope detail. Template in `assets/ranked-index.md`.
+status and a pointer to the per-scope detail. Template in `assets/ranked-index.md`. It also carries the
+register's totals with their derivation and the `NOT RUN` list, because the operator plans from the index
+and "what we did not test" belongs where it will actually be read.
+
+### The verdict is computed, never written
+
+The report's headline is a verdict, and `NO VERDICT` is the legal default. Without one the reader computes
+a verdict themselves from an empty blocker table, which is the "0 bugs" report with better typography — a
+run can show ten agents, 180 cases and zero blockers while the one row that would have caught a
+cross-tenant data leak sits `BLOCKED` at the bottom because a second tenant was never provisioned.
+
+So `GREEN within stated bounds` is **computed from the register**, and every condition must name the rows
+that satisfy it: no open `critical` or `blocker`, including any held at `DECIDE` · every defect class the
+applicable domain files mark `critical` or `blocker` has at least one `PASS` case **in a scope whose
+calibration row passed** · no unreconciled `LONG` row · no `BLOCKED` or `NOT RUN` row guarding a
+`critical` class · build identity established per component and unchanged since the last case ran · the
+smoke row passed on the build and environment the verdict names. Any condition without rows → `NO VERDICT`,
+and the first line of the report says which one failed.
+
+The verdict is also **bounded in writing**: the digests, topology, tenant shape and dataset size it covers,
+and a "what this does not cover" block — *scope 8 was one hour of a bored attacker, not a penetration
+test* — because an unbounded green is the claim this skill exists to prevent. Template in
+`assets/ranked-index.md`.
+
+Every `FAIL` case names its finding. The reverse is not required — a finding stumbled on while doing
+something else is legitimate, and exploratory testing finds what case design cannot imagine — but
+**back-fill it as a case**, or the next iteration has no way to regress it. Cases are never de-duplicated;
+findings are.
 
 De-duplicate by **root cause**, not symptom. "Any unrecognised argument launches the GUI and never exits"
 was reported independently by the Windows agent and the macOS agent against two different products. It is
@@ -287,6 +381,7 @@ order, and running them out of order wastes the budget. `references/iteration-cy
 The shape:
 
 ```
+Case review                 — update the denominator first; the set only ever grows
 Phase 0  Build identity     — does this build actually contain the fixes?
 Phase 1  Fix verification   — original repro verbatim, plus one adversarial variant
 Phase 2  Regression         — scoped by the blast radius of the diff
@@ -307,16 +402,46 @@ build with broken fixes is dominated by findings the operator already has, burie
 and spends the expensive phase to learn what the cheap one already knew. Phases 0–2 cost a small fraction
 of a sweep; that asymmetry is the whole point.
 
+The test-case register is what makes the cheap phases cheap. Phase 1 is **the failed cases re-run
+verbatim**, and the adversarial variant each one requires becomes a *new, permanent* case rather than a
+note in the margin — that is how the coverage that was missing last time stops being missing. Phase 2 is
+**the `PASS` cases whose subject falls in the diff's blast radius**, which is a selection rather than a
+guess, and that selection is most of the gate's cost advantage. A `PASS` case is never retired for
+passing; it is the regression suite.
+
 Carry **one finding register with stable ids** across every iteration. Ids are names, not positions —
 never reuse or renumber them, or nothing can be discussed across builds. Regressions get new ids, with the
 causal link in the body ("introduced by the fix for K1"). And if the same finding fails verification twice,
 escalate the root cause instead of running a third cycle of the same patch — including the possibility
 that your own original diagnosis was the thing that was wrong.
 
+## If a separate dev session does the fixing
+
+Read `references/dev-handoff.md`. The two sessions share no context, so everything between them is an
+artifact: **two ledgers with one writer each** (`qa-state.json` is QA's, `fix-state.json` is DEV's, joined
+by finding id — neither ever writes the other's fields), a defect lifecycle where `NEW` is not a resting
+state, and the invariant that **DEV may claim `FIXED` while only QA may `CLOSE`**, because those are
+different statements made by different parties on different evidence.
+
+Two mechanisms do most of the work. The ticket publishes its **acceptance criterion** — the case id and its
+oracle — plus the adversarial variant as a *class of input rather than a value*, so a fix is aimed at the
+defect instead of the symptom and cannot be ambushed at verification. And the handback is **rejectable
+before anyone is briefed**: no build digest per component, or any finding still `NEW`, or missing
+fail-first evidence, and it comes back unread. That is far cheaper than a verification round that reports
+`NOT IN BUILD` for half the register. Packets in `assets/handoff-packet.md`.
+
+The link that pays twice: **QA's case is the spec, DEV's regression test is its automation**, with the
+oracle copied into the test verbatim. Cases DEV has automated stop needing a human run, so the engagement
+gets cheaper each round rather than more expensive.
+
 ## If the mandate becomes "fix"
 
-Read `references/fix-phase.md`. It covers worktree isolation so the operator's own checkouts are never
-written to, writing the test first and **proving it fails against the unfixed code** (a test that passes
+Read `references/fix-phase.md`. If you are the author *and* the verifier, the invariant above still holds:
+the verification pass is a separate cold pass against the built artifact, graded on the recorded oracle
+rather than your memory of what you changed — and the report says that author and verifier were the same
+party, because that is a material limitation of the evidence. It covers worktree isolation so the
+operator's own checkouts are never written to, writing the test first and **proving it fails against the
+unfixed code** (a test that passes
 before the fix is testing nothing), one branch per finding so the operator can take them independently,
 declaring merge-order dependencies between branches, and what to deliberately leave alone — legal text,
 registered identities, registry paths, anything where a rename is really a migration.
@@ -328,12 +453,18 @@ registered identities, registry paths, anything where a rename is really a migra
 | `references/evidence-standard.md` | Before the first finding. What counts as proof, per surface. |
 | `references/scope-playbooks.md` | Splitting scopes or briefing an agent. The twelve families, with steps, and the agent budget. |
 | `references/domains/` | **First, every time.** Twenty-seven product classes — its README indexes them and says which pair up. Each maps the families onto that class, declares its applicable set and agent count, defines what "first success" means, and lists the fault catalogue and defect classes by name. |
+| `references/test-cases.md` | Step 3, before running anything. What a test case is here, where cases are derived from, and why the register is the run's denominator. |
 | `references/docs-conformance.md` | Scope 9. Claim extraction, two-way coverage, and what a 100% claim requires. |
 | `references/experience.md` | Usability and UX. The first-run measurement, making a UX finding provable, error messages, accessibility. |
 | `references/iteration-cycles.md` | Any iteration after the first. Phases, the gate, the finding register, when to stop. |
+| `references/dev-handoff.md` | A separate dev session or team fixes what you found. Role declaration, the two ledgers, the defect lifecycle, the handback contract, disputes. |
 | `references/fix-phase.md` | Report-only has been lifted. |
 | `references/gotchas.md` | Before heavy local work — builds, edits at scale, containers, browser automation. Traps that each cost a cycle. |
 | `references/case-file.md` | You want a worked end-to-end example with real numbers. |
-| `scripts/safe_edit.py` | Any scripted edit to source files. Byte-safe, newline- and BOM-preserving, aborts unless every anchor matches exactly once. |
+| `scripts/safe_edit.py` | Any scripted edit to source files. Byte-safe, newline- and BOM-preserving, atomic; validates every anchor against the **original** before applying any, and aborts unless each matches exactly once. `--check` dry-runs anchors. |
+| `scripts/qa_dashboard.py` | Generating the local HTML dashboard from the ledgers and event logs — verdict, per-finding QA/DEV lifecycle, coverage, time-in-state. One site per release. |
+| `scripts/test_*.py` | The two scripts have self-tests. Run them after touching either; the regression cases fail against the versions that shipped with the bugs. |
 | `assets/agent-brief.md` | Briefing a scope agent — or yourself, when working a scope solo. |
+| `assets/test-case-register.md` | The register itself — what was exercised, its oracle, its result, what was not run. |
+| `assets/handoff-packet.md` | Handing findings to a dev session, or handing a build back to QA. |
 | `assets/finding.md`, `assets/ranked-index.md` | Writing up. |

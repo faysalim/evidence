@@ -41,6 +41,11 @@ returns 500, then times out, then succeeds · a webhook delivered twice and out 
 polled after its record expires · concurrent `PATCH` on one resource · a compressed body that expands
 enormously.
 
+- **Published performance claim under saturation** (scope 8b): reproduce the claimed number on a
+  stated rig, then measure the degradation curve at 10x and 100x that load. At saturation, establish
+  whether it sheds load, queues unboundedly or loses data — queueing to out-of-memory is a
+  durability defect wearing a performance costume.
+
 ## Defect classes to look for by name
 
 **Object-level authorization missing** — another account's object readable by its id · idempotency honoured

@@ -103,6 +103,11 @@ One row per claim, filled in as you go:
 `result` is `PASS`, `FAIL`, or `BLOCKED` with a reason. `BLOCKED` rows stay in the denominator — they are
 the honest cost of missing access, and quietly dropping them is how a coverage number becomes a lie.
 
+**This ledger is a test-case register of one kind** (`references/test-cases.md`): a claim is an action, the
+documented wording is the oracle, and the row carries its result and evidence. The run-wide register adopts
+these rows **by reference** — `D1`–`D<n>` with their totals — and does not re-list them, so the two
+denominators never double-count the same work.
+
 Where a claim fails, run the *working* variant too. Knowing that the documented call fails but the call
 with one extra parameter succeeds is what turns the finding into a one-line doc fix.
 

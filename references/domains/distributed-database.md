@@ -40,6 +40,11 @@ reconnect mid-batch · client retry of a write whose first attempt was already a
 A kill does not stand in for a partition. They have different bug populations, and the asymmetric
 partition is the one most products have never been tested against.
 
+- **Published performance claim under saturation** (scope 8b): reproduce the claimed number on a
+  stated rig, then measure the degradation curve at 10x and 100x that load. At saturation, establish
+  whether it sheds load, queues unboundedly or loses data — queueing to out-of-memory is a
+  durability defect wearing a performance costume.
+
 ## Defect classes to look for by name
 
 Acknowledged-write loss · split-brain (two acceptors during a partition) · replica staleness after
@@ -61,7 +66,7 @@ owner change.
 | Two acceptors during a partition | **critical** |
 | Available but stale beyond the documented contract | **blocker** |
 | Convergence latency beyond the docs or a client's retry budget, with no loss | **major**, and the first line must say "availability, not loss" |
-| The contract is undocumented | file the missing contract as a scope-9 finding *first*; hold the data finding at `DECIDE` |
+| The contract is undocumented | file the missing contract as a scope-9 finding *first*, **and** file the data finding at its consequence severity with status `DECIDE` and the assumption named — it stays open at that severity for the verdict |
 
 You cannot grade a product against a promise it never made — which is why the undocumented contract is
 the first finding, not a footnote.

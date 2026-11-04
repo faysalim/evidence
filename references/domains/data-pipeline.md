@@ -64,7 +64,8 @@ diff input against output. That turns "the transform looks right" into a measure
 
 The delivery guarantee is a documentation claim: test the **exact wording**. "At-least-once" and
 "exactly-once" are different pass criteria, and if the docs state neither, the missing contract is the
-first finding.
+first finding — **and the data finding is still filed at its consequence severity**, held at `DECIDE` with
+the assumption named, open at that severity for the verdict.
 
 ## Experience
 

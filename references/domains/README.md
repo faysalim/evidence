@@ -129,5 +129,6 @@ matrix rather than a setting. One extra, for a stated reason. Nothing else is op
 Copy the headings, fill them from a real engagement rather than from first principles, and keep it to
 60–110 lines — or up to about 150 when the domain carries a **test matrix of its own** that the families
 cannot express, as `mobile-app.md` does for devices and `ai-tutor.md` does for learner levels. That is the
-only accepted reason to run long; a longer file for any other reason is padding. The value is in specificity: "three nodes formed and one write acknowledged and read back
-from a different node" is useful; "the product works" is not.
+only accepted reason to run long; a longer file for any other reason is padding. The value is in
+specificity: "three nodes formed and one write acknowledged and read back from a different node" is
+useful; "the product works" is not.
