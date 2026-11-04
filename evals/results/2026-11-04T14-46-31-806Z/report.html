@@ -1,0 +1,1483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eval report — product-suite v0.1.0</title>
+</head>
+<body>
+<style>
+:root{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}}
+:root[data-theme="dark"]{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}
+:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px 64px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+header h1{margin:2px 0 0;font-size:24px;font-weight:600;line-height:1.25;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;color:var(--ink-2);font-size:13px}
+.meta .num{font-variant-numeric:tabular-nums lining-nums}
+.banner{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;
+  border:1px solid var(--hairline);background:var(--surface);font-size:13px}
+.banner .chip-warn{color:var(--warning);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:4px}
+.tile .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.tile .value{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
+.tile.hero .value{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:48px}
+.tile .sub{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tile .value.delta-pos{color:var(--delta-good)}
+.tile .value.delta-neg{color:var(--critical)}
+.toolbar{display:flex;gap:8px;justify-content:flex-end}
+.toolbar button{font:12px system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:4px 10px;cursor:pointer}
+.toolbar button:hover{color:var(--ink)}
+.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.case{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px}
+.case-regressed{border-left:3px solid var(--critical)}
+.verdict{margin:6px 0 0;font-size:15px}
+.verdict .delta{font-size:15px}
+.flag{font-size:11px;font-weight:600;color:var(--warning);white-space:nowrap}
+.star{color:var(--warning);font-size:.45em;vertical-align:super;line-height:0;cursor:help}
+.legend summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.legend-list{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-2)}
+.case-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.case-head h2{margin:0;font-size:16px;font-weight:600}
+.case-head .spacer{flex:1}
+.case-score{font-size:15px;font-weight:600}
+.mono{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--ink-3);font-size:12px}
+.meter{display:inline-block;position:relative;width:120px;height:6px;border-radius:4px;background:var(--grid);
+  vertical-align:middle}
+.meter>span{display:block;height:100%;border-radius:4px;max-width:100%}
+.meter .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-3);border-radius:1px}
+.m-accent>span{background:var(--accent)}
+.m-base>span{background:var(--base-fill)}
+.delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.delta-pos{color:var(--delta-good)}
+.delta-neg{color:var(--critical)}
+.delta-zero{color:var(--ink-3)}
+details.section{border-top:1px solid var(--grid);padding-top:10px}
+details.section>summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);list-style-position:outside;margin-left:2px}
+details.section>summary:hover{color:var(--ink)}
+details.section[open]>summary{margin-bottom:8px}
+.md{display:flex;flex-direction:column;gap:8px;background:var(--inset);border-radius:8px;
+  padding:12px 14px;overflow-wrap:break-word}
+.md>:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:4px 0 0;font-size:1em;font-weight:600;line-height:1.3}
+.md p,.md ul,.md ol,.md blockquote,.md table,.md pre,.md hr{margin:0}
+.md ul,.md ol{display:flex;flex-direction:column;gap:4px;padding-left:20px}
+.md blockquote{border-left:2px solid var(--hairline);padding-left:10px;color:var(--ink-2)}
+.md :not(pre)>code{background:var(--inset);padding:1px 4px;border-radius:4px;
+  font:.92em "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre{background:var(--inset);border:1px solid var(--hairline);padding:10px 12px;border-radius:6px;
+  overflow-x:auto;font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre code{background:none;padding:0;font:inherit}
+.md table{width:100%;border-collapse:collapse}
+.md th,.md td{padding:5px 8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--grid)}
+.md th{font-weight:600;color:var(--ink-2)}
+.md a{color:var(--accent);text-decoration:none}
+.md a:hover{text-decoration:underline}
+.grader-def{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.grader-def+.grader-def{border-top:1px solid var(--grid)}
+.grader-def-head{display:flex;align-items:baseline;gap:8px}
+.grader-name{font:13px "SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:600}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+  border:1px solid var(--hairline);border-radius:999px;padding:1px 8px}
+.config{display:flex;flex-direction:column;gap:2px;background:var(--inset);border-radius:8px;padding:10px 14px}
+.config code{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.arm{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.arm+.arm{border-top:1px dashed var(--grid);margin-top:4px;padding-top:12px}
+.arm-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.arm-label{font-size:13px;font-weight:600}
+.run{border:1px solid var(--grid);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.run-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.run-title{font-size:12px;font-weight:600;color:var(--ink-2)}
+.run-error .explanation{color:var(--ink-2)}
+.note{font-size:12px;color:var(--ink-2)}
+.graders{display:flex;flex-direction:column;gap:4px}
+details.grader{border-radius:6px}
+details.grader>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:3px 4px;
+  border-radius:6px;list-style:none}
+details.grader>summary::-webkit-details-marker{display:none}
+details.grader>summary::before{content:'▸';font-size:10px;color:var(--ink-3);flex:none;
+  transition:transform .12s ease}
+details.grader[open]>summary::before{transform:rotate(90deg)}
+details.grader>summary:hover{background:var(--inset)}
+details.grader>summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grader-body{padding:6px 8px 8px 24px;display:flex;flex-direction:column;gap:6px}
+.chip{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.chip-pass{color:var(--good);border:1px solid currentColor}
+.chip-fail{color:var(--critical);border:1px solid currentColor}
+.chip.chip-warn{color:var(--warning);border:1px solid currentColor}
+.explanation{margin:0;font-size:13px;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:break-word}
+.kv{display:flex;gap:8px;font-size:12px;color:var(--ink-3)}
+.votes{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+pre.evidence{margin:0;background:var(--inset);border:1px solid var(--hairline);border-radius:6px;
+  padding:8px 10px;overflow-x:auto;max-height:320px;
+  font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:break-word}
+footer{color:var(--ink-3);font-size:12px;text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  details.grader>summary,.toolbar button{transition:background .12s ease,color .12s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  details.grader>summary::before{transition:none}
+}
+@media print{
+  :root,:root[data-theme="dark"],:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+  body{background:#fff}
+  .toolbar{display:none}
+  .case,.run,.grader-def{break-inside:avoid}
+  pre.evidence{max-height:none}
+}
+</style>
+<div class="wrap">
+<header>
+<div class="eyebrow">Plugin eval report</div>
+<h1>product-suite v0.1.0</h1>
+<p class="verdict">Plugin effect: <span class="delta delta-pos">↑ +22.2 pts</span> vs baseline — improved 2 · flat 4 · regressed 0 of 6 cases.</p>
+<div class="meta">
+<span class="mono">.</span>
+<span>Claude Code v2.1.318</span>
+<span class="num">2026-11-04 14:46 UTC</span>
+<span class="num">3m 9s</span>
+<span class="num">$3.24</span>
+<span class="num">36 runs</span>
+<span class="num">3 in flight</span>
+<span class="mono">product-suite@product-suite-market</span>
+
+<span>judge default</span>
+<span class="num">threshold 100%</span>
+
+</div>
+</header>
+
+<section class="tiles">
+<div class="tile hero"><span class="label">Suite score · with plugin</span><span class="value">38.9%</span><span class="sub">mean of per-case scores</span></div>
+<div class="tile"><span class="label">Ablation Δ</span><span class="value num delta-pos">↑ +22.2</span><span class="sub">score points vs baseline, 6 of 6 cases</span></div>
+<div class="tile"><span class="label">Baseline score</span><span class="value num">16.7%</span><span class="sub">without the plugin</span></div>
+<div class="tile"><span class="label">Cases</span><span class="value num">6</span><span class="sub">2 of 6 ≥ 100% threshold</span></div>
+<div class="tile"><span class="label">Perfect runs</span><span class="value num">38.9%</span><span class="sub">runs where every grader passed</span></div>
+</section>
+<details class="section legend">
+<summary>How to read this report</summary>
+<ul class="legend-list">
+<li>A run's score is the weighted fraction of its graders that passed; a "perfect" run passed every grader.</li>
+<li>A case's score is the mean of its runs; a case passes when its score is at or above the 100% threshold (the tick on each case bar).</li>
+<li>The suite score is the mean of the per-case scores.</li>
+<li>Judge votes are independent samples of the LLM judge; the majority decides pass or fail.</li>
+<li>"With plugin" and "Baseline" runs are identical except for the plugin being loaded; Δ is the with-plugin score minus the baseline score.</li>
+
+</ul>
+</details>
+<div class="toolbar"><button type="button" data-act="expand">Expand all</button><button type="button" data-act="collapse">Collapse all</button></div>
+<article class="case" id="case-1">
+<div class="case-head">
+<h2>trigger-backlog-near-miss-from-qa</h2>
+<span class="muted mono">evals\trigger-backlog-near-miss-from-qa</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">4 turns · $0.10 · 14:46:31 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t write the criteria yet because the story wasn&apos;t included. Your message says &quot;this story&quot;, but no story text came through, and the working directory is empty, so there&apos;s no work-item hub or backlog for me to pull it from.
+
+Please paste the story. If you have them, these help too:
+- **Who it&apos;s for and what they can do afterwards** (role, path, data)
+- **The requirement or PRD it comes from**, so the criteria stay within that scope
+- **Known limits or constraints** (performance targets, permissions, plan limits, integrations)
+
+I&apos;ll write each criterion so someone else could grade it the same way without asking. Each one will say what is done, what independently shows pass or fail, and which input would make it fail. Every story will also get at least one failure-path criterion alongside the happy path. Here&apos;s an example:
+
+&gt; ❌ &quot;Users can reset their password&quot;
+&gt; ✅ &quot;A reset link sent to a real mailbox works only once: using it a second time shows an expiry message, and the old password no longer signs in.&quot;
+
+If the story is vague enough that I can&apos;t write a criterion like that, I&apos;ll point it out and ask you rather than choose an interpretation myself.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">4 turns · $0.10 · 14:46:31 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t see a story to write criteria for. Nothing was attached or pasted, and the working directory is empty.
+
+Please paste the story. These details help most:
+
+- **The story text**, including the title and the &quot;as a… I want… so that…&quot; line if there is one.
+- **Who it&apos;s for**: the role or permission level, since each role usually needs its own criteria.
+- **Any limits or numbers** you already have, such as sizes, time limits, formats or plans.
+- **The requirement or PRD it comes from**, if there is one.
+- **The surface**: web UI, API, email, mobile or something else. This decides what can independently confirm a pass or a fail.
+
+If you just paste the story, I&apos;ll work from that and list any assumptions so you can correct them. Each criterion will say exactly what to do, what independently confirms the result, and which input should make it fail, so QA can turn it straight into a test case. I&apos;ll also include the failure path, not only the happy path.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">4 turns · $0.10 · 14:46:31 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I don&apos;t have the story yet. Your message didn&apos;t include it, and the working directory is empty, so I couldn&apos;t find a story in a hub or tracker export either.
+
+Please paste the story, ideally with:
+
+1. **The story itself**: title and description, or the &quot;As a… I want… so that…&quot; text.
+2. **Context that changes the criteria**, if you have it:
+   - user roles and permissions
+   - what the feature touches (web UI, API, email, files)
+   - any limits, formats or numbers already agreed
+   - the PRD or requirement it comes from
+
+Once I have it, each criterion I write will:
+
+- say exactly what action someone has to repeat.
+- say what decides pass or fail, checked independently rather than taken from the product&apos;s own &quot;success&quot; message.
+- name an input that would make it fail.
+- be gradeable by someone else without asking you what it means.
+
+I&apos;ll also include the failure path, not just the happy path. If the story is too vague to write criteria like that, I&apos;ll point out the gap and ask you to decide rather than picking an interpretation myself.</pre>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.05 · 14:46:45 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t find the story. Nothing was pasted with your message, and the working directory is empty.
+
+Please send the user story, either by pasting the text or giving me a file path or ticket link. The more of these you include, the better the criteria will be:
+
+- **The story itself**: &quot;As a [role], I want [capability], so that [benefit]&quot;
+- **Context**: the product or feature area, the users, and any constraints you already know about (performance, security, compliance, platforms)
+- **Format preference**: Given/When/Then (Gherkin), a checklist, or both
+- **Scope notes**: anything that&apos;s explicitly out of scope or depends on other work
+
+Once I have it, I&apos;ll write criteria for the main path, edge cases, error handling, and any non-functional requirements that apply.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.05 · 14:46:45 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t find a story to work from. Nothing came through in your message, and the working directory is empty.
+
+Paste the story and I&apos;ll write the acceptance criteria. Ideally include:
+- **The story itself**, e.g. &quot;As a [user], I want [goal] so that [benefit]&quot;
+- **Any context** you have: business rules, constraints, edge cases, or related stories
+- **Format you want**: Given/When/Then (Gherkin), a checklist, or both
+
+If it&apos;s in a file or ticket, give me the path or paste the text.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.05 · 14:46:46 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t see the story you&apos;re referring to. Nothing was attached to your message, and the working directory is empty.
+
+Please paste the story text, for example &quot;As a ___, I want ___ so that ___&quot;, along with any notes or constraints. Once I have it, I&apos;ll write acceptance criteria in Given/When/Then format. They&apos;ll cover the main path, edge cases, error handling and any non-functional requirements that apply. If you&apos;d like a different format, such as a checklist, let me know.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>Write acceptance criteria for this story.</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must invoke product-suite:backlog, NOT product-suite:qa. Acceptance criteria are the product owner's, written before any test exists.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case" id="case-2">
+<div class="case-head">
+<h2>trigger-dev-near-miss-from-qa</h2>
+<span class="muted mono">evals\trigger-dev-near-miss-from-qa</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">6 turns · $0.13 · 14:46:54 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I didn&apos;t fix anything, because I couldn&apos;t find the CSV export finding or any code to change.
+
+**What I found:**
+- **The working directory is empty.** It&apos;s a git repo on `main` with no commits and no files. So there&apos;s no hub, no QA register and no export code in it.
+- **The skill&apos;s own files are blocked.** Reading `E:/Personal/projects/product-qa/shared/principles.md` was denied, and so was searching the parent directory. Both were refused because the session is in &quot;don&apos;t ask&quot; mode.
+- **I have no shell.** The skill moves findings only through `hub.py`, so I couldn&apos;t list QA&apos;s findings, look up the finding or record the fix.
+
+I didn&apos;t try to get around those denials, for example by handing the reads to a subagent. Those rules are your safety margin, not something for me to route around.
+
+**To go ahead I need:**
+1. **Access to the product repo and the hub**, either by running from the product&apos;s checkout or by giving me its path. I also need permission to read the product-qa skill files and run `hub.py`.
+2. **The finding id** (e.g. `K3`), or permission to run `hub.py list --type finding` so I can find the CSV export one myself.
+3. **Which branch deploys**, if it isn&apos;t obvious from the hosting config. The fix worktree has to start from that branch.
+
+With access, I&apos;ll create a separate `fix/qa-&lt;slug&gt;` worktree so your checkout isn&apos;t touched. I&apos;ll copy the finding&apos;s oracle into a test and show it fails on the current code, then fix and rebuild. The handback will give the commit, the root cause, the fail-first evidence and anything I deliberately left alone. QA then decides whether it&apos;s closed, not me.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">6 turns · $0.14 · 14:46:54 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I haven&apos;t fixed the CSV export finding yet. I can&apos;t find it or the code it&apos;s about from here.
+
+- **The working directory is empty.** It&apos;s set up as a git repo, but there are no files in it and no commits, so there&apos;s no code to fix.
+- **I&apos;m not allowed to read or search.** I tried to read the workflow&apos;s rules (`principles.md` under `E:/Personal/projects/product-qa/shared/`) and to search the home directory for &quot;CSV&quot;. Both were blocked because this session is running in &quot;don&apos;t ask&quot; mode, and I have no shell, so I can&apos;t run `hub.py` to look up the finding QA filed. Starting a helper agent just to get around those blocks would defeat their purpose, so I stopped here.
+
+To go ahead I need:
+
+1. **Access:** permission to use Read, Grep and Bash (at least for `hub.py`, `git` and the project&apos;s test runner), or a switch to a mode where I can ask for approval as I go.
+2. **The repo:** the path to the product&apos;s repo, or a working directory that contains it. Then I can confirm which branch actually deploys and set up an isolated worktree, so your own checkout isn&apos;t touched.
+3. **The finding:** its ID if you have it (for example from `hub.py list --type finding`), so I fix the one QA filed rather than guessing which CSV issue you mean.
+
+Once I have those, the fix goes like this. I write a test using QA&apos;s acceptance criterion as the check and show it fails on the current code. Then I fix the code on its own branch and record the before-and-after test results in the hub. I hand it back with the commit and the root cause, and mark it `FIXED` for QA to verify; marking it closed is QA&apos;s call, not mine.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">6 turns · $0.13 · 14:46:56 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I haven&apos;t fixed anything yet. I couldn&apos;t find the QA finding or any code to fix.
+
+- **The working directory is empty.** `C:\Users\faisal_iqbal\AppData\Local\Temp\claude-eval-J40vBR\home\cwd` has no files, so there&apos;s no CSV export code here and no hub record of the finding.
+- **My reads are being denied.** Claude Code is in &quot;don&apos;t ask&quot; mode, which blocked `Read` on the process files (`E:/Personal/projects/product-qa/shared/principles.md`) and `Grep` on the parent directory. I also have no shell, so I can&apos;t run `hub.py` to list QA&apos;s findings.
+
+To go ahead I need:
+
+1. **Where the product&apos;s repo is**, if it isn&apos;t this empty directory.
+2. **Which finding this is.** Give me the finding ID (for example `K3`), or allow Read/Grep and shell access so I can find it with `hub.py list --type finding`.
+3. **Those permissions anyway**, because the fix needs them. I have to read the finding&apos;s acceptance criterion and copy its oracle into a test. Then I&apos;ll make an isolated worktree, run the test against the unfixed code to show it fails, apply the fix, and record a handback for QA. I can&apos;t do any of those steps without Read and a shell.
+
+If you&apos;d rather not change the permission mode, you can paste the finding text (ID, description and oracle) and the path to the repo instead.</pre>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">4 turns · $0.06 · 14:47:13 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I couldn&apos;t find the QA finding or any CSV export code, so I haven&apos;t changed anything.
+
+- **The working directory is empty.** `cwd` has no files, and a search for &quot;csv&quot; found nothing. The repo also has no commits.
+- **I couldn&apos;t look anywhere else.** I tried to check the parent directory, but that search wasn&apos;t allowed in the current permission mode.
+- **I have no access to your bug tracker.** No ticketing tools are connected in this session, so I can&apos;t read QA&apos;s report directly.
+
+To go ahead, I need:
+1. **The finding itself:** paste the ticket text, or tell me where it is (a file path or ticket ID plus a way to reach it).
+2. **The code:** the path to the project that has the CSV export, if it&apos;s not in `cwd`. Or start the session from that repo.
+
+Once I have those, I&apos;ll find the export code, reproduce the issue and fix it.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:47:14 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I couldn&apos;t find the QA finding or any code to fix, so I haven&apos;t changed anything.
+
+- **The working directory is empty.** `cwd` has no files, and the git repo has no commits.
+- **I couldn&apos;t search more widely.** A search of the parent `home` directory for &quot;CSV&quot; or &quot;QA&quot; was blocked by the current permission mode.
+- **I can&apos;t reach your tracker.** No issue tracker or ticket system is connected, so I can&apos;t read what QA filed.
+
+To fix it, I need:
+1. **The finding:** paste the ticket text, or give me the ticket ID and how to reach the tracker.
+2. **The code:** the path to the repo or directory with the CSV export code, if it isn&apos;t this one.
+
+Once I have both, I&apos;ll find the cause, fix it and check the export output.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">4 turns · $0.06 · 14:47:14 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I couldn&apos;t find the QA finding or any CSV export code, so I haven&apos;t changed anything.
+
+- **The working directory is empty.** The repo (`.../claude-eval-NhGoN0/home/cwd`) has no tracked files and no commits, and searching it for &quot;csv&quot; found nothing.
+- **I couldn&apos;t look further.** A search of the parent directory was blocked by your permission settings, and I don&apos;t have access to your issue tracker.
+
+To go ahead, I need:
+1. **The QA finding itself:** paste the ticket text, or give me a ticket ID and a way to reach the tracker.
+2. **Where the code is:** the path to the project with the CSV export, if it&apos;s not in this directory.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>Fix the finding QA filed about the CSV export.</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must invoke product-suite:dev, NOT product-suite:qa. Fixing belongs to dev; qa never fixes and never closes its own work.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case" id="case-3">
+<div class="case-head">
+<h2>trigger-hub-hit</h2>
+<span class="muted mono">evals\trigger-hub-hit</span>
+<span class="spacer"></span>
+
+<span class="delta delta-pos">↑ +100.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">5 turns · $0.12 · 14:47:25 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t tell you what&apos;s waiting on you, because there&apos;s no hub here to read it from.
+
+The default hub location is `./qa-reports/hub` and that folder doesn&apos;t exist. I also searched the whole working directory for a `qa-state.json`, `fix-state.json` or event log (`*.jsonl`) and found none. The repository has no commits either. With nothing recorded, I won&apos;t guess at what you owe anyone.
+
+To get a real answer, pick whichever fits:
+
+- **If the hub lives in another folder**, tell me the path. I&apos;ll run `hub.py status` and `validate`, then `list --mine --role &lt;ROLE&gt; --hub &lt;path&gt;`.
+- **If this is new work**, I can start a hub with `hub.py init`.
+- **If you have earlier QA or report files somewhere**, `hub.py import &lt;dir&gt;` brings them in. Their ids stay the same, but they&apos;re marked as reconstructed and every item starts over in its initial state. Nothing is accepted as verified just because an old file said so.
+
+Either way I&apos;ll also need your role (for example `OPERATOR`, `PO` or `HEAD_OF_PRODUCT`) so the &quot;waiting on me&quot; list only shows your items.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">5 turns · $0.12 · 14:47:25 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t tell you what&apos;s waiting on you, because there&apos;s no work-item hub here to read from.
+
+I looked for one at the default location (`./qa-reports/hub` in `C:\Users\faisal_iqbal\AppData\Local\Temp\claude-eval-HzfTbW\home\cwd`). I also searched the whole directory for a hub folder or a `qa-state.json` / `fix-state.json` file and found none. The git repo has no commits either. I won&apos;t guess at a list of tasks, because someone might plan around it.
+
+I couldn&apos;t run `hub.py` itself because I don&apos;t have shell access in this session. Both searches came back empty, though, so there&apos;s nothing for it to read yet.
+
+To get an answer, pick whichever fits:
+
+1. **If the hub lives somewhere else,** tell me the path and your role (e.g. `PO`, `OPERATOR`, `QA`, `DEV`). The query is:
+   ```
+   python &quot;E:/Personal/projects/product-qa/shared/scripts/hub.py&quot; --hub &lt;DIR&gt; list --mine --role &lt;ROLE&gt;
+   ```
+2. **If this is new work,** start a hub with `hub.py init`.
+3. **If an existing product has earlier reports** (an old `qa-state.json` or a report folder), bring them in with `hub.py import &lt;report-dir&gt;`. Imported items keep their ids but restart in their initial state, since nobody has verified them here.
+
+Once there&apos;s a hub and I know your role, I&apos;ll check it for problems first, then list what&apos;s waiting on you by id and state.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">5 turns · $0.12 · 14:47:26 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t tell you what&apos;s waiting on you, because there&apos;s no work-item hub here to read from.
+
+I checked the default location, `./qa-reports/hub` in the current directory, and found nothing. When I tried to search the wider home directory for a hub somewhere else, the permission mode blocked it, so I don&apos;t know whether one exists elsewhere. Your shell isn&apos;t available to me in this session either, so I couldn&apos;t run `hub.py status` to confirm.
+
+I won&apos;t guess at a list. Anything I made up could end up being planned against.
+
+To get a real answer, one of these needs to happen:
+
+1. **If a hub exists somewhere else**, tell me the path and your role (for example `PO`, `OPERATOR` or `HEAD_OF_PRODUCT`). The query is:
+   ```
+   python &quot;E:/Personal/projects/product-qa/shared/scripts/hub.py&quot; --hub &lt;DIR&gt; list --mine --role &lt;ROLE&gt;
+   ```
+2. **If you have older artifacts** (a `qa-state.json` or a report directory), import them with `hub.py import &lt;dir&gt;`. Imported items start in their initial state, not their old one, because nobody has checked them here.
+3. **If this is new work**, create a hub with `hub.py init`.
+
+To run any of these myself, I&apos;d need shell access. Otherwise you can run the command and paste the output.</pre>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:47:44 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t find anything waiting on you, and I don&apos;t have access to the places where work like that usually shows up.
+
+- **This repo:** The working directory is empty. It&apos;s on `main` with no commits, and the only change is an untracked `../.gitconfig` in the parent folder. There are no open branches, unfinished changes or TODOs.
+- **Saved notes:** I was denied permission to read my memory folder, so I couldn&apos;t check whether earlier sessions left any reminders or follow-ups.
+- **This session:** I have no background agents or scheduled tasks running.
+- **Other sources:** I&apos;m not connected to email, Slack, a calendar, GitHub pull requests and reviews, or an issue tracker, so I can&apos;t see anything assigned to you there.
+
+If you tell me where your work queue lives, I can look there. That could be a GitHub repo or organisation through the `gh` CLI, a folder of notes or task files, or a different project directory. You could also allow access to the memory folder so I can check for saved follow-ups.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:47:45 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t find anything waiting on you, mostly because I have nothing to look in:
+
+- **Working directory:** it&apos;s an empty git repo with no commits and no files. The only change git shows is an untracked `.gitconfig` in the parent folder, so there are no pending changes, TODOs or open work here.
+- **Memory:** my request to read the saved-memory folder was denied, so I couldn&apos;t check for notes from earlier sessions.
+- **Other sources:** I&apos;m not connected to email, a calendar, Slack, GitHub PRs/issues, Jira or any task tracker, so I can&apos;t see messages, reviews or tickets assigned to you.
+
+If you tell me where your work usually waits, I can look there. That could be a repo path, a PR list or a TODO file. You can also connect a tool like GitHub or Slack through an MCP server.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:47:48 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I couldn&apos;t find anything waiting on you, but I also don&apos;t have access to the places where that would normally show up.
+
+- **This workspace is empty.** The working directory has no files, and the git repo on `main` has no commits. There are no TODOs, branches or uncommitted work to pick up. The only change is an untracked `.gitconfig` in the parent folder.
+- **I couldn&apos;t check saved notes from past sessions.** Permission to read that folder was denied.
+- **I&apos;m not connected to email, calendar, Slack, GitHub or a task tracker.** So I can&apos;t see messages, reviews or deadlines.
+
+If you tell me where your work lives, I can look there. That could be another repo or folder, or a tool you can connect. You could also give me read access to the saved-notes folder.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>What is waiting on me right now?</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must invoke product-suite:hub, NOT product-suite:delivery. A direct 'waiting on me' query is a hub query; delivery owns status reports with risks and milestones.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case" id="case-4">
+<div class="case-head">
+<h2>trigger-none-ordinary-debugging</h2>
+<span class="muted mono">evals\trigger-none-ordinary-debugging</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.07 · 14:47:57 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I don&apos;t see the regex or the input string in your message. Could you paste:
+
+1. **The regex**, exactly as it appears in your code, including the quotes or slashes around it.
+2. **The input string** you expect it to match.
+3. **The language or tool** (JavaScript, Python, grep, etc.). Regex rules differ between them.
+4. **What happens instead**: no match at all, a partial match, or the wrong capture groups.
+
+While you gather that, these are the most common causes:
+
+- **Backslashes in normal strings:** `&quot;\d+&quot;` in Java, C#, or a Python non-raw string may need to be `&quot;\\d+&quot;` or `r&quot;\d+&quot;`.
+- **Anchors:** `^...$` must match the whole string (or line). Python&apos;s `re.match` only checks the start of the string, while `re.search` looks anywhere.
+- **Hidden characters:** a trailing `\r` (Windows line endings), a non-breaking space, or curly quotes in the input.
+- **Greedy matching:** `.*` grabs as much as it can, and `.` doesn&apos;t match newlines unless you turn on the DOTALL/`s` flag.
+- **Unescaped special characters:** `.`, `(`, `?`, `+`, `[`, `$`, and `|` need a `\` when you mean them literally.
+- **Flags:** case sensitivity, multiline mode, or JavaScript&apos;s global `/g` flag with `lastIndex`, which makes repeated `test()` calls alternate between true and false.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.07 · 14:47:59 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">The user didn&apos;t include the regex or the input string. Ask for them.
+
+I can&apos;t see the regex or the input string. Your message doesn&apos;t include them. Please send:
+
+1. **The regex**, exactly as it appears in your code (with any delimiters or flags, e.g. `/^\d+$/gm` or `re.compile(r&quot;...&quot;, re.I)`)
+2. **The input string** you expect it to match
+3. **The language or tool** you&apos;re using (JavaScript, Python, Java, grep, an editor&apos;s find/replace, etc.), since regex behavior varies between them
+4. **What you expected and what happened**: no match at all, a partial match, or the wrong capture groups
+
+If they&apos;re in a file in this repo, give me the path and I&apos;ll look.
+
+While you get those together, these are the most common reasons a regex doesn&apos;t match:
+- **Escaping:** in a normal (non-raw) string, `&quot;\d&quot;` or `&quot;\.&quot;` can get mangled before the regex engine sees it. Use `r&quot;...&quot;` in Python, or double the backslashes in Java and C#.
+- **Anchors:** `^...$` must match the whole string or line. Trailing whitespace or a `\r` from Windows line endings is enough to make it fail.
+- **Full match vs. search:** Python&apos;s `re.match` only matches at the start of the string, and Java&apos;s `matches()` needs the entire string to match.
+- **Greedy vs. lazy:** `.*` takes as much as it can. Use `.*?` if it&apos;s overshooting.
+- **`.` and newlines:** `.` doesn&apos;t match `\n` unless you turn on the DOTALL or `s` flag.
+- **Case:** matching is case-sensitive unless you add the `i` flag.
+- **Stateful `/g` in JavaScript:** calling `.test()` again on the same global regex continues from `lastIndex`, so repeated calls can alternate between true and false.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.07 · 14:48:04 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I don&apos;t see a regex or input string in your message, and your working directory has no files I could pull them from. Please paste:
+
+1. **The regex**, exactly as written in your code, including delimiters and flags (e.g. `/^\d+$/m` or `re.compile(r&quot;...&quot;, re.I)`)
+2. **The input string** you expect it to match
+3. **The language or tool** (JavaScript, Python, Java, grep, .NET, etc.), because regex behaviour varies between engines
+4. **What you expected** (a full match, a captured group, all matches) and what happened instead
+
+While you gather that, these are the most common reasons a regex doesn&apos;t match:
+
+- **Anchors:** `^...$` must match the whole string (or the whole line with the multiline flag). Python&apos;s `re.match` only matches at the start of the string.
+- **Escaping:** `.`, `?`, `+`, `(`, `[`, `\` and `$` need escaping to match literally. In non-raw strings (Java, C#, or Python without `r&quot;&quot;`), backslashes must be doubled: `&quot;\\d&quot;`.
+- **Hidden characters:** `\r\n` line endings on Windows, trailing spaces, tabs, non-breaking spaces, or &quot;smart&quot; quotes copied from a document.
+- **Case sensitivity:** you may need the `i` flag.
+- **Dot and newlines:** `.` doesn&apos;t match a newline unless you use the `s` (DOTALL) flag.
+- **Greedy vs. lazy:** `.*` can consume more than you meant to. Try `.*?`.
+- **Engine differences:** lookbehind, `\b` with Unicode, and named groups (`(?&lt;name&gt;)` vs `(?P&lt;name&gt;)`) aren&apos;t supported the same way everywhere.</pre>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.05 · 14:48:08 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I&apos;d be glad to help, but your message didn&apos;t include the regex or the input. Please send:
+
+1. **The regular expression**, exactly as written in your code, including quotes, delimiters, and flags (e.g. `r&quot;\d+&quot;`, `/foo/gi`, `Pattern.compile(&quot;...&quot;)`).
+2. **The input string** you expect it to match.
+3. **The language or tool** you&apos;re using (Python, JavaScript, Java, grep, etc.), since regex behavior varies between them.
+4. **The result you expected vs. what you got**, such as no match at all, a partial match, or the wrong capture group.
+
+If they&apos;re in a file in this project, give me the path and I&apos;ll look.
+
+Common causes while you gather those:
+- **Escaping:** In a normal (non-raw) string, `\d` or `\b` can turn into something else, like a backspace character.
+- **Anchors:** `^`/`$` match only the whole string unless multiline mode is on.
+- **Full vs. partial match:** Python&apos;s `re.match` only matches at the start of the string, and Java&apos;s `matches()` requires the entire string to match.
+- **Greedy quantifiers:** `.*` consumes more text than you expect.
+- **Unescaped special characters:** `.`, `(`, `+`, `?` and `$` have special meanings unless escaped.
+- **Hidden characters:** The input may contain `\r\n` line endings (common on Windows), trailing spaces, or non-breaking spaces.
+- **Case or flags:** A missing `i`, `m` or `s` flag.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.05 · 14:48:11 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I don&apos;t see a regex or input string in your message. Can you paste:
+
+1. **The regex pattern**, exactly as it appears in your code, with its quotes or delimiters
+2. **The input string** you expect it to match
+3. **The language or tool** (JavaScript, Python, Java, grep, etc.), because escaping and features differ between them
+4. **How you&apos;re calling it**, e.g. `re.match` vs `re.search`, or `test()` vs `match()`, plus any flags
+
+Some common causes while you get that:
+
+- **Anchors or full-match calls:** `^...$`, Python&apos;s `re.match` (which only matches at the start of the string), and Java&apos;s `String.matches()` (which must match the whole string) can all fail on partial matches.
+- **Escaping:** in a normal string, `&quot;\d&quot;` or `&quot;\.&quot;` may need to be written as `&quot;\\d&quot;`, or use a raw string such as `r&quot;\d&quot;` in Python.
+- **Special characters not escaped:** `.`, `+`, `?`, `(`, `[`, `$` and `|` have special meanings.
+- **Hidden characters in the input:** trailing `\r\n` (common on Windows), non-breaking spaces, or smart quotes.
+- **Case sensitivity:** you may need the `i` / `re.IGNORECASE` flag.
+- **Multiline input:** `^`/`$` only match at line boundaries with the `m` flag, and `.` doesn&apos;t match newlines without the `s` flag.
+- **Greedy vs. lazy matching:** `.*` may match more than you expect, while `.*?` matches as little as possible.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.05 · 14:48:16 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I don&apos;t see the regex or the input string in your message. Could you paste:
+
+1. **The pattern**, exactly as it appears in your code, including the delimiters or quotes (for example `/^\d+$/` or `r&quot;\d+&quot;`)
+2. **The input string** you expect it to match
+3. **The language or tool** (JavaScript, Python, Java, grep, etc.), because regex flavors differ
+4. **How you&apos;re calling it**, such as `re.match` vs `re.search`, `.test()` vs `.match()`, and any flags
+
+If it lives in a file in this repo, give me the path and I&apos;ll look at it there.
+
+While you get that, these are the usual reasons a regex doesn&apos;t match:
+- **Anchoring:** Python&apos;s `re.match` only matches at the start of the string, and Java&apos;s `matches()` needs the whole string to match.
+- **Escaping:** in a non-raw Python string, `&quot;\d&quot;` or `&quot;\b&quot;` gets changed before the regex sees it. `&quot;\b&quot;` becomes a backspace character.
+- **Hidden characters:** a trailing `\r` or `\n`, non-breaking spaces, or &quot;smart&quot; quotes in the input.
+- **Missing flags:** case-insensitive (`i`), multiline (`m`, so `^` and `$` match at each line), or dotall (`s`, so `.` matches newlines).
+- **Greedy vs lazy:** `.*` matches as much as it can and can swallow text you meant for later in the pattern.
+- **Unescaped special characters:** `.`, `?`, `+`, `(`, `)`, `[`, `$` and `|` need a backslash to match literally.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>Why is this regular expression not matching my input string?</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must NOT invoke any product-suite skill. This is ordinary debugging, and the qa description explicitly excludes it.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case" id="case-5">
+<div class="case-head">
+<h2>trigger-qa-hit</h2>
+<span class="muted mono">evals\trigger-qa-hit</span>
+<span class="spacer"></span>
+
+<span class="delta delta-pos">↑ +33.3 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:33.3%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">33.3%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:33.3%"></span></span>
+<span class="num">33.3%</span>
+<span class="muted num">33.3% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">6 turns · $0.16 · 14:48:20 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I haven&apos;t tested anything yet, so I can&apos;t tell you what&apos;s broken. Two things are stopping me.
+
+**1. I can&apos;t find the release.** The working directory (`...\claude-eval-6pNStr\home\cwd`) is empty: no code, build, deploy config or docs. The git repo has no commits, and the only change it shows is an untracked `../.gitconfig`. I tried to look in the parent directory, but that lookup was denied.
+
+**2. I don&apos;t have the access a QA run needs.** This session is in don&apos;t-ask mode, and it denied reading the QA method&apos;s own files (`principles.md` and the references it points to). I also have no shell here. Without one I can&apos;t run `hub.py status`, which is the required first step for finding out whether this is the first test pass or a re-test of earlier findings. I could get a sub-agent to do these steps for me, but that would just route around the restrictions you&apos;ve set, so I haven&apos;t.
+
+A &quot;0 bugs&quot; answer from what I have now would be made up, which is exactly what this QA method exists to prevent.
+
+**What I need from you:**
+
+1. **Where the release is:** a repo path, a build or image, or a URL for a deployed environment, plus which branch or tag is the release candidate.
+2. **Permissions:** turn off don&apos;t-ask mode, or allow Read/Glob on `E:/Personal/projects/product-qa/` and the release, and allow a shell so I can run `hub.py` and drive the product.
+3. **Whether this is the first QA pass:** if earlier QA runs filed findings, tell me where their results are.
+4. **Ground rules:**
+   - Should I only report what I find, or also fix it?
+   - Which environments and credentials can I use, and which are off-limits? Test tenants only, nothing in production.
+   - Is there anything that has to be true for this release to ship, such as SLAs or contract terms?
+   - Is there anything that breaks or costs money if I build, activate or run it?
+
+Once I have the first two, I&apos;ll set up the findings register, check which build is actually being served, write the test cases, and then run them against the product.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">6 turns · $0.16 · 14:48:22 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I haven&apos;t tested anything yet, so I can&apos;t tell you what&apos;s broken. I couldn&apos;t find the release, and I don&apos;t have the access I&apos;d need to test it.
+
+- **No release to test:** the working directory (`...\claude-eval-Norvj2\home\cwd`) is an empty git repo on `main`. It has no commits and no files.
+- **Couldn&apos;t look elsewhere:** reading the parent directory and the QA method&apos;s instructions (`E:/Personal/projects/product-qa/shared/principles.md`) was denied by the current permission mode.
+- **Can&apos;t run commands:** this session has no shell. The QA method starts with `hub.py status`, which checks whether this is the first QA pass or a re-test of earlier findings. I can&apos;t run it, and I&apos;d need a shell to drive the product too.
+
+To go ahead I need:
+
+1. **The release:** a repo path (or the right working directory), a build or image digest, or a deployed URL plus the version that&apos;s meant to be live.
+2. **Permissions:** read access outside the empty directory, and a shell, so I can run `hub.py` and actually use the product rather than just check that pages load.
+3. **The ground rules:**
+   - Is this the first QA pass, or a re-check of fixes from an earlier one?
+   - Should I only report problems, or also fix them?
+   - Which environments and test credentials can I use, and what&apos;s off-limits (production, deploys, other people&apos;s data)?
+   - What has to be true for this release to ship (SLAs, contract terms), beyond what the docs say?
+   - Does anything break, cost money or use up licences if I build, activate or run it?
+
+Once I have those, I&apos;ll test the release and give you a ranked list of what&apos;s broken, with evidence for each problem. Anything I couldn&apos;t test will be listed as not tested, not counted as a pass.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">6 turns · $0.15 · 14:48:27 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I haven&apos;t QA&apos;d anything yet. I couldn&apos;t find a release to test, and I can&apos;t do the first required steps with my current permissions.
+
+**What I found**
+- **The working directory is empty.** `cwd` has no files, and the repo on `main` has no commits. The only thing git shows is an untracked `../.gitconfig`. There&apos;s no code, build, version tag or deployment to test here.
+- **The QA method&apos;s first steps were blocked.** It starts by reading its shared rules (`E:/Personal/projects/product-qa/shared/principles.md`) and running `hub.py status`. That second step checks whether this is a first run or a re-test of earlier findings. My file read was denied, a listing of the parent folder was denied too, and I don&apos;t have a shell in this session to run `hub.py`.
+
+I could get around this by handing the work to a sub-agent with wider permissions. I haven&apos;t, because that would sidestep the permission choice you made.
+
+**What I need from you**
+1. **Where the release is:** a repo path, branch or tag, a build or image, and/or a URL where it&apos;s running.
+2. **Permissions:** allow reads under `E:/Personal/projects/product-qa/` and the release&apos;s location, plus shell access to run `hub.py` and the product. Or tell me to run without the hub and I&apos;ll say so in the report.
+3. **Scope:**
+   - Is this report-only, or should I fix things too? I&apos;ll assume report-only.
+   - Which environments and test credentials can I use? Is it safe to break anything I set up myself?
+   - Are there any must-haves for shipping, such as service-level or contract requirements? If not, I&apos;ll test against the docs only.
+   - Is there anything that breaks or costs money if I build, activate or run it?
+4. **History:** is this a re-test of findings from an earlier QA run, or the first pass?
+
+Once I have the location and permissions, I&apos;ll start with confirming which build is actually live, then work through the documented customer flows end to end.</pre>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:48:43 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t QA this release yet because there&apos;s nothing here to test.
+
+- **The working directory is empty.** `...\claude-eval-lVVNge\home\cwd` has no files.
+- **The git repo has no commits.** `main` has no history, so there&apos;s no tagged release or diff to review. The only thing git reports is an untracked `../.gitconfig` in the parent folder, and that isn&apos;t release code.
+- **I couldn&apos;t look anywhere else.** I tried to search the parent `home` directory, but that permission was denied, so I stopped there.
+
+To go ahead, I need one of these:
+1. **The path to the release code**, if it lives somewhere else, or permission to read the parent directory.
+2. **A branch, tag, or PR** to check out or compare against, if the code is supposed to be in this repo.
+3. **A build file** (installer, zip, package) and how it&apos;s meant to be run.
+
+It would also help to know what the release contains (release notes or a changelog) and how to run it and its tests. Then I can check the new changes specifically, not just the code in general.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:48:46 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I couldn&apos;t QA anything because there&apos;s no release here to test.
+
+- **The working directory is empty.** A search for files in `C:\Users\faisal_iqbal\...\home\cwd` returned nothing.
+- **The git repo has no commits.** Its history is blank. The only change is an untracked `../.gitconfig`, which sits outside this directory.
+- **I can&apos;t look elsewhere.** I tried the parent directory, but that permission was denied in this session, so I stopped there rather than work around it.
+
+To go ahead, I need one of these:
+
+1. **The release location:** a path to the build, branch or repo, or a tag or commit if it&apos;s in a different clone.
+2. **The artifact itself:** an installer, zip or package. Put it in its own folder and point me to it.
+3. **Broader access:** permission to read the parent directory, if the code is nearby.
+
+It would also help to know what kind of release it is (web app, CLI, library, mobile build), whether there&apos;s a test suite or QA checklist, and which changes or areas worry you most.
+
+Once I have something to test, I&apos;ll build and run it, run the tests, go through the main user flows, and report what&apos;s broken with steps to reproduce.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:48:51 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I couldn&apos;t QA anything, because there&apos;s no release here to test.
+
+- **The working directory is empty.** `C:\Users\faisal_iqbal\AppData\Local\Temp\claude-eval-h0p4E9\home\cwd` has no files at all.
+- **The git repo has no commits.** The branch is `main`, but its history is empty, so I couldn&apos;t check out a tag, branch or diff.
+- **The only untracked item is `../.gitconfig`,** which sits in the parent folder and is a config file, not release code.
+- **I couldn&apos;t search further.** I tried to look in the parent `home` directory, but the current permission mode blocked it.
+
+So I have nothing to report as broken, and I haven&apos;t tested anything. To go ahead I need one of these:
+
+1. The path to the release (a repo, folder or build file), or permission to search outside this directory.
+2. A branch, tag or PR to check out, if the code is in a remote repo.
+3. What &quot;release&quot; means here (a web app, CLI, library, mobile build, etc.) and anything specific you want covered, such as a changelog, test plan or risky areas.
+
+Once I have the code, I&apos;ll run the test suite and build, use the app to check the main workflows, and review recent changes for bugs. You&apos;ll get a list of what&apos;s broken, ordered by severity.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>QA this release before we ship it, and tell me what is broken.</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must invoke the product-suite:qa skill, and no other product-suite skill.</p>
+</div>
+</div>
+</details>
+</article>
+<article class="case" id="case-6">
+<div class="case-head">
+<h2>trigger-release-near-miss-from-qa</h2>
+<span class="muted mono">evals\trigger-release-near-miss-from-qa</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">5 turns · $0.12 · 14:48:57 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t tell you we&apos;re ready to ship. The honest answer is **no verdict**: nothing here shows what&apos;s being shipped or that it was tested.
+
+**What I found:**
+- **The working directory is empty.** I searched `cwd` for every file and got nothing back. There&apos;s no code and no hub data.
+- **The git repo has no commits.** `main` has no history. The only untracked file is `../.gitconfig`, which sits outside this directory.
+- **I couldn&apos;t run the release check.** The verdict comes from `hub.py dashboard`, but I don&apos;t have a shell in this session. My attempt to look inside the release tooling at `E:/Personal/projects/product-qa/` was blocked by the permission mode.
+
+**Why that means no verdict and not a go:** a release only gets a green when specific checks have passed, and every one of them is missing here:
+
+| Check | Status |
+|---|---|
+| A record of exactly which build is being released, for each part of the product | Missing: no build or commit to name |
+| A quick check that the deployed build actually works | Missing: no build |
+| A passing test for each kind of bug that would stop a release | Missing: no test records |
+| A passing test for every requirement | Missing: no requirements |
+| No open blocker or critical bugs | Unknown: no bug records at all, which is different from zero bugs |
+| No stories finished but not signed off, no pending decisions, no open risks | Unknown: no records |
+
+**To get a real answer, one of these:**
+1. **Point me at the right place.** If the project is in another directory, tell me where and I&apos;ll compute the verdict from its data.
+2. **Run `python &quot;E:/Personal/projects/product-qa/shared/scripts/hub.py&quot; dashboard` yourself** and paste the output. I&apos;ll go through the condition-by-condition table rather than the one-line verdict above it.
+3. **If this is a first release with no tracking set up yet,** the honest position is no verdict, shipping on your call. You can still ship. That&apos;s a legitimate decision as long as it&apos;s recorded as yours with your reason. I can help list what was and wasn&apos;t checked so the record is accurate.
+
+Before shipping in any case: if this is wrong, who would notice first? If the answer is &quot;a customer,&quot; missing monitoring should be logged as a risk now, not after launch.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">5 turns · $0.21 · 14:49:00 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">**No verdict. I couldn&apos;t compute a go/no-go, so I can&apos;t say you&apos;re ready to ship.**
+
+Two things stopped me:
+
+1. **I couldn&apos;t run the release check.** The verdict comes from `hub.py dashboard`, and this session has no shell tool. I tried a helper agent, but it had no shell either and was refused read access to `E:/Personal/projects/product-qa/`. So I never saw the checklist the verdict is built from.
+2. **There&apos;s nothing here to assess.** The working directory (`...\home\cwd`) is empty: no files, no commits, no hub data. Even if the dashboard ran, it would have no test results, build IDs or accepted stories to check, and every condition would come back empty. That gives &quot;no verdict&quot;, not &quot;go&quot;.
+
+&quot;Ready to ship&quot; needs evidence I don&apos;t have: which build is going out, passing smoke and acceptance tests on that build, no open critical bugs, and no test that was blocked or never run on a high-risk area. None of that exists here yet.
+
+**To get a real answer:**
+- Run `python &quot;E:/Personal/projects/product-qa/shared/scripts/hub.py&quot; dashboard` from the product&apos;s repo, where the hub lives, and paste me the full table, not just the headline. I&apos;ll go through it row by row.
+- Or start a session in that repo with shell access, and I&apos;ll run it myself.
+- If this is a first release with no QA history, the honest result will probably still be &quot;no verdict&quot;. You can ship anyway, but that&apos;s your call, and the hub records it in your words (`hub.py move &lt;REL&gt; SHIPPED -f reason=&quot;...&quot; --role OPERATOR`) rather than me calling it green.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">5 turns · $0.11 · 14:49:06 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t call this a go. The verdict is **NO VERDICT**: there&apos;s nothing here to judge.
+
+- **No product and no hub.** The working directory (`...\claude-eval-EMPrRG\home\cwd`) is empty and the repo has no commits. The release check works out the answer from the project&apos;s records of stories, tests, bugs and builds, and none exist here.
+- **I couldn&apos;t check whether those records live somewhere else.** I don&apos;t have a shell in this session, so I couldn&apos;t run the status command (`hub.py dashboard`). My attempt to look inside the tool&apos;s own script for where it stores its records was blocked by permissions, so I stopped there.
+
+So none of the conditions for a go can be met yet. There&apos;s no build to name, no smoke test on it, no passing tests, no record of open blockers (checked or not), and no accepted work. An empty bug list here means nobody has looked, not that the product is clean.
+
+**To get a real answer:**
+1. Point me at the right project. If the product and its records are in another directory, give me the path or open the session there.
+2. Let me run commands, or run `python &quot;E:/Personal/projects/product-qa/shared/scripts/hub.py&quot; dashboard` yourself in the project and paste the output. I&apos;ll read every condition, not just the headline.
+3. If the records were never set up, start with `/product-suite:orient` to set them up, then `/product-suite:qa` to test the build.
+
+If you need to ship before then, that&apos;s your call to make. It gets recorded under your name with your reason, and the record will show it went out without a verdict.</pre>
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.05 · 14:49:20 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">Not yet. There&apos;s nothing here to ship.
+
+- **The working directory is empty.** `C:\Users\faisal_iqbal\AppData\Local\Temp\claude-eval-MJYQOM\home\cwd` has no files.
+- **The repo has no commits.** `main` has no history, so there&apos;s no code to review, test, or release.
+- **The only change git sees is `../.gitconfig`,** an untracked file in the parent directory. That&apos;s config, not a deliverable.
+
+I may be in the wrong place. If the project is in another directory or on another branch, give me the path or branch and I&apos;ll check whether it&apos;s ready: review the diff, run the tests and look for anything left unfinished.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.06 · 14:49:27 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">No, there&apos;s nothing here to ship yet.
+
+- **The working directory is empty.** `cwd` contains no files at all.
+- **The repo has no commits.** `main` has no history yet.
+- **The only change git sees is an untracked `../.gitconfig`.** That&apos;s a config file in the parent directory, not project code.
+
+I tried to look in the parent `home` directory in case the project lives there, but that was blocked by the current permission mode, so I couldn&apos;t check further.
+
+If the code is somewhere else, give me the path or open the session in that directory. Also tell me what &quot;ready&quot; means for this project, such as tests passing, a clean build or a review of the changes. I can then run `/code-review` or `/security-review` and give you a real answer.</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.05 · 14:49:30 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">criteria</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">I can&apos;t say yet, because there&apos;s nothing here to ship. The working directory (`...\home\cwd`) has no files, and the git repo has no commits. The only thing git shows is an untracked `../.gitconfig` in the parent directory, which isn&apos;t project code.
+
+Maybe I&apos;m in the wrong place, or the code is somewhere else. Which of these fits?
+
+- **The project is in another directory:** send me the path and I&apos;ll check it there.
+- **The code is on a branch or remote I can&apos;t see:** tell me which one and I&apos;ll fetch it.
+- **You meant a different project or PR:** point me to it.
+
+Once I can see the code, I&apos;ll check whether it&apos;s ready to ship. That means building it, running the tests, reviewing the pending changes with `/code-review`, and running a security review if you want one.</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>Are we ready to ship?</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">criteria</span><span class="badge">llm</span></div>
+<div class="md"><p>The response must invoke product-suite:release, NOT product-suite:qa. The go/no-go is computed by release.</p>
+</div>
+</div>
+</details>
+</article>
+<footer>Generated by <code>claude plugin eval</code> · schema v1 · scores are not comparable across different suites</footer>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var bar=document.querySelector('.toolbar');
+  if(!bar)return;
+  bar.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest('button');
+    if(!b)return;
+    var open=b.dataset.act==='expand';
+    document.querySelectorAll('details.section, details.grader').forEach(function(d){d.open=open});
+  });
+});
+// Collapsed details vanish from print/PDF; these pages are share artifacts.
+window.addEventListener('beforeprint',function(){
+  document.querySelectorAll('details').forEach(function(d){
+    if(!d.open){d.dataset.printOpened='1';d.open=true}
+  });
+});
+window.addEventListener('afterprint',function(){
+  document.querySelectorAll('details[data-print-opened]').forEach(function(d){
+    d.open=false;delete d.dataset.printOpened;
+  });
+});
+</script>
+</body>
+</html>

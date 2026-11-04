@@ -10,44 +10,63 @@ rewrite history or delete branches.
 
 ## Where we are
 
-**Steps 1-6 complete.** 4 of 15 skills built.
+**Steps 1-9 complete. All 15 skills built. The 5-agent review council is running.**
 
-| Step | What | State |
+| Step | What | Commit |
 |---|---|---|
-| 1 | Snapshot commit | **DONE** `306816a` |
-| 2 | `docs/design/plugin.md` | **DONE** `e5dc138` |
-| 3 | `shared/hub` + `hub.py` + dashboard + tests | **DONE** `ead6091` |
-| 4 | File moves, splits, QA trimmed 470 -> 263 | **DONE** `624cc2e` |
-| 5 | `skills/dev` | **DONE** `b31b755` |
-| 6 | `skills/hub`, `skills/orient` | **DONE** `3a61b17` |
-| 7 | The remaining 11 skills | **IN PROGRESS** |
-| 8 | Trigger evals + both fixtures | not started |
-| 9 | README, CONTRIBUTING, migration; full run | not started |
-| 10 | 5-agent council, apply, verify (max 2 rounds) | not started |
+| 1 | Snapshot | `306816a` |
+| 2 | `docs/design/plugin.md` | `e5dc138` |
+| 3 | hub, hub.py, dashboard, tests | `ead6091` |
+| 4 | File moves and splits; QA trimmed 470 -> 263 | `624cc2e` |
+| 5 | `skills/dev` | `b31b755` |
+| 6 | `skills/hub`, `skills/orient` | `3a61b17` |
+| 7a | discovery, prd, backlog | `7d4fbd6` |
+| 7b | requirements, architecture, design | `877eb52` |
+| 7c | release, docs-authoring, launch, analytics, delivery | `1339e02` |
+| 7d | descriptions trimmed to the measured budget | `26232d5` |
+| 8a | both fixtures + dashboards | `fa352e0` |
+| 8b/9 | trigger evals, fixture test, README, CONTRIBUTING | `43695c0` |
+| 10 | 5-agent council -> consolidate -> apply -> verify | **IN PROGRESS** |
 | 11 | `final-report.md` | not started |
-
-Skills built: `qa` (263 lines), `dev`, `hub`, `orient`.
-Remaining: `discovery` `prd` `requirements` `backlog` `delivery` `design` `architecture`
-`release` `docs-authoring` `launch` `analytics`.
 
 ## Next
 
-Write the remaining 11 skills in lifecycle order, each <=300 lines, `status: draft` in its own
-README, concrete field lists and templates, open questions at the end. Commit in small groups.
+The council's five reports arrive as task notifications. Then: consolidate into
+`docs/design/council-review.md` de-duplicated by root cause and ranked; apply or reject each with
+a reason; anything that would change a product-qa rule goes to NEEDS FAISAL rather than being
+applied; commit fixes in groups referencing finding ids; then ONE fresh verification agent re-runs
+every applied finding's repro. At most two rounds. Then the final report.
 
 ## Test status
 
 | Suite | Count | State |
 |---|---|---|
-| `shared/scripts/test_safe_edit.py` | 25 checks | PASS |
-| `shared/scripts/test_qa_dashboard.py` | 25 checks | PASS |
-| `shared/scripts/test_hub.py` | 70 checks | PASS |
+| `shared/scripts/test_hub.py` | 70 | PASS |
+| `shared/scripts/test_safe_edit.py` | 25 | PASS |
+| `shared/scripts/test_qa_dashboard.py` | 25 | PASS |
 | `shared/scripts/check_repo.py` | 7 checks | PASS |
-| `claude plugin validate .` | — | PASS (warns: no icon; README rewrite due in step 9) |
-| trigger evals / `claude plugin test` | — | not written (step 8) |
-| description-budget test | — | not written (step 8) |
+| `tests/test_fixtures.py` | 24 | PASS |
+| `tests/test_description_budget.py` | 6 (+1 measured) | PASS — 2,349 tok of 2,500 |
+| `tests/triggers/check_overlap.py` | overlap + corpus | PASS — found 8 unguarded pairs, all now guarded |
+| `claude plugin validate .` | — | PASS (one warning: no icon) |
+| `claude plugin eval` (6 cases) | — | MIXED, see below |
 
-**120 automated checks passing.**
+**~160 automated checks passing.**
+
+### Eval results, honestly
+
+Run 1 (`max_turns: 2`): every skill-firing case hit the turn limit — my config bug, not a trigger
+result. The one case that must trigger NOTHING scored 1.00 with and without.
+
+Run 2 (`max_turns: 6`): mean delta +0.22. `hub` hit 1.00 with vs 0.00 without. Ordinary debugging
+still correctly fired nothing. `qa` hit 0.33. The three near-miss cases scored 0.00 — but the
+grader was an `llm` judge reading response prose, which is weak evidence for which tool fired.
+
+Run 3 (in flight) uses the `tool_used` grader found by probing the harness: free, deterministic,
+and `max: 0` proves no skill fired at all. That makes the must-not-trigger case decisive. Which
+skill fired is still judged from prose — recorded as a known weak oracle in `evals/README.md`.
+
+Cost so far: ~$6 of eval runs.
 
 ## Scaffold evidence (kept — the design rests on it)
 
