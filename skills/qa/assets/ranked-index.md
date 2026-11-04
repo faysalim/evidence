@@ -81,7 +81,7 @@ run.**
 | id | Finding | Severity | Status this iteration | Evidence |
 |---|---|---|---|---|
 | `K1` | Self-hosted activation names the wrong env var | blocker | `VERIFIED FIXED` | 3 runs, only the var name differing; now issues |
-| `L5` | `+subaddressing` defeats one-trial-per-email | major | `PARTIAL` | tag stripped on `@a.com`; tag-only local part still mints |
+| `L5` | `+subaddressing` defeats one-trial-per-email | major | `PARTIAL` | tag stripped on `@example.com`; tag-only local part still mints |
 
 `PARTIAL` means the reported repro passes and the adversarial variant still fails — the approach was right
 and the coverage was wrong. It does not pass the gate.

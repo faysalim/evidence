@@ -50,7 +50,7 @@ deliverable; this file is what makes the run resumable.
       "oracle": "a usable key arrives in the real mailbox and activates a real binary",
       "result": { "1": "FAIL", "2": "PASS" }, "finding": "K1" },
     { "id": "S5-03", "scope": "licensing",
-      "action": "tag-only local part, e.g. +tag@a.com",
+      "action": "tag-only local part, e.g. +tag@example.com",
       "oracle": "whether a second trial mints for the same mailbox",
       "result": { "2": "FAIL" }, "finding": "L5",
       "note": "adversarial variant of L5; permanent from iteration 2" },

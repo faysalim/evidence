@@ -105,7 +105,7 @@ So each side **appends** to its own log, one JSON object per line, never rewriti
 {"ts":"2026-11-05T15:40:22Z","actor":"dev/session-2","role":"DEV","event":"FIX_DELIVERED","id":"K1","branch":"fix/qa-k1-env-var","commit":"9f8e7d6","build":"2.5.1@9f8e7d6","satisfies_cases":["S5-01","S5-02"]}
 {"ts":"2026-11-06T08:15:00Z","actor":"qa/lead","role":"QA","event":"BUILD_IDENTITY","build":"2.5.1@9f8e7d6","present":["K1"],"absent":[]}
 {"ts":"2026-11-06T08:31:45Z","actor":"qa/scope-5-agent","role":"QA","event":"CASE_RESULT","case":"S5-01","result":"PASS","ran_under":{"topology":"self-hosted 1 node listed"}}
-{"ts":"2026-11-06T08:33:02Z","actor":"qa/scope-5-agent","role":"QA","event":"VERIFIED","id":"K1","status":"VERIFIED FIXED","variant_used":"tag-only local part +x@a.com"}
+{"ts":"2026-11-06T08:33:02Z","actor":"qa/scope-5-agent","role":"QA","event":"VERIFIED","id":"K1","status":"VERIFIED FIXED","variant_used":"tag-only local part +x@example.com"}
 {"ts":"2026-11-06T09:00:00Z","actor":"qa/lead","role":"QA","event":"CLOSED","id":"K1","iteration":2}
 ```
 
