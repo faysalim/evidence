@@ -91,7 +91,8 @@ anything. **Establish each of these from the artifact, and record how you establ
 
 **Do the thing, once, as a user would.** Install it, sign up, run the quickstart — and time it. That
 first-run trace is perishable: you get exactly one genuine first encounter with a product, and it is also
-the baseline every later iteration is measured against. `${CLAUDE_PLUGIN_ROOT}/shared/references/experience.md`
+the baseline every later iteration is measured against.
+`${CLAUDE_PLUGIN_ROOT}/shared/references/experience.md`
 has the method. Take it **before** you read the architecture docs, or label it warm and say so.
 
 ## Step 5 — Map their artifacts onto hub types
