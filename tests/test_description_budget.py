@@ -72,8 +72,18 @@ def descriptions():
         if not os.path.isfile(path):
             continue
         text = io.open(path, encoding="utf-8").read()
-        m = re.search(r'(?<=\ndescription: ).*?(?=\n---\n)', text, re.S)
-        out[name] = m.group(0).strip() if m else ""
+        m = re.search(r'(?<=\ndescription: ).*?(?=\n[a-z_-]+:|\n---)', text, re.S)
+        d = m.group(0).strip() if m else ""
+        # A frontmatter key must never leak into what we measure. Adding `roles:` and
+        # `status:` after the description broke three separate tools that read to the
+        # closing `---` rather than to the next key, inflating every description. The
+        # overlap checker caught it; this says so where the measurement happens.
+        if re.search(r'^(?:roles|status|name|allowed-tools|license):', d, re.M):
+            raise SystemExit(
+                "%s: the extracted description contains a frontmatter key, so this parse "
+                "reads past the description and every number below would be wrong:\n  %r"
+                % (name, d[-120:]))
+        out[name] = d
     return out
 
 

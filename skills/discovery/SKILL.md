@@ -19,6 +19,23 @@ cannot pass those two is a hypothesis, which is fine, as long as it is labelled 
 
 Items move only through `python "${CLAUDE_PLUGIN_ROOT}/shared/scripts/hub.py"`.
 
+## Before you start: read the profile
+
+```
+hub.py status          # mode, the product class, and what orient could not establish
+hub.py profile         # the full profile, including their domains and acceptance requirements
+```
+
+If there is no profile, stop and run `/evidence:orient` — without it this skill guesses the product
+class, the deploy branch and what the team calls things, and a guess here is wrong in a way nobody
+notices until the first handoff is rejected on vocabulary.
+
+Read `<report-dir>/conventions.md` too, and **use their words, their ids and their templates.** If
+they number requirements `CR-4` or call a story an MMF, so does this skill; existing ids are
+preserved, never renumbered. The ten principles in `${CLAUDE_PLUGIN_ROOT}/shared/principles.md` are
+the only thing here that is not theirs to set — and `status` prints what orient could not establish,
+which you must read before assuming anyone looked.
+
 ## What this skill produces
 
 | Hub item | When |

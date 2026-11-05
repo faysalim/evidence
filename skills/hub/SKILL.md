@@ -60,6 +60,15 @@ The hub lives at `./qa-reports/hub` unless `--hub` or `$PRODUCT_HUB` says otherw
 work before or after the subcommand. `hub.py --help` lists every command; `hub.py <cmd> --help`
 lists its fields.
 
+**Name the engagement.** Without `--engagement` every dashboard page is titled "unnamed engagement",
+and a dashboard opened in six months should say what it is about.
+
+When you answer a question **use their words**: `<report-dir>/conventions.md` holds the team's name
+for each item type and their severity scale, so a status answer lands in their vocabulary rather than
+this plugin's. Unlike every other skill here, this one does **not** refuse to work without a profile —
+answering "where does this stand" on a bare hub is a legitimate request. But say that the profile is
+missing when it is, because an answer drawn from an unoriented hub cannot know what was never looked at.
+
 ## What the verdict actually reads
 
 The computed verdict depends on conventions nothing else states in one place. A hub that ignores

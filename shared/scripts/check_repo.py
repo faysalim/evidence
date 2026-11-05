@@ -432,6 +432,22 @@ def check_coverage():
         else:
             statuses[name] = ms.group(1)
 
+        # skills/orient Step 3 says: "Write conventions.md beside the profile, and have every
+        # downstream skill read it." Exercising the suite found 2 of 15 did. analytics,
+        # architecture, launch, prd and release referenced NEITHER -- exactly the skills that
+        # otherwise guess the product class and impose their own vocabulary, which is the
+        # imposition-over-adoption failure orient's own "For the lead" section warns about.
+        # The promise is now a check, because a promise about every skill that holds for two
+        # is the same defect as a false "Enforced:" line.
+        if "profile" not in text.lower():
+            fail("coverage", "%s never reads the profile -- then it guesses the product class "
+                             "and the deploy branch that orient established" % name)
+            bad += 1
+        if "conventions.md" not in text:
+            fail("coverage", "%s never reads conventions.md -- then it imposes this plugin's "
+                             "vocabulary on the team instead of adopting theirs" % name)
+            bad += 1
+
     served = {r for rr in declared.values() for r in rr}
     for r in sorted(roles - served):
         fail("coverage", "role %s is in model.json and no skill serves it -- the README's "

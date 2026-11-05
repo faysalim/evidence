@@ -46,12 +46,18 @@ python "${CLAUDE_PLUGIN_ROOT}/shared/scripts/hub.py" status
 |---|---|
 | A hub | this is `iteration + 1` → `${CLAUDE_SKILL_DIR}/references/iteration-cycles.md` |
 | No hub, but an old `qa-state.json` or prior reports | still a later iteration → `hub.py import <dir>`. Items arrive `provenance: reconstructed` and **the report says the register was reconstructed** |
-| Nothing, and no prior run described | iteration 1 → `hub.py init`, as your first write, before testing |
+| Nothing, and no prior run described | iteration 1 → `hub.py init --engagement "<product and date>"`, as your first write, before testing |
 | Ambiguous — "re-test the bugs" but no register anywhere | **ask.** One question is far cheaper than a sweep that re-reports known findings as new |
 
 The iteration number is an explicit hub event (`hub.py iteration <n>`), never inferred. A generated view
 (`qa-state.json`) whose `generated_from` header does not match the hub is **not truth** — that is the
 import branch, and `hub.py validate` flags it.
+
+`status` also prints the product class and, critically, **what `/evidence:orient` could not establish** —
+the environment nobody reached, the component whose build is unknown. Read that list before assuming
+anyone looked. Read `<report-dir>/conventions.md` with it and **use their words and their ids**: their
+severity scale, their name for a story, their existing finding ids preserved rather than renumbered. The
+ten principles are the only thing here that is not theirs to set.
 
 Then pin the mandate, in writing, into the hub profile:
 

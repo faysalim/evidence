@@ -59,7 +59,7 @@ def descriptions():
     for name in sorted(os.listdir(sk)):
         path = os.path.join(sk, name, "SKILL.md")
         if os.path.isfile(path):
-            m = re.search(r'(?<=\ndescription: ).*?(?=\n---\n)', read(path), re.S)
+            m = re.search(r'(?<=\ndescription: ).*?(?=\n[a-z_-]+:|\n---)', read(path), re.S)
             out[name] = m.group(0).strip() if m else ""
     return out
 
