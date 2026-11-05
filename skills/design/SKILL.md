@@ -1,6 +1,8 @@
 ---
 name: design
 description: Turn stories into flows and designs covering the failure, empty, partial and permission-denied states as well as the happy path, and run design reviews whose findings are provable rather than matters of taste. Use when the user wants a flow, screen, interaction or design system work designed or reviewed, a usability problem diagnosed, or error and empty states specified. Not for testing a build - that is evidence:qa.
+roles: DESIGNER, DESIGN_LEAD
+status: draft
 ---
 
 # Design

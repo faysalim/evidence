@@ -1,6 +1,8 @@
 ---
 name: orient
 description: Establish the product profile and baseline before any other skill runs: new or existing product, its product class, the team's methodology, toolchain and existing conventions. For an existing product it builds a capability inventory from the running product and maps their artifacts onto hub item types. Use when starting work on an unfamiliar product or repo, or when another skill reports no profile. Not for testing - that is evidence:qa.
+roles: HEAD_OF_PRODUCT
+status: draft
 ---
 
 # Orient

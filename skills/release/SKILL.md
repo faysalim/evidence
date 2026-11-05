@@ -1,6 +1,8 @@
 ---
 name: release
 description: Call a release: compute the go/no-go from the hub rather than asserting it, state the bounds the verdict covers and what it does not, write release notes from what actually shipped, and record the operator's decision when they ship without a green. Use when the user asks whether something is ready to ship, or wants a go/no-go, release-readiness assessment or release notes. Not for testing the build - that is evidence:qa.
+roles: DELIVERY, PM, TECH_LEAD
+status: draft
 ---
 
 # Release

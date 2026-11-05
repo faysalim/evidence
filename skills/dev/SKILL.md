@@ -1,6 +1,8 @@
 ---
 name: dev
 description: Build a story or fix a reported finding: learn an existing repo's real conventions and deploy branch first, work in an isolated worktree, write the test before the fix and prove it fails, copy the case's oracle into that test, and hand back a packet naming the build digest. Use when the user wants a story implemented, a bug or QA finding fixed, a fix handed back for verification, or a repo's conventions learned before a change. Not for finding or verifying bugs - that is evidence:qa, and you never grade your own fix. Not for the technical design (evidence:architecture) or slicing stories (evidence:backlog).
+roles: DEV
+status: proven
 ---
 
 # Dev

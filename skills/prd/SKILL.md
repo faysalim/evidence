@@ -1,6 +1,8 @@
 ---
 name: prd
 description: Write a product requirements document: the problem, who has it, success metrics measurable with a stated denominator and baseline, and an explicit non-scope. For an existing product it reconstructs a current-state PRD from what the product does, then states the change as a delta. Use when the user wants a PRD, product brief, spec or one-pager written or reviewed, scope defined, or success criteria agreed before build. Not for stories - that is evidence:backlog.
+roles: PM
+status: draft
 ---
 
 # PRD

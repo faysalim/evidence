@@ -107,15 +107,21 @@ verdict function; principle 8 is a repo check that has already caught a live vio
 | `launch` | PMM | positioning and copy where every claim links to a passing case |
 | `analytics` | analyst | metric readings, the post-launch review |
 
-`qa` and `dev` carry the original engagement's provenance. **Eleven are marked `status: draft`** in
-their own README, because they were written from first principles — which is exactly what
-`CONTRIBUTING.md` warns against. The warning is on the tin rather than hidden.
+Every skill declares `roles:` and `status:` in its own frontmatter, and `check_repo.py coverage`
+enforces all of it: that every role in `shared/hub/model.json` has a skill, that no skill claims a role
+the model does not have, that no skill omits either field, and that **any count stated in this README
+matches the declarations.** Three levels, and a skill may not claim more than it has earned:
 
-The remaining two, `hub` and `orient`, carry **no status marker at all**, which is worse than a draft
-label: a reader infers "proven" from the absence of a warning. Neither has been run on a real product
-either. Nothing in the repo declares a skill's role or status in machine-readable form, so "every role is
-covered" is a prose claim that no check can verify — unlike the ten principles, where
-`tests/test_enforcement_claims.py` probes each one.
+| Status | Means | Skills |
+|---|---|---|
+| `proven` | Carries a real engagement's provenance, where its absence cost something | `qa`, `dev` |
+| `exercised` | Run end to end against a real product by its author, defects found and fixed. **Weaker than proven** — principle 7 says the author does not grade their own work | `hub` |
+| `draft` | Written from first principles, never run. Exactly what `CONTRIBUTING.md` warns against | **Twelve are marked `status: draft`** |
+
+That last count is checked, not asserted. It had to be: this README claimed thirteen, was corrected to
+eleven, and both were wrong, because `orient` carried no marker at all and so was invisible to a hand
+count. A reader infers "proven" from the absence of a warning, which is why the absence is now a
+build failure.
 
 Leads do not get separate skills; each skill has a short "for the lead" section.
 

@@ -27,6 +27,7 @@ Exit 0 when every selected check passes, 1 otherwise.
 from __future__ import annotations
 
 import io
+import json
 import os
 import re
 import sys
@@ -365,10 +366,98 @@ def check_skills():
         ok("skills", "%d skill(s) within the line and description budgets" % found)
 
 
+# The three honest levels. A skill may not claim more than it has earned.
+#   proven    -- carries a real engagement's provenance, where its absence cost something
+#   exercised -- run end to end against a real product by its author, defects found and fixed.
+#                NOT an independent engagement: principle 7 means the author does not grade
+#                their own work, so this is explicitly weaker than proven.
+#   draft     -- written from first principles, never run. CONTRIBUTING.md warns against this.
+STATUSES = ("proven", "exercised", "draft")
+
+
+def check_coverage():
+    """Every model role has a skill, every skill declares a real role and an honest status.
+
+    This exists because "one skill per deliverable, every role covered" was the plugin's
+    headline claim and NOTHING could verify it: no skill declared its role, so the claim was
+    prose. That is the same defect as the three false "Enforced:" lines the review found in
+    principles.md -- a claim with no mechanism behind it -- in the README instead.
+    """
+    model_path = os.path.join(ROOT, "shared", "hub", "model.json")
+    skills_dir = os.path.join(ROOT, "skills")
+    if not os.path.isfile(model_path) or not os.path.isdir(skills_dir):
+        fail("coverage", "shared/hub/model.json or skills/ is missing")
+        return
+    model = json.loads(read(model_path))
+    roles = set(model.get("roles", []))
+    bad = 0
+    declared, statuses = {}, {}
+
+    for name in sorted(os.listdir(skills_dir)):
+        path = os.path.join(skills_dir, name, "SKILL.md")
+        if not os.path.isfile(path):
+            continue
+        head = read(path).split("\n---", 2)
+        fm = head[1] if len(head) > 2 else head[0]
+        mr = re.search(r"^roles:\s*(.+)$", fm, re.M)
+        ms = re.search(r"^status:\s*(\S+)\s*$", fm, re.M)
+        if not mr:
+            fail("coverage", "%s declares no `roles:` -- then nothing can check that the "
+                             "suite covers every role" % name)
+            bad += 1
+        else:
+            rr = [x.strip() for x in mr.group(1).split(",") if x.strip()]
+            declared[name] = rr
+            for r in rr:
+                if r not in roles:
+                    fail("coverage", "%s declares role %r, which is not in model.json" % (name, r))
+                    bad += 1
+        if not ms:
+            fail("coverage", "%s declares no `status:` -- a reader then infers 'proven' from "
+                             "the absence of a warning" % name)
+            bad += 1
+        elif ms.group(1) not in STATUSES:
+            fail("coverage", "%s has status %r; allowed: %s"
+                 % (name, ms.group(1), ", ".join(STATUSES)))
+            bad += 1
+        else:
+            statuses[name] = ms.group(1)
+
+    served = {r for rr in declared.values() for r in rr}
+    for r in sorted(roles - served):
+        fail("coverage", "role %s is in model.json and no skill serves it -- the README's "
+                         "'every role covered' claim would be false" % r)
+        bad += 1
+
+    # A count stated in the README must match the declarations, so it cannot drift. The
+    # README said "thirteen are marked status: draft" when eleven were.
+    readme = os.path.join(ROOT, "README.md")
+    if os.path.isfile(readme):
+        text = read(readme)
+        words = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven",
+                 8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve",
+                 13: "thirteen", 14: "fourteen", 15: "fifteen"}
+        for st in STATUSES:
+            n = sum(1 for v in statuses.values() if v == st)
+            claim = re.search(r"\*\*(?:Only )?(\w+) (?:are|is) marked `status: %s`" % st, text)
+            if claim:
+                said = claim.group(1).lower()
+                if said not in (words.get(n, ""), str(n)):
+                    fail("coverage", "README says %s skill(s) are status: %s; %d are"
+                         % (said, st, n))
+                    bad += 1
+
+    if not bad:
+        ok("coverage", "%d skills cover all %d roles; statuses: %s"
+           % (len(declared), len(roles),
+              ", ".join("%d %s" % (sum(1 for v in statuses.values() if v == s), s)
+                        for s in STATUSES)))
+
+
 CHECKS = {
     "refs": check_refs, "lint": check_lint, "registry": check_registry,
     "headings": check_headings, "width": check_width, "examples": check_examples,
-    "skills": check_skills,
+    "skills": check_skills, "coverage": check_coverage,
 }
 
 

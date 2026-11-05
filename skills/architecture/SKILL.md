@@ -1,6 +1,8 @@
 ---
 name: architecture
 description: Document the architecture a product actually has before changing it, then write the technical design as a change against that, recording each consequential choice as an ADR with the options rejected and what would prove it wrong. Covers the durability, consistency and failure-mode contracts the product class implies. Use when the user wants a technical design, ADR, system diagram, or an existing system's architecture documented. Not for product scope - that is evidence:prd.
+roles: TECH_LEAD
+status: draft
 ---
 
 # Architecture

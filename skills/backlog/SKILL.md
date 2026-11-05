@@ -1,6 +1,8 @@
 ---
 name: backlog
 description: Turn a PRD and requirements into stories whose acceptance criteria are oracles - each gradeable the same way by a different person, so QA can turn it straight into a test case. For an existing product it imports the backlog, adds missing criteria and flags untestable stories. Use when the user wants stories or tickets written, a backlog groomed or prioritised, or acceptance criteria written or reviewed. Not for deciding what to build - that is evidence:prd.
+roles: PO
+status: draft
 ---
 
 # Backlog

@@ -1,6 +1,8 @@
 ---
 name: discovery
 description: Plan and synthesise product research: interview guides, and insight items that each carry their evidence, sample size and what they do not show, separating observed from reported from inferred. Use when the user wants user research planned or synthesised, interviews or usability sessions prepared, findings turned into insights, or a problem validated before a PRD. Not for writing the PRD - that is evidence:prd.
+roles: RESEARCHER
+status: draft
 ---
 
 # Discovery
