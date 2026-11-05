@@ -24,12 +24,23 @@ the rules are stated once in `shared/principles.md` rather than fifteen times.
 /plugin install evidence@evidence-market
 ```
 
-Skills are then invoked as `/evidence:qa`, `/evidence:dev`, `/evidence:hub` and so on —
-**always namespaced.** Bare names resolve by an origin order nobody controls, and `docs` already collides
-with a skill that ships by default, which is why this plugin's writer skill is `docs-authoring`.
+Skills are then invoked as `/evidence:qa`, `/evidence:dev`, `/evidence:hub` and so on. **Always use the
+namespaced form.** The bare form does resolve to these skills today — that was measured, not assumed — but
+it resolves by an origin order this plugin does not control, so which skill you get depends on what else
+you have installed. `docs` already collides with a skill that ships by default, which is why the writer
+skill here is `docs-authoring`.
 
-Most of the time you will not invoke anything: the descriptions trigger on ordinary requests like "QA this
-release", "write acceptance criteria for this story", or "what is waiting on me".
+Much of the time you will not invoke anything: the descriptions are written to trigger on ordinary requests
+like "QA this release", "write acceptance criteria for this story", or "what is waiting on me".
+
+> **Known limitation, measured.** Claude Code gives the whole skill listing a character budget of 1% of the
+> model's context window, **shared across every skill you have** — 8,000 characters on a 200k-token model.
+> This plugin's 15 descriptions are ~7,300 of that on their own, and when the listing overflows Claude Code
+> **drops descriptions**, starting with the least-invoked skills. In a session with other plugins installed,
+> 7 of these 15 had no description at all, and auto-triggering worked reliably only for `qa`, `dev`, `hub`
+> and `orient`. Until that is resolved, **invoke the other eleven explicitly.**
+> `tests/test_description_budget.py` fails on purpose until it is fixed, rather than reporting green over
+> it.
 
 ### Migrating from the standalone `product-qa` skill
 
@@ -41,10 +52,10 @@ rm -rf ~/.claude/skills/product-qa
 
 On Windows, delete `%USERPROFILE%\.claude\skills\product-qa`.
 
-A plugin skill and a standalone skill with the same name **both load**, so leaving it in place means the
-method is read twice from two versions, and which one wins is not something you decide. The old skill's
-content is all still here: the QA method is `skills/qa/`, and what more than one role needs moved to
-`shared/`.
+Both will load — the names differ (`product-qa` versus `evidence:qa`), so they do not collide outright,
+which is the problem: their **descriptions** overlap heavily, so a request like "QA this release" can route
+to either, and you cannot tell from the answer which version of the method you got. The old skill's content
+is all still here: the QA method is `skills/qa/`, and what more than one role needs moved to `shared/`.
 
 Your existing report directories still work. `python shared/scripts/hub.py import <report-dir>` reads an
 old `qa-state.json`, **preserves every finding id**, and marks everything `provenance: reconstructed` — it
