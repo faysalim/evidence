@@ -2,12 +2,12 @@
 name: prd
 description: Write a product requirements document: the problem, who has it, success metrics measurable with a stated denominator and baseline, and an explicit non-scope. For an existing product it reconstructs a current-state PRD from what the product does, then states the change as a delta. Use when the user wants a PRD, product brief, spec or one-pager written or reviewed, scope defined, or success criteria agreed before build. Not for stories - that is evidence:backlog.
 roles: PM
-status: draft
+status: exercised
 ---
 
 # PRD
 
-`status: draft` — see `${CLAUDE_SKILL_DIR}/README.md`.
+`status: exercised` -- run against a real product; weaker than `proven`. See `${CLAUDE_SKILL_DIR}/README.md`.
 
 A PRD fails in one of two ways, and both are invisible at the time. It describes a solution without ever
 stating the problem, so nobody can later tell whether it worked. Or it has a success metric with no
@@ -105,6 +105,27 @@ Why this order, and it is not ceremony: a change described against an imagined c
 re-specifies behaviour nobody intended to touch, and engineering then discovers it as a regression.
 `shared/principles.md` §10 — when docs, tickets and code disagree, the disagreement is the finding, and the
 current-state PRD is where you write it down.
+
+**Three of the nine sections ask a different question in a reconstruction**, and exercising this skill
+showed that reading them the change-PRD way produces a filled-in template with no findings in it —
+which is the whole value gone. Ask these instead:
+
+| § | In a change PRD | In a current-state reconstruction |
+|---|---|---|
+| **4 Success metrics** | What we will achieve | **What the product is already judged by, with its measured baselines — and what it is not judged by at all.** The gap is the finding. One product measured durability against real denominators over millions of keys and availability against nothing; writing the table is what made that visible |
+| **6 Non-scope** | What we chose not to build | **What the product does not do that a reader assumes it does.** Not a scoping decision — a discovery. One entry read "no failure-domain awareness; durability is defined over pods, and closing the gap between a pod and a failure domain is the operator's job, which nothing tells them". That is non-scope that reads as scope, and it was the engagement's largest risk |
+| **8 Risks / 9 Open decisions** | What could stop the plan | **The gaps the reconstruction just exposed**, each routed as a `risk` or `decision` item rather than left as prose |
+
+§3 Current state carries one more thing in a reconstruction: **the workaround.** If users have one,
+it is absorbing a defect and hiding its size — client-side retry on a routing error is the normal,
+sensible thing to do, and it is why a multi-minute unavailability window can exist with nobody
+complaining. Name the workaround and you have found the quantity nobody is measuring.
+
+**Provenance.** `derived_from` points at `insight` items, and a reconstructed PRD usually has none —
+no discovery was run, because the product is already there. What it rests on is artifacts: the
+deploy config, the running build, a certification report, the capability inventory. Cite those, per
+line, the way `/evidence:orient` Step 4 does. A reconstructed PRD whose §3 cannot be sourced is a
+recollection.
 
 For a new product there is no current state. Say that explicitly rather than leaving §3 blank.
 

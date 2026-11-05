@@ -7,7 +7,7 @@ status: exercised
 
 # Delivery
 
-`status: draft` — see `${CLAUDE_SKILL_DIR}/README.md`.
+`status: exercised` -- run against a real product; weaker than `proven`. See `${CLAUDE_SKILL_DIR}/README.md`.
 
 A status report that people write about their own work is a report of how they feel about their work. It is
 optimistic in a predictable direction, it costs everyone an hour a week to produce, and it is wrong in the

@@ -131,7 +131,9 @@ def seed(hub):
         ("prd", "SEED-P1", ["title=a seeded prd"], "pm1", "PM"),
         ("release", "SEED-R1", ["title=a seeded release"], "dm1", "DELIVERY"),
         ("requirement", "SEED-RQ1", ["title=a seeded requirement"], "ba1", "BA"),
-        ("metric", "SEED-M1", ["title=a seeded metric"], "an1", "ANALYST"),
+        ("metric", "SEED-M1", ["title=a seeded metric", "name=a seeded metric",
+                               "denominator=seeded accounts, excluding internal"],
+         "an1", "ANALYST"),
         ("insight", "SEED-I1", ["title=a seeded insight"], "re1", "RESEARCHER"),
         ("adr", "SEED-A1", ["title=a seeded adr"], "tl1", "TECH_LEAD"),
         ("design", "SEED-D1", ["title=a seeded design"], "de1", "DESIGNER"),
@@ -146,7 +148,14 @@ def seed(hub):
         argv = ["add", t, i]
         for kv in f:
             argv += ["-f", kv]
-        sh(argv, hub, actor=actor, role=role)
+        rc, out = sh(argv, hub, actor=actor, role=role)
+        # The seed must fail LOUDLY. It did not, and tightening `metric` to require a
+        # denominator at creation silently stopped SEED-M1 from existing -- after which any
+        # documented command touching it would have been reported as the document's fault.
+        # A harness whose setup fails quietly blames the thing it is testing.
+        if rc != 0:
+            raise SystemExit("seed failed to create %s %s -- the harness cannot judge any "
+                             "document until this is fixed:\n  %s" % (t, i, out.strip()))
 
 
 def skill_role(path):

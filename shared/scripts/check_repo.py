@@ -408,7 +408,6 @@ def check_coverage():
             end = text.find("\n---", 3)
             fm = text[4:end] if end != -1 else ""
         mr = re.search(r"^roles:\s*(.+)$", fm, re.M)
-        mr = re.search(r"^roles:\s*(.+)$", fm, re.M)
         ms = re.search(r"^status:\s*(\S+)\s*$", fm, re.M)
         if not mr:
             fail("coverage", "%s declares no `roles:` -- then nothing can check that the "
@@ -431,6 +430,19 @@ def check_coverage():
             bad += 1
         else:
             statuses[name] = ms.group(1)
+
+        # The body's own status banner must agree with the frontmatter. Exercising `architecture`
+        # and `prd` found five skills whose frontmatter read `status: exercised` while the first
+        # line of the body still read "`status: draft`" -- left behind when the statuses were
+        # flipped and invisible to this check, which read frontmatter only. A file that
+        # contradicts itself about its own maturity is worse than one with no marker: the reader
+        # cannot tell which line is stale, and the banner is the line they see first.
+        banner = re.search(r"^`status:\s*(\w+)`", text, re.M)
+        if banner and ms and banner.group(1) != ms.group(1):
+            fail("coverage", "%s: frontmatter says status %r and the body banner says %r -- "
+                             "the file contradicts itself about its own maturity"
+                 % (name, ms.group(1), banner.group(1)))
+            bad += 1
 
         # skills/orient Step 3 says: "Write conventions.md beside the profile, and have every
         # downstream skill read it." Exercising the suite found 2 of 15 did. analytics,

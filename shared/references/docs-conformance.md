@@ -119,7 +119,7 @@ Enumerate from the code, then subtract what is documented. The remainder is the 
 | Surface | How to enumerate it |
 |---|---|
 | HTTP routes | Router registrations / route table (`MapGet`, `MapPost`, decorators, route files) |
-| Environment variables | Grep the environment-read API: `Environment.GetEnvironmentVariable`, `process.env`, `os.environ`, `getenv`; dedupe |
+| Environment variables | Grep **every** language that touches config, not just the service's own: the environment-read APIs (`Environment.GetEnvironmentVariable`, `process.env`, `os.environ`, `getenv`) **and** the places variables are *set* — Helm templates, Dockerfiles, compose files, entrypoint scripts, CI config. Then dedupe across all of them |
 | CLI commands and flags | The option-parser definitions, not `--help` (help text is itself a doc that can be wrong) |
 | Config keys | The config schema or binding class, plus defaults |
 | Public API | Exported/public symbols of each shipped package |
@@ -127,22 +127,48 @@ Enumerate from the code, then subtract what is documented. The remainder is the 
 | Feature flags | The flag registry or their read sites |
 | Error codes | The enum or constant table |
 
-**Scope the enumeration before you trust the number, and state how you scoped it.** Three traps, all
-hit while exercising this method against a real codebase:
+**Scope the enumeration before you trust the number, and record the scope as a command.** Five traps.
+The first three were hit exercising this method against a real codebase; the last two were hit
+*re-running it on the same codebase six months later* and finding the published figure irreproducible.
 
 - **Build output.** A grep that reaches into `bin/`, `obj/`, `dist/`, `target/` or `node_modules/`
   counts compiled copies of the same symbol, and on a binary it yields `Binary file ... matches` as
   if that were a result. Restricting to source files took one real count from 154 to 138.
 - **Test and benchmark code.** A certification harness's knobs are not product surface. Separating
-  them took 138 to 102, and the honest claim names both figures and the rule used to split them.
-- **The reverse direction is a finding too.** Three documented variables did not exist in the code
-  at all. A documented surface the product does not have is worse than an undocumented one, because
-  a reader will try it and conclude the product is broken.
+  them changed the figure materially, and the honest claim names both figures and the rule used.
+- **The reverse direction is a finding too.** A documented surface the product does not have is
+  worse than an undocumented one, because a reader will try it and conclude the product is broken.
+- **One language is not the surface.** The first enumeration grepped the service's own language and
+  found 96 names. Repeating it across the Helm chart, Dockerfiles, the web console's TypeScript and
+  the entrypoint scripts found **131** — 53 names invisible to a single-language grep, three of
+  which had been *reported as documented-but-nonexistent* purely because the grep could not see
+  where they were read. A one-language sweep does not just undercount; it manufactures findings in
+  the reverse direction.
+- **"Excluding test code" is not a method.** It is a sentence, and sentences are not reproducible.
+  Four honest readings of one such sentence — match the path segment, the project name, the
+  filename, or nothing — gave **93, 96, 103 and 131** distinct names on the same commit of the same
+  repository. A denominator nobody can recompute is not a denominator.
 
-Then diff, both ways, and state the denominator and the exclusions with the result — "57 of 102
-production environment variables are undocumented, counting distinct reads in non-test source,
-excluding build output" is checkable, and a reader who disagrees with the enumeration can say so.
-"Documentation is incomplete" is not.
+So **record the enumeration as a re-runnable command, verbatim, beside the number**, and put it in
+the profile (`capability_inventory_method`) so the next pass recomputes rather than re-decides:
+
+```
+git ls-files | grep -viE '(^|/)(tests?|bench|harness)/|/publish/|^artifacts/' \
+  | xargs grep -hoE 'ZARIS_[A-Z0-9_]+' | sort -u | wc -l        # -> 131
+```
+
+**And state which documentation counts.** This is the half most often left implicit, and it moves the
+result further than any exclusion above. Against the public site alone, 85 of those 131 names were
+undocumented (65%). Against the site **plus the product's own shipped `docs/` and the chart's inline
+comments** — both of them surfaces §1 already tells you to inventory — the same code enumeration gives
+**23 of 131** (18%). Same product, same commit, same grep: 47 points of difference, entirely from an
+unstated choice between items on §1's own list. Three variables named as the headline examples of the
+65% figure turned out to be documented in the shipped docs all along.
+
+Then diff, both ways, and state the surface, the exclusions, the command and the doc corpus with the
+result. "23 of 131 configuration variables have no entry in any shipped or published doc, enumerated
+by <command>, documentation corpus = public site + `docs/` + chart comments" is checkable, and a
+reader who disagrees with the enumeration can re-run it. "Documentation is incomplete" is not.
 
 An undocumented environment variable is a support ticket with a long fuse; an undocumented endpoint
 is either dead code or an unannounced API someone will build on. Report both.
@@ -161,7 +187,14 @@ Reverse coverage  — product surface documented:     96 / 113   (85%)
                     undocumented: 14 env vars, 2 routes, 1 CLI flag
 Denominators: claims extracted from the 9 doc surfaces in §1 (list);
               surface enumerated from route table, env-read grep, parser defs.
+Doc corpus:   public site + README + shipped docs/ + chart comments  (of §1's list)
+Enumerated by: <the exact command, so the number can be recomputed rather than re-decided>
 ```
+
+The last two lines are not bookkeeping. A reverse-coverage ratio has an enumeration on top and a
+documentation corpus underneath, and **leaving either implicit lets the same product report 18% or
+65%** — so a reader cannot tell a real regression from a changed definition, and neither can you on
+the next pass.
 
 **"100% coverage" means nothing without the denominator and the enumeration method.** An unqualified 100%
 is the same failure as the "0 bugs" report this whole skill is built against: it sounds like a result and

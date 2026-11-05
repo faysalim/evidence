@@ -7,7 +7,7 @@ status: exercised
 
 # Requirements
 
-`status: draft` — see `${CLAUDE_SKILL_DIR}/README.md`.
+`status: exercised` -- run against a real product; weaker than `proven`. See `${CLAUDE_SKILL_DIR}/README.md`.
 
 A BA's characteristic failure is a reasonable one: two stakeholders say incompatible things, and the
 document records a blend that neither asked for and neither will accept at review. The blend is invisible —

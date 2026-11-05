@@ -115,22 +115,23 @@ matches the declarations.** Three levels, and a skill may not claim more than it
 | Status | Means | Skills |
 |---|---|---|
 | `proven` | Carries a real engagement's provenance, where its absence cost something | `qa`, `dev` |
-| `exercised` | Run against a real product by its author, defects found and fixed. **Weaker than proven** — principle 7 says the author does not grade their own work | `hub`, `orient`, `delivery`, `release`, `docs-authoring`, `launch`, `requirements` |
-| `draft` | Written from first principles, never run. Exactly what `CONTRIBUTING.md` warns against | **Six are marked `status: draft`** — `analytics`, `architecture`, `backlog`, `design`, `discovery`, `prd` |
+| `exercised` | Run against a real product by its author, defects found and fixed. **Weaker than proven** — principle 7 says the author does not grade their own work | `hub`, `orient`, `delivery`, `release`, `docs-authoring`, `launch`, `requirements`, `architecture`, `prd` |
+| `draft` | Written from first principles, never run. Exactly what `CONTRIBUTING.md` warns against | **Four are marked `status: draft`** — `analytics`, `backlog`, `design`, `discovery` |
 
 That last count is checked, not asserted. It had to be: this README claimed thirteen, was corrected to
 eleven, and both were wrong, because `orient` carried no marker at all and so was invisible to a hand
 count. A reader infers "proven" from the absence of a warning, which is why the absence is now a
-build failure.
+build failure. The check also compares each skill's frontmatter against the status banner in its own
+body, after five files were found claiming `exercised` in one and `draft` in the other.
 
-**What `exercised` actually bought.** Running the seven against a live codebase — a real distributed
-data store, its real docs and its real public comparison page — found twelve defects in the skills
-themselves, including the largest one in the suite: `orient` promised that *every* downstream skill
-reads the profile and `conventions.md`, and two of fifteen did. Five referenced neither, which are
-exactly the skills that would otherwise guess the product class and impose vocabulary on a team. Every
-defect is listed in `docs/design/exercise.md` with what it broke.
+**What `exercised` actually bought.** Running them against a live codebase — a real distributed data
+store, its real docs, its real public comparison page and its own certification artifacts — found
+twenty defects in the skills themselves, including the largest one in the suite: `orient` promised
+that *every* downstream skill reads the profile and `conventions.md`, and two of fifteen did. Five
+referenced neither, which are exactly the skills that would otherwise guess the product class and
+impose vocabulary on a team. Every defect is listed in `docs/design/exercise.md` with what it broke.
 
-The six drafts are not untested — every documented command in all fifteen is executed by
+The four drafts are not untested — every documented command in all fifteen is executed by
 `tests/test_documented_commands.py`, every state they name is checked against the model, and the
 profile contract is enforced for all of them. They have simply never been pointed at a real product,
 and that is a different claim.

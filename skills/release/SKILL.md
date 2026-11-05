@@ -7,7 +7,7 @@ status: exercised
 
 # Release
 
-`status: draft` — see `${CLAUDE_SKILL_DIR}/README.md`.
+`status: exercised` -- run against a real product; weaker than `proven`. See `${CLAUDE_SKILL_DIR}/README.md`.
 
 The go/no-go is the single most consequential sentence anyone in this suite writes, and it is the one most
 often produced by looking at an empty bug list and feeling reassured. **This skill does not write a

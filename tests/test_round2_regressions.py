@@ -151,7 +151,8 @@ def main():
         for literal in ("null", "[]", "{}", '""'):
             rc = cli(hub, "d1", "DEV", "move", "F-4", "REJECTED", "-f", "reason=%s" % literal)
             check("[REGRESSION] reason=%s is refused" % literal, rc != 0, "rc=%r" % rc)
-        cli(hub, "an", "ANALYST", "add", "metric", "MM-1", "-f", "name=x")
+        cli(hub, "an", "ANALYST", "add", "metric", "MM-1", "-f", "name=x",
+            "-f", "denominator=signups, excluding internal")
         rc = cli(hub, "an", "ANALYST", "move", "MM-1", "BASELINED",
                  "-f", "denominator=signups", "-f", "baseline=0")
         check("   but a baseline of 0 is still a reading", rc == 0, "rc=%r" % rc)

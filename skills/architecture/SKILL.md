@@ -2,12 +2,12 @@
 name: architecture
 description: Document the architecture a product actually has before changing it, then write the technical design as a change against that, recording each consequential choice as an ADR with the options rejected and what would prove it wrong. Covers the durability, consistency and failure-mode contracts the product class implies. Use when the user wants a technical design, ADR, system diagram, or an existing system's architecture documented. Not for product scope - that is evidence:prd.
 roles: TECH_LEAD
-status: draft
+status: exercised
 ---
 
 # Architecture
 
-`status: draft` — see `${CLAUDE_SKILL_DIR}/README.md`.
+`status: exercised` -- run against a real product; weaker than `proven`. See `${CLAUDE_SKILL_DIR}/README.md`.
 
 Two rules govern this skill, and both come from the same place.
 
@@ -54,6 +54,24 @@ Link each `adr` to the `story` or `prd` it serves. An ADR attached to nothing is
 
 ## The ADR
 
+**If they already keep decision records, theirs win — read them before this section.** An existing
+`docs/decisions/`, `adr/` or wiki category is a convention, and `conventions.md` is where it is
+recorded. Exercising this skill against a real product found five records named
+`NNNN-kebab-title.md`, titled `# Decision NNNN — <sentence>`, each with a companion sketchnote, a
+free-prose `**Status:**` line, and sections `Problem` / `Root cause` / `Decision` / `Why not the
+alternatives` / `Tests` / `Validation` / dated `Addendum`. The team calls them **Decisions**, not
+ADRs. Imposing `ADR-4` and the six-field block below on that would renumber their records and rename
+their artifact — the same imposition-over-adoption failure that `requirements` committed with a
+hard-coded `REQ-14`, and the one `/evidence:orient`'s "For the lead" section exists to catch.
+
+So: keep their ids, their filename pattern, their title form and their section names. Add only what
+is **missing** from their template, and only where it earns its place. In that engagement the answer
+was one field — see `falsifier` below — because they were already doing `rejected` well, under the
+heading `## Why not the alternatives`.
+
+The six fields below are the template when a team has none, and the checklist for what to look for
+when they do.
+
 Six fields. The last two are the ones usually missing and the ones that make it useful later.
 
 ```
@@ -72,6 +90,34 @@ permanently; omitting it means having it again.
 **`falsifier`** is the oracle rule (`shared/principles.md` §3) applied to a decision. "If p99 write latency
 under the migration path exceeds 200 ms at 3× current volume, this was the wrong call." Without it an ADR
 can never be shown to have been a mistake, so nothing is learned and the next one is no better.
+
+This field was the suite's own invention and was marked untested. Exercising the skill is what
+settled it, and the evidence came from the team's own records rather than from argument: none of
+their five Decisions stated a falsifier, and **two carried a dated `## Addendum` recording that the
+decision had later been found wrong or incomplete** — "the fence had a hole: a Handoff→Recovering
+bounce", and a regression-and-revert of half a fix. Those addenda are falsifiers, written after the
+fact at the cost of a failed run. Proposing the field is therefore adoption of a practice the team
+already has, moved earlier; that is the argument to make to them, not a template preference.
+
+## A decision that is accepted but only half-built
+
+The `adr` lifecycle is `PROPOSED → ACCEPTED → SUPERSEDED`, and it is about the **decision**, not the
+build. One of the five real Decisions read `Status: Partial (instrumentation + safety net
+implemented; core transport fix pending next-run pinpoint)` — a state the lifecycle cannot express.
+`ACCEPTED` overstates it and `PROPOSED` is false, so mapping it either way loses the fact that half
+of a shipped decision is still outstanding.
+
+Do not resolve this by renaming their status. Resolve it by making the outstanding half a linked
+item with its own owner — a `story` if it is planned, a `risk` if it is not — so the gap is visible
+in the hub rather than buried in prose:
+
+```
+hub.py link <the adr> blocked_by <the risk or story carrying the unfinished half>
+```
+
+An `adr` in `ACCEPTED` with nothing recording its unfinished half reads as done. That is a reporting
+rule, not an enforced one: nothing checks it, which is why it is written here and in the lead's
+review list rather than claimed as a guard.
 
 ## Current-state architecture, for an existing product
 
@@ -117,6 +163,12 @@ person with a second `--role`.
 Review the `falsifier` first. An ADR with no falsifier cannot be wrong, which means it cannot be assessed
 and will be defended rather than revisited.
 
+Then two questions the hub cannot ask for you, because neither is enforced:
+
+- **Is this ADR linked to anything?** "An ADR attached to nothing is a preference" is stated above and
+  checked nowhere — the hub will accept and accept an unlinked `adr` all the way to `ACCEPTED`.
+- **Does an `ACCEPTED` decision have unfinished halves, and do they have items?** See the section above.
+
 Then ask the question the design most often cannot answer: **what does this promise that nothing
 enforces?** A replication factor set in config but not asserted anywhere, a documented consistency model
 with no test, an at-most-once claim over an at-least-once transport. Those gaps become `case` items for QA
@@ -126,10 +178,20 @@ if they are real, and `adr` corrections if they are not.
 
 - Whether `adr` should require `falsifier` to reach `PROPOSED`, the way a story requires criteria. It would
   be consistent with the rest of the suite; it may be too strict for a small reversible choice.
+- Whether `adr` should require a link to reach `ACCEPTED`, given that this file says an unlinked ADR is a
+  preference and nothing enforces it. Exercising the skill gave a reason to leave it unenforced:
+  `/evidence:orient` Step 5 maps an existing `docs/decisions/` folder onto `adr` items *before* any
+  `story` or `prd` exists, so a link requirement at creation would make importing five real records
+  impossible. The cost is that the rule now lives only in the lead's review list.
 - No diagram format is prescribed. Textual component lists diff well in version control; teams may want
   something renderable, and a textual format that renders is probably the answer.
+- Whether the `adr` lifecycle needs a state between `ACCEPTED` and done, for a decision whose
+  implementation is partial. One of five real Decisions was in exactly that state. Today the answer is
+  a linked `story` or `risk`, which keeps the lifecycle about the decision; it also means the hub shows
+  `ACCEPTED` for something half-built unless somebody remembers the link.
 - The current-state table is QA's Step 1 generalised, which has real provenance. The ADR field list is
-  conventional, and the `falsifier` field is this suite's own addition — untested.
+  conventional. The `falsifier` field was the suite's own untested addition until exercising the skill
+  found two of a team's five Decisions carrying post-hoc addenda that were falsifiers in all but name.
 
 | File | Read it when |
 |---|---|

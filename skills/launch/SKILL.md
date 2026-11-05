@@ -7,7 +7,7 @@ status: exercised
 
 # Launch
 
-`status: draft` — see `${CLAUDE_SKILL_DIR}/README.md`.
+`status: exercised` -- run against a real product; weaker than `proven`. See `${CLAUDE_SKILL_DIR}/README.md`.
 
 Marketing copy is the one artifact in this suite that a stranger reads and relies on without any way to
 check it. So it gets the strictest version of the evidence rule: **every product claim in customer-facing

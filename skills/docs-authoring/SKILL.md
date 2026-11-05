@@ -7,7 +7,7 @@ status: exercised
 
 # Docs authoring
 
-`status: draft` — see `${CLAUDE_SKILL_DIR}/README.md`.
+`status: exercised` -- run against a real product; weaker than `proven`. See `${CLAUDE_SKILL_DIR}/README.md`.
 
 Documentation is the contract, and a customer's first run **is** the documented path. So a documented path
 that fails is a blocker regardless of how correct the product is underneath — the origin engagement's

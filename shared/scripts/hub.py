@@ -1027,6 +1027,75 @@ def cmd_init(args):
     return 0
 
 
+DOMAINS_DIR = os.path.join(os.path.dirname(HERE), "domains")
+
+
+def known_domains():
+    """The product classes this copy of the suite actually has a file for.
+
+    Returns None when the directory is unreachable, which means "cannot validate" rather than
+    "nothing is valid" -- refusing every class because an install is odd would be worse than the
+    defect this guards.
+    """
+    try:
+        names = os.listdir(DOMAINS_DIR)
+    except OSError:
+        return None
+    return {n[:-3] for n in names if n.endswith(".md") and n != "README.md"}
+
+
+def check_domains(fields):
+    """`domains` names product classes, and the vocabulary is closed.
+
+    skills/orient Step 2 says to pick from shared/domains/; skills/architecture and skills/prd
+    then say to READ the chosen file for the fault catalogue and the load-bearing contracts.
+    Exercising those two against a real product, `domains=[..., "self-hosted-deployment"]` was
+    stored without comment and there is no such file -- so the catalogue for a class the product
+    really is would never have been read, and nothing would ever have said so. Since `status`
+    began printing this field, an unrecognised name reaches eleven skills with the profile's
+    authority behind it.
+
+    A class the suite genuinely lacks is a real case: orient says to work from the scope families
+    and write the file afterwards. That goes in `domains_other`, which is kept and surfaced. The
+    point is only that a typo must not be indistinguishable from a deliberate choice.
+    """
+    if "domains" not in fields:
+        return
+    value = fields["domains"]
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, list):
+        raise HubError("domains must be a class name or a list of them, got %r" % (value,))
+    known = known_domains()
+    if known is None:
+        return
+    unknown = [str(d) for d in value if str(d) not in known]
+    if not unknown:
+        return
+    import difflib
+    lines = []
+    for name in unknown:
+        # A wrong suggestion is worse than none: a reader who accepts it reads the fault
+        # catalogue for the wrong class, and the tool sounded sure. The first version of this
+        # message offered "self-hosted-deployment -- did you mean payments?" at difflib's 0.4
+        # cutoff. So require either a shared hyphen-token or a very close string, never a loose
+        # character-overlap score.
+        tokens = {t for t in str(name).lower().split("-") if len(t) > 2}
+        near = [k for k in sorted(known)
+                if tokens & {t for t in k.split("-") if len(t) > 2}
+                or difflib.SequenceMatcher(None, str(name).lower(), k).ratio() >= 0.8][:3]
+        lines.append("  %s -- %s" % (name, ("did you mean %s?" % ", ".join(near)) if near
+                                     else "nothing close"))
+    raise HubError(
+        "no product class file for %d of the domains given:\n%s\n"
+        "Every skill that reads the class opens shared/domains/<name>.md for the fault "
+        "catalogue; a name with no file means that catalogue is silently never read. Pick from "
+        "the %d available, or -- if the suite genuinely has no class for this product -- record "
+        "it in `domains_other` with the reason and work from the scope families, as "
+        "skills/orient Step 2 says."
+        % (len(unknown), "\n".join(lines), len(known)))
+
+
 def cmd_profile(args):
     hub = resolve_hub(args)
     if not args.set:
@@ -1034,7 +1103,9 @@ def cmd_profile(args):
         print(json.dumps(h.meta.get("profile", {}), indent=1))
         return 0
     actor, role = identity(args)
-    append_event(hub, role, actor, {"op": "profile", "fields": kv(args.set)})
+    fields = kv(args.set)
+    check_domains(fields)
+    append_event(hub, role, actor, {"op": "profile", "fields": fields})
     print("profile updated")
     return 0
 
@@ -1250,6 +1321,17 @@ def cmd_status(args):
     unestablished = profile.get("not_established") or []
     if isinstance(unestablished, str):
         unestablished = [unestablished]
+    # `domains` is surfaced for the same reason, found the same way. Eleven skills open with
+    # `hub.py status  # mode, the product class, and what orient could not establish`, and the
+    # middle claim was false: the product class lived only in `hub.py profile`. A skill that
+    # believed the comment either guessed the class -- the exact failure that block was added to
+    # stop -- or made an undocumented second call. `status` advertises it, so `status` prints it.
+    domains = profile.get("domains") or []
+    if isinstance(domains, str):
+        domains = [domains]
+    other = profile.get("domains_other") or []
+    if isinstance(other, str):
+        other = [other]
     out = {
         "hub": hub_dir, "found": True,
         "engagement": h.meta.get("engagement"),
@@ -1259,12 +1341,22 @@ def cmd_status(args):
         "problems": len(h.validate()),
         "skew": len(h.skew),
         "profile_mode": profile.get("mode"),
+        "domains": list(domains),
         "not_established": list(unestablished),
     }
+    if other:
+        # A class the suite has no file for. Surfaced so a reader can tell it from a typo, and so
+        # the skill that goes looking for a fault catalogue knows there is none to find.
+        out["domains_other"] = list(other)
     if not profile:
         out["next"] = ("no profile. Run /evidence:orient first, or every skill after this "
                        "one guesses the product class, the deploy branch and their vocabulary.")
-    elif not unestablished:
+    elif not domains:
+        out["domains_warning"] = (
+            "the profile names no product class. orient Step 2 requires choosing one from "
+            "shared/domains/ -- and every skill that reads this field treats silence as 'no "
+            "class applies', which is how a distributed store gets tested as a web app.")
+    if profile and not unestablished:
         out["not_established_warning"] = (
             "the profile claims nothing was left unestablished. orient Step 6 requires that "
             "paragraph; an empty list means either a complete orientation or one that did not "

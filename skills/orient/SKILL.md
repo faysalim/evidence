@@ -61,6 +61,21 @@ next person in that field will need it.
 hub.py profile --set mode=existing --set 'domains=["crm","multi-tenant-saas"]'
 ```
 
+`domains` is a **closed vocabulary** — the hub refuses a name it has no file for, and names the
+near misses. That is not pedantry about spelling: every skill that reads the class opens
+`shared/domains/<name>.md` for the fault catalogue, so a name with no file means the catalogue is
+silently never read. Exercising `architecture` and `prd` stored `self-hosted-deployment` here
+without a murmur, and nothing downstream could have told that from a real class.
+
+When nothing fits, say so in the field rather than inventing a name — then write the missing file:
+
+```
+hub.py profile --set 'domains=["distributed-database"]' \
+   --set 'domains_other=["self-hosted install/operate: no class file; worked from the scope families"]'
+```
+
+`hub.py status` prints both, so a reader can tell a deliberate gap from a typo.
+
 ## Step 3 — Methodology, toolchain, conventions: adopt, never impose
 
 This is the step that decides whether the team can use any of this. **Adopt their templates and their
@@ -97,8 +112,8 @@ anything. **Establish each of these from the artifact, and record how you establ
 |---|---|
 | Which branch actually deploys | The hosting config, not the repo default. One repo's `master` was a month stale while the live line was `release/2.5.0` |
 | Which build is live, per component | A version endpoint, an image digest, or a string you can grep in the served asset. Record the commit delta from the branch tip |
-| What the product actually exposes | The route table, every environment-variable read, the option parser, the config schema. This is the **capability inventory**, and it is enumerated from code, never from the docs. **Exclude build output and vendored dependencies, and say which directories you excluded** — a grep that reaches into `bin/`, `obj/`, `dist/` or `node_modules/` counts compiled copies of the same symbol and silently inflates the denominator. Exercising this skill, that mistake turned 102 real reads into 154, with binary-match lines among them. Separate test-only knobs from production ones too, and state the split: a certification harness's flags are not product surface |
-| What the docs claim it exposes | The published surface. The difference, both ways, is your first set of findings |
+| What the product actually exposes | The route table, every environment-variable read, the option parser, the config schema — across **every** language that touches config, not just the service's own: a single-language grep found 96 names where the chart, Dockerfiles, console TypeScript and entrypoint scripts brought it to 131. This is the **capability inventory**, enumerated from code, never from the docs. **Record the enumeration as a re-runnable command in `capability_inventory_method`, not as prose.** "Excluding test code" is a sentence, and four honest readings of one such sentence gave 93, 96, 103 and 131 on the same commit — a denominator nobody can recompute is not a denominator. Exclude build output and vendored dependencies (a grep into `bin/`, `obj/`, `dist/` or `node_modules/` counts compiled copies and yields `Binary file ... matches` as if that were a result), and separate test-only knobs from production ones: a certification harness's flags are not product surface |
+| What the docs claim it exposes | The published surface — and **name the corpus**: site only, or site plus shipped `docs/` and chart comments? The same code enumeration read 65% undocumented against one and 18% against the other. The difference, both ways, is your first set of findings |
 | What data it keeps, and what it promises about it | Consistency, durability, delivery guarantees — stated or **absent**. An absent contract is itself the first finding |
 | Who the users actually are | There is rarely one. An admin, an end user, an implementation partner, a support agent |
 

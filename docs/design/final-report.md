@@ -202,20 +202,57 @@ distributed data store, its real docs and its real public comparison page.
 - `orient` Step 6 requires stating what you could not establish and warns that downstream skills
   "will otherwise assume you looked" — and the field it wrote was **read by nothing**.
 - Enumerating a capability inventory "from code" with no scope rule: my own first count read
-  compiled DLLs and reported 154 environment variables against a real 102.
+  compiled DLLs and reported 154 environment variables against a then-claimed 102.
 
-**Statuses now:** `proven` 2 (`qa`, `dev`) · `exercised` 7 (`hub`, `orient`, `delivery`,
-`release`, `docs-authoring`, `launch`, `requirements`) · `draft` 6 (`analytics`,
-`architecture`, `backlog`, `design`, `discovery`, `prd`). The count is enforced, because the
-README has already been wrong about it twice.
+### 7b. A second exercise — `architecture` and `prd`, same day
+
+The two design skills, pointed at the same product's **own certification artifacts** — a 4-hour
+run that returns FAIL — and at its five existing decision records.
+
+**Eight defects in the suite, six in the product, and one correction to §7's own published
+finding.** The correction is the useful part:
+
+- **"57 of 102 undocumented" could not be reproduced.** Four honest readings of its own stated
+  exclusion — "excluding directories matching `test|bench|harness`" — give **93, 96, 103 and
+  131** on the same commit. And the documentation corpus was never stated: against the public
+  site the figure is 85 of 131 (65%); against the site plus the product's own shipped docs and
+  chart comments it is **23 of 131 (18%)**. The three variables §7 named as headline examples
+  were documented all along. `docs-conformance.md` was using that sentence as its example of a
+  *checkable* claim, so the reference was teaching the error.
+  The method now requires the enumeration as a **re-runnable command** and the **doc corpus
+  named** — and the enumeration must cross every language that touches config, because a
+  one-language grep found 96 of 131 names and **manufactured three false findings** in the
+  reverse direction.
+- `hub.py status` printed no product class, which eleven skills' own first line promises it does.
+  It now does, and `tests/test_status_contract.py` checks the comment against the output.
+- `domains` was unvalidated: a class with no file was stored in silence, so the fault catalogue
+  for a class the product really is would never have been read and nothing would have said so.
+- A `metric` reached `DEFINED` with no denominator, against `prd`'s own words and against
+  everything `analytics` is written to rely on.
+- `architecture` imposed `ADR-4` and a six-field template over a team that keeps
+  `docs/decisions/NNNN-kebab-title.md` and calls them **Decisions** — the `REQ-14` imposition
+  that triggered the §7 finding, still live in a second skill.
+- Seven `SKILL.md` files said `exercised` in frontmatter and `draft` in their own body banner.
+  **Five predate this exercise.** `check_repo coverage` read frontmatter only; it now compares both.
+
+One thing the exercise *settled* rather than broke: `architecture`'s `falsifier` field was the
+suite's own untested invention. None of the team's five Decisions states one — and two carry a
+dated `## Addendum` recording that the decision was later found wrong. Those addenda are
+falsifiers, written after a failed run paid for them.
+
+**Statuses now:** `proven` 2 (`qa`, `dev`) · `exercised` 9 (`hub`, `orient`, `delivery`,
+`release`, `docs-authoring`, `launch`, `requirements`, `architecture`, `prd`) · `draft` 4
+(`analytics`, `backlog`, `design`, `discovery`). The count is enforced, because the README has
+already been wrong about it twice.
 
 `discovery` is **NOT RUN** and cannot be exercised here: its method needs real users to
 interview, and inventing them would be the exact failure the suite exists to prevent.
 
-**Three new checks, each proven to fail before it was accepted:** every documented `hub.py`
-command is now executed in document order as the role its skill declares (26 commands);
-every state named in prose is checked against the model; and every role, status and
-README count is enforced.
+**Six new checks, each proven to fail before it was accepted:** every documented `hub.py`
+command is executed in document order as the role its skill declares (50 commands now); every
+state named in prose is checked against the model; every role, status and README count is
+enforced; the status comment is checked against `status`'s real output; the product-class
+vocabulary is closed; and a `metric` cannot exist without its denominator.
 
 **The three LOW defects left open after the review rounds are closed**, and reproducing them
 showed two were understated: `validate` exited 0 over a hub that did not exist, and a single

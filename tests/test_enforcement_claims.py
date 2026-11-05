@@ -79,7 +79,15 @@ def main():
         allowed("setup", "init", "--engagement", "enforce")
 
         print("\nprinciple 2 -- every number has a denominator")
-        allowed("a metric can be defined", "add", "metric", "M-1", "-f", "name=activation",
+        # The gate used to start at BASELINED, so `add metric -f name=activation` was accepted
+        # into DEFINED with no denominator at all -- which is what skills/analytics then reads.
+        # Exercising `prd` found it; the denominator is now required from the moment the metric
+        # exists, and this probe asserts the earlier gate rather than the weaker one.
+        refused("a metric cannot be defined without a denominator",
+                "add", "metric", "M-0", "-f", "name=activation",
+                actor="an1", role="ANALYST", needle="denominator")
+        allowed("a metric can be defined with one", "add", "metric", "M-1",
+                "-f", "name=activation", "-f", "denominator=signups, excluding internal",
                 actor="an1", role="ANALYST")
         refused("a metric cannot be BASELINED without a denominator",
                 "move", "M-1", "BASELINED", "-f", "baseline=7.9%",

@@ -1272,6 +1272,11 @@
         "PM",
         "ANALYST"
       ],
+      "requires_fields_on_create": [
+        "name",
+        "denominator"
+      ],
+      "doc": "A success criterion. skills/prd says each metric is 'DEFINED with its denominator before anything is built', and skills/analytics opens by reading metrics 'against the denominator and baseline the PRD stated' -- so a DEFINED metric with no denominator hands analytics exactly the nothing it is written to avoid inventing. The denominator is definitional and sayable before any data exists, which is why it is required here while baseline is not: prd's own example records the baseline as 'unknown -- measuring is in scope', and the move to BASELINED demands a measured one.",
       "transitions": [
         {
           "from": [
