@@ -92,6 +92,11 @@ def write_probe(field, value):
     if field == "instrumented":
         return ["add", "metric", "M-P", "-f", "name=probe", "-f", "denominator=probe",
                 "-f", "instrumented=%s" % value, "--actor", "p1", "--role", "PM"]
+    if field == "owner_role":
+        # Created by a release-side role on purpose: creating is allowed for them, meeting is not,
+        # so this probe exercises the vocabulary without tripping the ownership rule.
+        return ["add", "readiness", "RD-P", "-f", "title=probe",
+                "-f", "owner_role=%s" % value, "--actor", "d1", "--role", "DELIVERY"]
     return None
 
 

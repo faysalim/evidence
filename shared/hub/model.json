@@ -25,6 +25,7 @@
     "confidence": ["observed", "authored", "reported", "inferred"],
     "mode": ["new", "existing"],
     "provenance": ["authored", "derived", "reconstructed"],
+    "owner_role": ["DEVOPS", "SECURITY", "SUPPORT"],
     "instrumented": ["yes", "no", "not yet"]
   },
   "link_types": [
@@ -1447,10 +1448,9 @@
           "roles": [
             "DEVOPS",
             "SECURITY",
-            "SUPPORT",
-            "DELIVERY",
-            "TECH_LEAD"
+            "SUPPORT"
           ],
+          "role_from_field": "owner_role",
           "requires_fields": [
             "evidence"
           ]

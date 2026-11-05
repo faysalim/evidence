@@ -13,8 +13,11 @@ verdict condition that reads them.
 
 ## The contract, in four sentences
 
-1. **Each readiness role creates its own `readiness` items** and moves them to `MET` with evidence.
-   Nobody creates a checkpoint on another role's behalf and marks it met.
+1. **Only the role named in a row's `owner_role` may move it to `MET`.** Enforced, on the CLI and
+   on replay. A review found DEVOPS creating a row owned by SECURITY and SUPPORT signing it off
+   with `evidence="trust me"`, and TECH_LEAD creating and meeting its own gate inputs -- principle
+   7 inverted on the one condition that exists to bring a voice in from outside QA.
+   `DELIVERY`, `TECH_LEAD` and `OPERATOR` may **create** rows and may never meet them.
 2. **`MET` means it happened**, with a time and a result. Not that it is documented, planned or
    possible. `shared/principles.md` §1.
 3. **Only the operator may `WAIVE`**, with a reason in their own words. Shipping without a rehearsed

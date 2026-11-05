@@ -153,6 +153,24 @@ def main():
             capture_output=True, text=True).returncode, ""
         check("check_repo.py examples runs and passes", code == 0, "rc=%r" % code)
 
+        print("\nreadiness ownership -- the gate that brings a voice from outside QA")
+        # A review walked through all three of these before they were enforced.
+        refused("owner_role must be a readiness role",
+                "add", "readiness", "RD-V", "-f", "title=x", "-f", "owner_role=BANANA",
+                actor="o1", role="DEVOPS", needle="DEVOPS")
+        allowed("a checkpoint is created with an owner",
+                "add", "readiness", "RD-1", "-f", "title=rollback rehearsed",
+                "-f", "owner_role=DEVOPS", actor="o1", role="DEVOPS")
+        refused("another readiness role may not meet it",
+                "move", "RD-1", "MET", "-f", "evidence=trust me",
+                actor="s1", role="SUPPORT", needle="owner_role is DEVOPS")
+        refused("nor may TECH_LEAD, which computes the verdict it would be feeding",
+                "move", "RD-1", "MET", "-f", "evidence=we can roll back",
+                actor="t1", role="TECH_LEAD", needle="may not move")
+        allowed("the owning role may, with evidence",
+                "move", "RD-1", "MET", "-f", "evidence=rehearsed 2026-03-04, 41s",
+                actor="o1", role="DEVOPS")
+
         print("\nthe guards that are not principles but are claimed in the skills")
         refused("a forbidden state cannot be reached at creation",
                 "add", "finding", "F-9", "--state", "CLOSED", "-f", "title=x",

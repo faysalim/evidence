@@ -604,6 +604,26 @@ class Hub:
                     "The producer claims; a different role accepts."
                     % (role, item["type"], item["state"], tr["to"], " or ".join(roles)))
 
+        # A transition whose authority is carried by the ITEM rather than by the model. The
+        # readiness gate shipped without this and a review walked straight through it: DEVOPS
+        # created a row owned by SECURITY and SUPPORT signed it off with evidence="trust me", and
+        # TECH_LEAD -- the role computing the go/no-go -- created and met its own gate inputs,
+        # which is principle 7 inverted on the one condition that exists to bring an outside
+        # voice in. Declared in the model as `role_from_field` so the fold enforces it too: a
+        # hand-written log line must not do what the CLI refuses.
+        from_field = tr.get("role_from_field")
+        if from_field:
+            owner = (item.get("fields") or {}).get(from_field)
+            if not owner:
+                return ("this %s carries no %s, so nobody is authorised to move it to %s. It was "
+                        "created without an owner, which should not have been possible."
+                        % (item["type"], from_field, tr["to"]))
+            if role != owner:
+                return ("role %s may not move %s to %s: its %s is %s. A checkpoint is met by the "
+                        "role that owns it and by nobody else -- otherwise one team signs off "
+                        "another's gate."
+                        % (role, item["id"], tr["to"], from_field, owner))
+
         # Required fields are checked against the fields supplied ON THIS EVENT, not against
         # whatever is already on the item. The earlier version OR-ed with item["fields"], which
         # made the guard dead on every path that mattered: a release reaching SHIPPED already
