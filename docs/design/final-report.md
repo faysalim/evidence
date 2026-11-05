@@ -99,64 +99,42 @@ Three fixes needed fixes of their own, all caught by tests rather than by me:
 
 ## 4. NEEDS FAISAL
 
-### `PE-2` — the plugin is over the skill-listing budget · **decide this first**
+### `PE-2` — diagnosed wrongly by me, then measured. **The split is REJECTED.**
 
-In a real session with your other plugins installed, **7 of the 15 skills have no description at
-all.** The listing is 38,132 chars against a 30,000 budget on the default model and **8,000 on a
-200k-window model** — this plugin's descriptions alone are ~96% of that before anything else
-exists. Overflow drops descriptions starting with the least-invoked skills, which here are the
-drafts. The README's primary promise — "most of the time you will not invoke anything" — is false
-for half the suite, and that is also why only 1 of 8 natural prompts routed.
-
-I measured one option and it does not work: `disable-model-invocation: true` leaves the description
-in the listing (always-on stayed at 2,349 tok).
-
-**My recommendation: ship fewer always-on skills.** Keep `qa`, `dev`, `hub` and `orient` — the two
-with real provenance plus the two every other skill calls — as a plugin that auto-triggers, and
-move the 11 drafts behind explicit invocation in a second plugin (`evidence-roles`) that a
-team enables when it wants them. That halves the listing cost, matches their draft status, and
-costs nothing in capability. The alternatives are cutting every description to ~265 characters,
-which guts the triggers and the "Not for" lines, or documenting `skillListingBudgetFraction` and
-accepting that users with many plugins silently lose the drafts.
-
-### `PE-1` -- CLOSED 2026-11-05, by running it
-
-The repo is published at **https://github.com/faysalim/evidence** and the README's install
-commands were executed verbatim against it:
+I recommended splitting this plugin in two, three times, on the premise that its 15 descriptions
+were what broke auto-triggering. Then I read the listing instead of reasoning about it:
 
 ```
-/plugin marketplace add faysalim/evidence
-/plugin install evidence@evidence-market
+[WARN] Skill listing over budget: 85 skills, 37942 chars > 30000 budget
 ```
 
-Both succeeded. The marketplace cloned 212 files at `063e563` into
-`~/.claude/plugins/marketplaces/evidence-market`, registered all 15 skills, and -- the part that
-actually matters -- **the full suite passes when run from that installed copy, not just from the
-checkout**: 8 of 9 suites green, `check_repo.py` 7/7, and both fixtures rebuild with `validate`
-clean. That is what proves the `${CLAUDE_PLUGIN_ROOT}` paths resolve as installed rather than only
-where they were written. The one failure is the deliberate budget test (`PE-2`).
+**Eighty-five skills.** This plugin is 7,220 of those characters — 19%. Removing it entirely
+leaves 30,722, still over budget. `vercel` alone ships 32 skills and 13,738 chars; built-ins and
+synced skills are another ~16,800. The overflow is a property of the machine, not of this plugin,
+and my recommendation would have restructured the repo and changed nothing observable.
 
-This was the finding I could not close myself, because closing it needed a push. It is closed by
-doing the thing, not by reasoning that it should work.
+**The fix is one line, verified by measurement** — the remedy named in the tool's own warning:
 
-### Smaller ones
+```json
+{ "skillListingBudgetFraction": 0.02 }
+```
 
-- **`MG-9`** — "NEW is not a resting state" has a `validate` check that keys on a field nothing
-  ever sets. *Recommendation: add `hub.py handover <id>` and key the check on it.*
-- **`HA-11`** — `import` is not atomic: a malformed file leaves a partial hub, and the retry is
-  poisoned permanently because the log is append-only. *Recommendation: validate the whole file
-  before appending anything.*
-- **`PP-11`** — no skill says where its document artifact lives; the hub holds a one-line summary,
-  so the launch claims table "the artifact this skill is built around" exists nowhere in either
-  fixture. *Recommendation: one convention — `<hub-parent>/<type>/<id>.md`, path in a field.*
-- **`D-11`** — plugin-directory submission wants a square PNG icon, and it is **fixed at first
-  submission and cannot be changed later**. *Recommendation: choose it deliberately before you ever
-  submit.*
-- **`D-12`** — run the probe once in default permission mode to confirm reading a shared file
-  prompts for nothing.
-- **13 of 15 skills are `status: draft`**, written from first principles — which `CONTRIBUTING.md`
-  warns against. *Recommendation: correct them from real engagements as you run them; that is the
-  highest-value contribution in the repo and each lists its open questions.*
+Default `0.01` gives a 30,000-char budget and overflows; `0.011` still overflows; `0.013` is the
+first value that fits; `0.02` fits with 22,000 chars of headroom. This restores descriptions for
+**all 85 skills**, not only this plugin's.
+
+**Why not split:** marketplace installs copy the plugin directory, so a second plugin cannot read
+`../../shared/`. It would need its own copy of `shared/` — two copies of the ten principles, which
+is precisely the failure `principles.md` opens by naming. It would also split one hub across two
+plugins that must agree on a model file neither owns.
+
+**What I could not make work:** `skillOverrides` (`name-only` would be the surgical answer — keep
+the drafts invokable, stop paying for their descriptions). Four attempts, both key shapes, via
+`--settings`: the listing stayed at 85 skills and 37,942 chars, byte for byte. I did not edit the
+real `~/.claude/settings.json` to find out whether it works from there, because that is the user's
+configuration. Mechanism documented, my use of it unverified, not recommended on that basis.
+
+Full measurement, including every value tried: `docs/design/listing-budget.md`.
 
 ## 5. Blocks and permission denials
 

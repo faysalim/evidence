@@ -33,14 +33,28 @@ skill here is `docs-authoring`.
 Much of the time you will not invoke anything: the descriptions are written to trigger on ordinary requests
 like "QA this release", "write acceptance criteria for this story", or "what is waiting on me".
 
-> **Known limitation, measured.** Claude Code gives the whole skill listing a character budget of 1% of the
-> model's context window, **shared across every skill you have** — 8,000 characters on a 200k-token model.
-> This plugin's 15 descriptions are ~7,300 of that on their own, and when the listing overflows Claude Code
-> **drops descriptions**, starting with the least-invoked skills. In a session with other plugins installed,
-> 7 of these 15 had no description at all, and auto-triggering worked reliably only for `qa`, `dev`, `hub`
-> and `orient`. Until that is resolved, **invoke the other eleven explicitly.**
-> `tests/test_description_budget.py` fails on purpose until it is fixed, rather than reporting green over
-> it.
+> **Read this before you rely on auto-triggering.** Claude Code gives the whole skill listing a
+> character budget — 1% of the model's context window by default, **shared across every skill you
+> have**, not just this plugin's. When it overflows, Claude Code *drops descriptions*, starting with
+> the least-invoked skills, and nothing tells you it happened. On the machine this was built on the
+> listing was 37,942 characters against a 30,000 budget, and 7 of these 15 skills had no description
+> at all.
+>
+> **One line fixes it, for every plugin you have:**
+>
+> ```json
+> { "skillListingBudgetFraction": 0.02 }
+> ```
+>
+> in `~/.claude/settings.json`. That was measured, not guessed: the default `0.01` overflowed, `0.013`
+> was the first value that fit, and `0.02` leaves 22,000 characters of headroom. `/skills` to disable
+> what you do not use works too.
+>
+> This plugin is 7,220 characters of that listing across 15 skills — a fifth of the problem on that
+> machine, and **removing it entirely would still leave the listing over budget.** The full
+> measurement, including the two remedies that did not work, is in `docs/design/listing-budget.md`.
+> `tests/test_description_budget.py` fails on purpose against the tighter 200k-window figure, because
+> a plugin this size should keep paying attention to what it costs everyone else.
 
 ### Contributor install
 

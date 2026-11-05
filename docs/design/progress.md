@@ -25,12 +25,16 @@ and then the whole suite was run from the resulting install: 8 of 9 suites pass 
 `~/.claude/plugins/marketplaces/evidence-market`, `check_repo.py` 7/7, both fixtures rebuild with
 `validate` clean. That is what proves the `${CLAUDE_PLUGIN_ROOT}` paths resolve as installed.
 
-**One thing still needs Faisal:**
+**`PE-2` is resolved, and my diagnosis of it was wrong.** The listing was over budget because this
+machine has **85 skills / 37,942 chars**, not because this plugin has 15. It is 19% of that; removing
+it entirely would still overflow. The fix is `{"skillListingBudgetFraction": 0.02}` in
+`~/.claude/settings.json`, measured: `0.013` is the first value that fits. **The two-plugin split is
+rejected** — it would need a second copy of `shared/`, which is the drift failure `principles.md`
+opens by naming. See `docs/design/listing-budget.md`.
 
-- `PE-2` — the plugin exceeds the skill-listing budget, so 7 of 15 descriptions are dropped in a
-  real session. Needs a product decision; `disable-model-invocation` was measured and does not
-  help. Recommendation: ship `qa`, `dev`, `hub`, `orient` as `evidence` and move the 11 drafts to a
-  second plugin.
+Nothing is blocking. Open items are the three LOW defects and four design limits in
+`council-review.md`, plus: no skill declares its role or status in machine-readable form, so "every
+role is covered" is a prose claim no check can verify.
 
 The old `product-qa-skill` repo and this repo's `origin` are untouched, and the local directory is
 still named `product-qa`. The remote `plugin-suite` branch duplicates `main` and can be deleted.

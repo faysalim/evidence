@@ -290,7 +290,14 @@ def check_examples():
     patterns = [
         (re.compile(r'\b[A-Za-z]:[\\/](?:Users|Personal|home)\b'), "a real absolute path"),
         (re.compile(r'\b(?:[a-z0-9-]+\.)+(?:com|io|net|dev|org|ai)\b'), "a real-looking hostname"),
-        (re.compile(r'\b(?:sk|pk|ghp|gho|AKIA)[-_A-Za-z0-9]{12,}'), "something shaped like a key"),
+        # The separator is load-bearing. Without it, `(?:sk|pk)` matched any word beginning
+        # "sk" or "pk" followed by 12 characters, and flagged `skillListingBudgetFraction` --
+        # a settings key NAME, not a secret -- as a key. Real tokens of these families all
+        # carry a separator: sk-..., sk_..., pk_live_..., ghp_... . The tail admits further
+        # separators, because pk_live_xxx would otherwise slip past the 12-character run.
+        (re.compile(r'\b(?:sk|pk|ghp|gho)[-_][-_A-Za-z0-9]{12,}'), "something shaped like a key"),
+        # AWS ids are the exception: no separator, but fixed-case and fixed-length.
+        (re.compile(r'\bAKIA[A-Z0-9]{12,}'), "something shaped like an AWS key id"),
     ]
     allow_host = re.compile(
         r'^(example\.(com|org|net)|example\.test|localhost|code\.claude\.com|claude\.com|'
