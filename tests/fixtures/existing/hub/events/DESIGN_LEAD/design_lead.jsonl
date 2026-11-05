@@ -1,1 +1,1 @@
-{"v": 1, "event_id": "DESIGN_LEAD/design_lead#1", "seq": 1, "ts": "2026-11-05T05:04:08.148944Z", "actor": "design_lead", "role": "DESIGN_LEAD", "op": "move", "after": ["DESIGNER/designer#2"], "fields": {}, "item": "DES-1", "to": "REVIEWED"}
+{"v": 1, "event_id": "DESIGN_LEAD/design_lead#1", "seq": 1, "ts": "2026-11-05T12:09:24.514083Z", "actor": "design_lead", "role": "DESIGN_LEAD", "op": "move", "after": ["DESIGNER/designer#2"], "fields": {}, "item": "DES-1", "to": "REVIEWED"}

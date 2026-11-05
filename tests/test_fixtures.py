@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.join(ROOT, "shared", "scripts"))
 
 import build as B        # noqa: E402
 import dashboard as D    # noqa: E402
+import hub as H          # noqa: E402  (to validate the COMMITTED fixtures, not only rebuilds)
 
 FAILURES = []
 
@@ -38,10 +39,37 @@ def check(label, condition, detail=""):
         FAILURES.append(label)
 
 
+def committed_fixtures():
+    """Validate the fixtures as COMMITTED, not only as rebuilt.
+
+    This suite rebuilt into a temp directory and never looked at the files in the repo, so the
+    committed copies rotted invisibly: a review found 8 problems in `existing` and 2 in `new`,
+    both of them replay failures against guards added after the fixtures were last generated.
+    A worked example that does not validate teaches the opposite of the method.
+    """
+    base = os.path.join(ROOT, "tests", "fixtures")
+    for mode in ("existing", "new"):
+        hub_dir = os.path.join(base, mode, "hub")
+        check("the committed %s fixture is present" % mode, os.path.isdir(hub_dir), hub_dir)
+        if not os.path.isdir(hub_dir):
+            continue
+        h = H.Hub(hub_dir)
+        problems = h.validate()
+        check("the committed %s fixture validates" % mode, not problems,
+              "%d problem(s): %s" % (len(problems), "; ".join(problems[:2])))
+        check("  and it is not empty", len(h.items) > 0, "%d items" % len(h.items))
+        # The rendered dashboard must exist too -- it is the artifact a reader opens.
+        index = os.path.join(base, mode, "dashboard", "index.html")
+        check("  and its dashboard is rendered", os.path.isfile(index), index)
+
+
 def main():
     tmp = tempfile.mkdtemp(prefix="fixture-test-")
     try:
-        print("existing-product engagement")
+        print("committed fixtures, as they sit in the repo")
+        committed_fixtures()
+
+        print("\nexisting-product engagement")
         hub, problems = B.build("existing", os.path.join(tmp, "existing"))
         check("builds through hub.py with no rejected calls", not B.FAILED,
               "; ".join(B.FAILED[:3]))
@@ -50,7 +78,8 @@ def main():
 
         types = {i["type"] for i in hub.items.values()}
         expected = {"prd", "requirement", "decision", "story", "design", "adr", "case",
-                    "finding", "fix", "release", "doc", "launch", "metric", "risk", "cleanup"}
+                    "finding", "fix", "release", "doc", "launch", "metric", "risk", "cleanup",
+                    "readiness"}
         check("every lifecycle in the arc is exercised", expected <= types,
               "missing: %s" % sorted(expected - types))
 

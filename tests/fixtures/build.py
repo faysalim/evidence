@@ -284,6 +284,40 @@ def build_existing(hub):
     run(hub, "qa2", "QA", "move", "REL-1", "NO_VERDICT",
         "-f", "reason=R-1 guards a critical class and could not be run: no second host")
 
+    # --- readiness outside QA: the half of the gate QA does not own ------------------------
+    # Three owners, three checkpoints, and one the operator waives. A worked example that showed
+    # only QA's rows would teach that "ready to ship" means "QA found nothing", which is the gap
+    # these three roles exist to close.
+    run(hub, "hop", "HEAD_OF_PRODUCT", "profile", "--set",
+        'required_checkpoints=["rollback-rehearsed","privacy-signoff","known-issues-published"]')
+
+    run(hub, "ops1", "DEVOPS", "add", "readiness", "RD-1",
+        "-f", "title=Rollback rehearsed on the candidate",
+        "-f", "owner_role=DEVOPS", "-f", "checkpoint=rollback-rehearsed")
+    run(hub, "ops1", "DEVOPS", "link", "RD-1", "gates", "REL-1")
+    run(hub, "ops1", "DEVOPS", "move", "RD-1", "MET", "-f", "build=4.2.2@d4d4d4d",
+        "-f", "evidence=rehearsed 2026-03-04 14:10Z on the candidate; 41s back to 4.2.1@c3c3c3c; "
+              "issuer served throughout; log in the run directory")
+
+    run(hub, "sec1", "SECURITY", "add", "readiness", "RD-2",
+        "-f", "title=Privacy sign-off for the new audit field",
+        "-f", "owner_role=SECURITY", "-f", "checkpoint=privacy-signoff")
+    run(hub, "sec1", "SECURITY", "link", "RD-2", "gates", "REL-1")
+    run(hub, "sec1", "SECURITY", "move", "RD-2", "MET", "-f", "build=4.2.2@d4d4d4d",
+        "-f", "evidence=DPIA addendum signed by the DPO 2026-03-05; covers the new audit field "
+              "only, NOT the existing export path")
+
+    # The one that is not met. Support cannot publish a known-issue list while R-1 is unverified,
+    # so the operator waives it in the same breath as shipping -- visible and attributed, which is
+    # the whole point of the waiver being theirs alone.
+    run(hub, "sup1", "SUPPORT", "add", "readiness", "RD-3",
+        "-f", "title=Known-issue list published for 4.2.2",
+        "-f", "owner_role=SUPPORT", "-f", "checkpoint=known-issues-published")
+    run(hub, "sup1", "SUPPORT", "link", "RD-3", "gates", "REL-1")
+    run(hub, "faisal", "OPERATOR", "move", "RD-3", "WAIVED", "-f", "build=4.2.2@d4d4d4d",
+        "-f", "reason=the only open issue is R-1, which is already in the release note as "
+              "unverified; a separate support list would say the same thing twice")
+
     run(hub, "dm", "DELIVERY", "add", "risk", "RISK-1",
         "-f", "title=No environment to exercise issuer durability",
         "-f", "impact=the contractual durability requirement is unverified at every release",
