@@ -12,6 +12,13 @@ Thumbs.db
 *-findings.md
 .qa-secrets/
 
+# The default report directory, and any hub inside one. The three patterns above state the
+# right intent and did not cover this: a hub event log from a scratch run was committed and
+# pushed to a public repo before anyone noticed. Root-scoped for the same reason as
+# /qa-state.json -- the fixtures under tests/fixtures/ are deliberate.
+/qa-reports/
+/hub/
+
 # Eval run artefacts: reports and per-run JSON are outputs, not source.
 evals/results/
 
