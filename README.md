@@ -37,7 +37,7 @@ like "QA this release", "write acceptance criteria for this story", or "what is 
 > character budget — 1% of the model's context window by default, **shared across every skill you
 > have**, not just this plugin's. When it overflows, Claude Code *drops descriptions*, starting with
 > the least-invoked skills, and nothing tells you it happened. On the machine this was built on the
-> listing was 37,942 characters against a 30,000 budget, and 7 of these 15 skills had no description
+> listing was 37,942 characters against a 30,000 budget, and 7 of these skills had no description
 > at all.
 >
 > **One line fixes it, for every plugin you have:**
@@ -46,11 +46,15 @@ like "QA this release", "write acceptance criteria for this story", or "what is 
 > { "skillListingBudgetFraction": 0.02 }
 > ```
 >
-> in `~/.claude/settings.json`. That was measured, not guessed: the default `0.01` overflowed, `0.013`
+> in `~/.claude/settings.json` — or, **for a team, in managed settings rather than left to each
+> person**, which is the right place for it: the setting is per-machine, so one engineer applying it
+> does nothing for the rest and the failure is silent for everyone else.
+>
+> That was measured, not guessed: the default `0.01` overflowed, `0.013`
 > was the first value that fit, and `0.02` leaves 22,000 characters of headroom. `/skills` to disable
 > what you do not use works too.
 >
-> This plugin is 7,220 characters of that listing across 15 skills — a fifth of the problem on that
+> This plugin is 9,579 characters of that listing across 18 skills — a fifth of the problem on that
 > machine, and **removing it entirely would still leave the listing over budget.** The full
 > measurement, including the two remedies that did not work, is in `docs/design/listing-budget.md`.
 > `tests/test_description_budget.py` fails on purpose against the tighter 200k-window figure, because
@@ -87,7 +91,7 @@ encouraged:
 Each one says what enforces it. Principle 7 is `shared/hub/model.json`; principle 6 is the dashboard's
 verdict function; principle 8 is a repo check that has already caught a live violation.
 
-## The 15 skills
+## The 18 skills
 
 | Skill | Role | Produces |
 |---|---|---|
@@ -102,6 +106,9 @@ verdict function; principle 8 is a repo check that has already caught a live vio
 | `architecture` | tech lead | technical design, ADRs with a falsifier |
 | `dev` | engineers | code, fixes, handback packets |
 | `qa` | QA | test cases, findings, the coverage denominator |
+| `ops-readiness` | DevOps / platform / SRE | rollback rehearsed, alerts proven, on-call named — checkpoints the verdict reads |
+| `security-review` | security, privacy, compliance | the sign-offs a release needs, each with a named signer and a stated boundary |
+| `support-readiness` | support / customer success | known issues from the findings nobody fixed, and the post-launch watch plan |
 | `release` | EM, QA lead, PM | the computed go/no-go, release notes |
 | `docs-authoring` | technical writer | docs written from behaviour, then verified claim by claim |
 | `launch` | PMM | positioning and copy where every claim links to a passing case |
@@ -248,7 +255,7 @@ shared/
   contracts/           qa-dev.md, the handoff packets
   templates/           the finding template
   references/          evidence-standard, experience, docs-conformance, gotchas
-  domains/             27 product classes + index
+  domains/             30 product classes + index
   hub/model.json       item types, states, who may move them
   scripts/             hub.py, dashboard.py, safe_edit.py, check_repo.py, tests
 skills/                the 15 skills

@@ -1,201 +1,672 @@
 {
-  "doc": "Trigger corpus: for each skill, prompts that should route to it, and near-misses that should route to a named neighbour instead. The near-misses are the valuable half -- a skill that fires on its neighbour's work is worse than one that under-fires, because the user gets confidently wrong guidance rather than none. `expect` is the skill that should win; `why` says what makes it the right one.",
-  "schema_version": 1,
-  "cases": [
-    { "expect": "qa", "hits": [
-      "QA this release before we ship it",
-      "find what is broken in the product",
-      "write the test cases for the checkout flow",
-      "check the docs match what the product actually does",
-      "give the API a full QA pass and rank what you find"
-    ], "near_misses": [
-      { "prompt": "fix the bug QA found in the export", "expect": "dev", "why": "fixing is DEV; QA never fixes" },
-      { "prompt": "write acceptance criteria for this story", "expect": "backlog", "why": "criteria are the PO's, before QA exists" },
-      { "prompt": "are we ready to ship", "expect": "release", "why": "the go/no-go is computed by release" },
-      { "prompt": "why is this regex not matching", "expect": "none", "why": "ordinary debugging, not a QA pass" },
-      { "prompt": "verify every claim in the user guide and publish it", "expect": "docs-authoring", "why": "authoring and verifying docs, not a QA sweep" }
-    ]},
-    { "expect": "dev", "hits": [
-      "implement story S-12",
-      "fix the finding QA filed about the CSV export",
-      "hand this fix back for verification",
-      "learn this repo's conventions before you change anything",
-      "write the test for this bug and prove it fails first"
-    ], "near_misses": [
-      { "prompt": "is this fix good enough to close the finding", "expect": "qa", "why": "closing is QA's; DEV may only claim FIXED" },
-      { "prompt": "should we use a queue or call it synchronously", "expect": "architecture", "why": "a consequential choice is an ADR" },
-      { "prompt": "split this epic into stories", "expect": "backlog", "why": "slicing is the PO's" },
-      { "prompt": "what is the status of the work", "expect": "hub", "why": "status is generated from the hub" },
-      { "prompt": "document the API we just built", "expect": "docs-authoring", "why": "writing docs is the writer's" }
-    ]},
-    { "expect": "hub", "hits": [
-      "what is the status of everything",
-      "what is waiting on me",
-      "show me the dashboard",
-      "what is blocked and on whom",
-      "validate the hub"
-    ], "near_misses": [
-      { "prompt": "write me a status report for the steering group", "expect": "delivery", "why": "a report with risks and milestones is delivery's" },
-      { "prompt": "are we green to ship", "expect": "release", "why": "the verdict is release's call" },
-      { "prompt": "what did users say in the interviews", "expect": "discovery", "why": "research synthesis, not hub state" },
-      { "prompt": "read the activation metric", "expect": "analytics", "why": "a metric reading is the analyst's" },
-      { "prompt": "triage these findings", "expect": "dev", "why": "triage is DEV's transition" }
-    ]},
-    { "expect": "orient", "hits": [
-      "I have never seen this repo before, get your bearings",
-      "set up the product profile",
-      "what kind of product is this and what does it actually expose",
-      "work out which branch actually deploys and what build is live",
-      "map this team's existing artifacts onto the hub"
-    ], "near_misses": [
-      { "prompt": "test this product end to end", "expect": "qa", "why": "orienting precedes testing but is not testing" },
-      { "prompt": "document the architecture that exists", "expect": "architecture", "why": "architecture owns the current-state design" },
-      { "prompt": "write the PRD for the change", "expect": "prd", "why": "deciding what to build is the PM's" },
-      { "prompt": "import the old qa-state.json", "expect": "hub", "why": "import is a hub command" },
-      { "prompt": "what do our users struggle with", "expect": "discovery", "why": "research, not profile" }
-    ]},
-    { "expect": "discovery", "hits": [
-      "plan the user interviews for this problem",
-      "synthesise what we heard in the research sessions",
-      "turn these interview notes into insights",
-      "validate that this problem is real before we build",
-      "write an interview guide"
-    ], "near_misses": [
-      { "prompt": "write the PRD from these insights", "expect": "prd", "why": "the PRD is the PM's artifact" },
-      { "prompt": "how did the feature perform after launch", "expect": "analytics", "why": "post-launch measurement" },
-      { "prompt": "review this design for usability problems", "expect": "design", "why": "a design review, not research" },
-      { "prompt": "which of our features do customers actually use", "expect": "analytics", "why": "usage is measured, not asked" },
-      { "prompt": "write the positioning for launch", "expect": "launch", "why": "messaging is PMM's" }
-    ]},
-    { "expect": "prd", "hits": [
-      "write the PRD for self-serve trials",
-      "define what success looks like for this feature",
-      "what is in scope and what is explicitly not",
-      "review this product brief",
-      "reconstruct a current-state PRD for the existing product"
-    ], "near_misses": [
-      { "prompt": "break this PRD into stories with criteria", "expect": "backlog", "why": "slicing is the PO's" },
-      { "prompt": "write the business rules and their exceptions", "expect": "requirements", "why": "rules and exceptions are the BA's" },
-      { "prompt": "read the metric this PRD defined", "expect": "analytics", "why": "reading is the analyst's" },
-      { "prompt": "design the screens for this", "expect": "design", "why": "flows and states are the designer's" },
-      { "prompt": "what did the research find", "expect": "discovery", "why": "the insight precedes the PRD" }
-    ]},
-    { "expect": "requirements", "hits": [
-      "elicit and document the requirements for this",
-      "map the business process including the exceptions",
-      "capture the business rules for billing",
-      "specify what the legacy system actually does",
-      "two stakeholders want different things, sort this out"
-    ], "near_misses": [
-      { "prompt": "write user stories with acceptance criteria", "expect": "backlog", "why": "criteria as oracles are the PO's" },
-      { "prompt": "write the PRD", "expect": "prd", "why": "the problem and scope are the PM's" },
-      { "prompt": "design the system that implements this", "expect": "architecture", "why": "technical design" },
-      { "prompt": "test that the business rule holds", "expect": "qa", "why": "exercising the rule is QA's" },
-      { "prompt": "what is blocked on the operator", "expect": "hub", "why": "status from the hub" }
-    ]},
-    { "expect": "backlog", "hits": [
-      "write stories for this PRD",
-      "groom the backlog for the next two sprints",
-      "write acceptance criteria for this ticket",
-      "are these acceptance criteria testable",
-      "import their backlog and flag the untestable stories"
-    ], "near_misses": [
-      { "prompt": "test whether the story is actually done", "expect": "qa", "why": "verification is QA's" },
-      { "prompt": "implement the top story", "expect": "dev", "why": "building is DEV's" },
-      { "prompt": "when will this be delivered", "expect": "delivery", "why": "plan and milestones" },
-      { "prompt": "decide what we should build this quarter", "expect": "prd", "why": "scope is the PM's" },
-      { "prompt": "document the business rules behind these stories", "expect": "requirements", "why": "rules are the BA's" }
-    ]},
-    { "expect": "delivery", "hits": [
-      "write the status report",
-      "build the delivery plan and milestones",
-      "maintain the RAID log",
-      "what is late and why",
-      "track the dependencies across the two teams"
-    ], "near_misses": [
-      { "prompt": "what is waiting on me right now", "expect": "hub", "why": "a direct hub query" },
-      { "prompt": "prioritise the backlog", "expect": "backlog", "why": "ranking is the PO's" },
-      { "prompt": "can we ship on Friday", "expect": "release", "why": "readiness is computed by release" },
-      { "prompt": "the cluster is still running and costing money", "expect": "hub", "why": "the cleanup ledger lives in the hub" },
-      { "prompt": "estimate how long this will take", "expect": "none", "why": "this suite deliberately offers no estimation method" }
-    ]},
-    { "expect": "design", "hits": [
-      "design the flow for requesting a trial",
-      "what should the empty and error states look like",
-      "review this screen for usability problems",
-      "the users cannot find the export, diagnose it",
-      "specify the error messages for this feature"
-    ], "near_misses": [
-      { "prompt": "test the error states in the build", "expect": "qa", "why": "exercising them is QA's" },
-      { "prompt": "measure whether users complete onboarding", "expect": "analytics", "why": "a metric reading" },
-      { "prompt": "interview users about the flow", "expect": "discovery", "why": "research" },
-      { "prompt": "build the screen", "expect": "dev", "why": "implementation" },
-      { "prompt": "write the help page for this screen", "expect": "docs-authoring", "why": "user documentation" }
-    ]},
-    { "expect": "architecture", "hits": [
-      "write the technical design for this change",
-      "record this as an ADR",
-      "document the architecture this system actually has",
-      "should this be synchronous or queued, and why",
-      "what are the durability contracts here"
-    ], "near_misses": [
-      { "prompt": "implement the design", "expect": "dev", "why": "building" },
-      { "prompt": "what is in scope for the release", "expect": "prd", "why": "product scope" },
-      { "prompt": "test the durability claim under fault", "expect": "qa", "why": "scope 10 is QA's" },
-      { "prompt": "write the business process map", "expect": "requirements", "why": "business, not technical" },
-      { "prompt": "is the design accessible", "expect": "design", "why": "experience review" }
-    ]},
-    { "expect": "release", "hits": [
-      "are we ready to ship",
-      "give me the go/no-go",
-      "write the release notes",
-      "is this release green",
-      "record that we shipped despite the open finding"
-    ], "near_misses": [
-      { "prompt": "test the release candidate", "expect": "qa", "why": "testing precedes the verdict" },
-      { "prompt": "write the launch announcement", "expect": "launch", "why": "messaging is PMM's" },
-      { "prompt": "what is still open", "expect": "hub", "why": "a status query" },
-      { "prompt": "document what changed for users", "expect": "docs-authoring", "why": "user docs, not release notes" },
-      { "prompt": "plan the next milestone", "expect": "delivery", "why": "planning" }
-    ]},
-    { "expect": "docs-authoring", "hits": [
-      "write the admin guide for this feature",
-      "verify every claim in the quickstart against the product",
-      "what is undocumented in our API",
-      "write the API reference from the actual routes",
-      "the docs are stale after this release, fix them"
-    ], "near_misses": [
-      { "prompt": "run documentation conformance as part of the QA sweep", "expect": "qa", "why": "scope 9 inside a QA run" },
-      { "prompt": "write the website copy for this", "expect": "launch", "why": "marketing copy" },
-      { "prompt": "write the release notes", "expect": "release", "why": "release notes come from what shipped" },
-      { "prompt": "record this architectural decision", "expect": "architecture", "why": "an ADR" },
-      { "prompt": "write the interview guide", "expect": "discovery", "why": "research instrument" }
-    ]},
-    { "expect": "launch", "hits": [
-      "write the launch announcement",
-      "write the positioning for this product",
-      "check our pricing page claims are true",
-      "build the go-to-market plan",
-      "review this website copy before it goes live"
-    ], "near_misses": [
-      { "prompt": "write the user documentation", "expect": "docs-authoring", "why": "docs, not marketing" },
-      { "prompt": "are we allowed to ship yet", "expect": "release", "why": "the ship decision" },
-      { "prompt": "did the launch work", "expect": "analytics", "why": "post-launch measurement" },
-      { "prompt": "test that the price on the page matches checkout", "expect": "qa", "why": "exercising the funnel" },
-      { "prompt": "what do customers care about most", "expect": "discovery", "why": "research" }
-    ]},
-    { "expect": "analytics", "hits": [
-      "read the activation metric",
-      "write the post-launch review",
-      "define this metric properly with its denominator",
-      "analyse the signup funnel",
-      "did the experiment move anything"
-    ], "near_misses": [
-      { "prompt": "define the success metrics for this PRD", "expect": "prd", "why": "defined at PRD time" },
-      { "prompt": "instrument the events we need", "expect": "dev", "why": "implementation" },
-      { "prompt": "interview the users who churned", "expect": "discovery", "why": "qualitative research" },
-      { "prompt": "how many stories are accepted", "expect": "hub", "why": "hub counts, not product metrics" },
-      { "prompt": "measure time to first success for a new user", "expect": "qa", "why": "the first-run measurement is QA's perishable one" }
-    ]}
-  ]
+ "doc": "Trigger corpus: for each skill, prompts that should route to it, and near-misses that should route to a named neighbour instead. The near-misses are the valuable half -- a skill that fires on its neighbour's work is worse than one that under-fires, because the user gets confidently wrong guidance rather than none. `expect` is the skill that should win; `why` says what makes it the right one.",
+ "schema_version": 1,
+ "cases": [
+  {
+   "expect": "qa",
+   "hits": [
+    "QA this release before we ship it",
+    "find what is broken in the product",
+    "write the test cases for the checkout flow",
+    "check the docs match what the product actually does",
+    "give the API a full QA pass and rank what you find"
+   ],
+   "near_misses": [
+    {
+     "prompt": "fix the bug QA found in the export",
+     "expect": "dev",
+     "why": "fixing is DEV; QA never fixes"
+    },
+    {
+     "prompt": "write acceptance criteria for this story",
+     "expect": "backlog",
+     "why": "criteria are the PO's, before QA exists"
+    },
+    {
+     "prompt": "are we ready to ship",
+     "expect": "release",
+     "why": "the go/no-go is computed by release"
+    },
+    {
+     "prompt": "why is this regex not matching",
+     "expect": "none",
+     "why": "ordinary debugging, not a QA pass"
+    },
+    {
+     "prompt": "verify every claim in the user guide and publish it",
+     "expect": "docs-authoring",
+     "why": "authoring and verifying docs, not a QA sweep"
+    }
+   ]
+  },
+  {
+   "expect": "dev",
+   "hits": [
+    "implement story S-12",
+    "fix the finding QA filed about the CSV export",
+    "hand this fix back for verification",
+    "learn this repo's conventions before you change anything",
+    "write the test for this bug and prove it fails first"
+   ],
+   "near_misses": [
+    {
+     "prompt": "is this fix good enough to close the finding",
+     "expect": "qa",
+     "why": "closing is QA's; DEV may only claim FIXED"
+    },
+    {
+     "prompt": "should we use a queue or call it synchronously",
+     "expect": "architecture",
+     "why": "a consequential choice is an ADR"
+    },
+    {
+     "prompt": "split this epic into stories",
+     "expect": "backlog",
+     "why": "slicing is the PO's"
+    },
+    {
+     "prompt": "what is the status of the work",
+     "expect": "hub",
+     "why": "status is generated from the hub"
+    },
+    {
+     "prompt": "document the API we just built",
+     "expect": "docs-authoring",
+     "why": "writing docs is the writer's"
+    }
+   ]
+  },
+  {
+   "expect": "hub",
+   "hits": [
+    "what is the status of everything",
+    "what is waiting on me",
+    "show me the dashboard",
+    "what is blocked and on whom",
+    "validate the hub"
+   ],
+   "near_misses": [
+    {
+     "prompt": "write me a status report for the steering group",
+     "expect": "delivery",
+     "why": "a report with risks and milestones is delivery's"
+    },
+    {
+     "prompt": "are we green to ship",
+     "expect": "release",
+     "why": "the verdict is release's call"
+    },
+    {
+     "prompt": "what did users say in the interviews",
+     "expect": "discovery",
+     "why": "research synthesis, not hub state"
+    },
+    {
+     "prompt": "read the activation metric",
+     "expect": "analytics",
+     "why": "a metric reading is the analyst's"
+    },
+    {
+     "prompt": "triage these findings",
+     "expect": "dev",
+     "why": "triage is DEV's transition"
+    }
+   ]
+  },
+  {
+   "expect": "orient",
+   "hits": [
+    "I have never seen this repo before, get your bearings",
+    "set up the product profile",
+    "what kind of product is this and what does it actually expose",
+    "work out which branch actually deploys and what build is live",
+    "map this team's existing artifacts onto the hub"
+   ],
+   "near_misses": [
+    {
+     "prompt": "test this product end to end",
+     "expect": "qa",
+     "why": "orienting precedes testing but is not testing"
+    },
+    {
+     "prompt": "document the architecture that exists",
+     "expect": "architecture",
+     "why": "architecture owns the current-state design"
+    },
+    {
+     "prompt": "write the PRD for the change",
+     "expect": "prd",
+     "why": "deciding what to build is the PM's"
+    },
+    {
+     "prompt": "import the old qa-state.json",
+     "expect": "hub",
+     "why": "import is a hub command"
+    },
+    {
+     "prompt": "what do our users struggle with",
+     "expect": "discovery",
+     "why": "research, not profile"
+    }
+   ]
+  },
+  {
+   "expect": "discovery",
+   "hits": [
+    "plan the user interviews for this problem",
+    "synthesise what we heard in the research sessions",
+    "turn these interview notes into insights",
+    "validate that this problem is real before we build",
+    "write an interview guide"
+   ],
+   "near_misses": [
+    {
+     "prompt": "write the PRD from these insights",
+     "expect": "prd",
+     "why": "the PRD is the PM's artifact"
+    },
+    {
+     "prompt": "how did the feature perform after launch",
+     "expect": "analytics",
+     "why": "post-launch measurement"
+    },
+    {
+     "prompt": "review this design for usability problems",
+     "expect": "design",
+     "why": "a design review, not research"
+    },
+    {
+     "prompt": "which of our features do customers actually use",
+     "expect": "analytics",
+     "why": "usage is measured, not asked"
+    },
+    {
+     "prompt": "write the positioning for launch",
+     "expect": "launch",
+     "why": "messaging is PMM's"
+    }
+   ]
+  },
+  {
+   "expect": "prd",
+   "hits": [
+    "write the PRD for self-serve trials",
+    "define what success looks like for this feature",
+    "what is in scope and what is explicitly not",
+    "review this product brief",
+    "reconstruct a current-state PRD for the existing product"
+   ],
+   "near_misses": [
+    {
+     "prompt": "break this PRD into stories with criteria",
+     "expect": "backlog",
+     "why": "slicing is the PO's"
+    },
+    {
+     "prompt": "write the business rules and their exceptions",
+     "expect": "requirements",
+     "why": "rules and exceptions are the BA's"
+    },
+    {
+     "prompt": "read the metric this PRD defined",
+     "expect": "analytics",
+     "why": "reading is the analyst's"
+    },
+    {
+     "prompt": "design the screens for this",
+     "expect": "design",
+     "why": "flows and states are the designer's"
+    },
+    {
+     "prompt": "what did the research find",
+     "expect": "discovery",
+     "why": "the insight precedes the PRD"
+    }
+   ]
+  },
+  {
+   "expect": "requirements",
+   "hits": [
+    "elicit and document the requirements for this",
+    "map the business process including the exceptions",
+    "capture the business rules for billing",
+    "specify what the legacy system actually does",
+    "two stakeholders want different things, sort this out"
+   ],
+   "near_misses": [
+    {
+     "prompt": "write user stories with acceptance criteria",
+     "expect": "backlog",
+     "why": "criteria as oracles are the PO's"
+    },
+    {
+     "prompt": "write the PRD",
+     "expect": "prd",
+     "why": "the problem and scope are the PM's"
+    },
+    {
+     "prompt": "design the system that implements this",
+     "expect": "architecture",
+     "why": "technical design"
+    },
+    {
+     "prompt": "test that the business rule holds",
+     "expect": "qa",
+     "why": "exercising the rule is QA's"
+    },
+    {
+     "prompt": "what is blocked on the operator",
+     "expect": "hub",
+     "why": "status from the hub"
+    }
+   ]
+  },
+  {
+   "expect": "backlog",
+   "hits": [
+    "write stories for this PRD",
+    "groom the backlog for the next two sprints",
+    "write acceptance criteria for this ticket",
+    "are these acceptance criteria testable",
+    "import their backlog and flag the untestable stories"
+   ],
+   "near_misses": [
+    {
+     "prompt": "test whether the story is actually done",
+     "expect": "qa",
+     "why": "verification is QA's"
+    },
+    {
+     "prompt": "implement the top story",
+     "expect": "dev",
+     "why": "building is DEV's"
+    },
+    {
+     "prompt": "when will this be delivered",
+     "expect": "delivery",
+     "why": "plan and milestones"
+    },
+    {
+     "prompt": "decide what we should build this quarter",
+     "expect": "prd",
+     "why": "scope is the PM's"
+    },
+    {
+     "prompt": "document the business rules behind these stories",
+     "expect": "requirements",
+     "why": "rules are the BA's"
+    }
+   ]
+  },
+  {
+   "expect": "delivery",
+   "hits": [
+    "write the status report",
+    "build the delivery plan and milestones",
+    "maintain the RAID log",
+    "what is late and why",
+    "track the dependencies across the two teams"
+   ],
+   "near_misses": [
+    {
+     "prompt": "what is waiting on me right now",
+     "expect": "hub",
+     "why": "a direct hub query"
+    },
+    {
+     "prompt": "prioritise the backlog",
+     "expect": "backlog",
+     "why": "ranking is the PO's"
+    },
+    {
+     "prompt": "can we ship on Friday",
+     "expect": "release",
+     "why": "readiness is computed by release"
+    },
+    {
+     "prompt": "the cluster is still running and costing money",
+     "expect": "hub",
+     "why": "the cleanup ledger lives in the hub"
+    },
+    {
+     "prompt": "estimate how long this will take",
+     "expect": "none",
+     "why": "this suite deliberately offers no estimation method"
+    }
+   ]
+  },
+  {
+   "expect": "design",
+   "hits": [
+    "design the flow for requesting a trial",
+    "what should the empty and error states look like",
+    "review this screen for usability problems",
+    "the users cannot find the export, diagnose it",
+    "specify the error messages for this feature"
+   ],
+   "near_misses": [
+    {
+     "prompt": "test the error states in the build",
+     "expect": "qa",
+     "why": "exercising them is QA's"
+    },
+    {
+     "prompt": "measure whether users complete onboarding",
+     "expect": "analytics",
+     "why": "a metric reading"
+    },
+    {
+     "prompt": "interview users about the flow",
+     "expect": "discovery",
+     "why": "research"
+    },
+    {
+     "prompt": "build the screen",
+     "expect": "dev",
+     "why": "implementation"
+    },
+    {
+     "prompt": "write the help page for this screen",
+     "expect": "docs-authoring",
+     "why": "user documentation"
+    }
+   ]
+  },
+  {
+   "expect": "architecture",
+   "hits": [
+    "write the technical design for this change",
+    "record this as an ADR",
+    "document the architecture this system actually has",
+    "should this be synchronous or queued, and why",
+    "what are the durability contracts here"
+   ],
+   "near_misses": [
+    {
+     "prompt": "implement the design",
+     "expect": "dev",
+     "why": "building"
+    },
+    {
+     "prompt": "what is in scope for the release",
+     "expect": "prd",
+     "why": "product scope"
+    },
+    {
+     "prompt": "test the durability claim under fault",
+     "expect": "qa",
+     "why": "scope 10 is QA's"
+    },
+    {
+     "prompt": "write the business process map",
+     "expect": "requirements",
+     "why": "business, not technical"
+    },
+    {
+     "prompt": "is the design accessible",
+     "expect": "design",
+     "why": "experience review"
+    }
+   ]
+  },
+  {
+   "expect": "release",
+   "hits": [
+    "are we ready to ship",
+    "give me the go/no-go",
+    "write the release notes",
+    "is this release green",
+    "record that we shipped despite the open finding"
+   ],
+   "near_misses": [
+    {
+     "prompt": "test the release candidate",
+     "expect": "qa",
+     "why": "testing precedes the verdict"
+    },
+    {
+     "prompt": "write the launch announcement",
+     "expect": "launch",
+     "why": "messaging is PMM's"
+    },
+    {
+     "prompt": "what is still open",
+     "expect": "hub",
+     "why": "a status query"
+    },
+    {
+     "prompt": "document what changed for users",
+     "expect": "docs-authoring",
+     "why": "user docs, not release notes"
+    },
+    {
+     "prompt": "plan the next milestone",
+     "expect": "delivery",
+     "why": "planning"
+    }
+   ]
+  },
+  {
+   "expect": "docs-authoring",
+   "hits": [
+    "write the admin guide for this feature",
+    "verify every claim in the quickstart against the product",
+    "what is undocumented in our API",
+    "write the API reference from the actual routes",
+    "the docs are stale after this release, fix them"
+   ],
+   "near_misses": [
+    {
+     "prompt": "run documentation conformance as part of the QA sweep",
+     "expect": "qa",
+     "why": "scope 9 inside a QA run"
+    },
+    {
+     "prompt": "write the website copy for this",
+     "expect": "launch",
+     "why": "marketing copy"
+    },
+    {
+     "prompt": "write the release notes",
+     "expect": "release",
+     "why": "release notes come from what shipped"
+    },
+    {
+     "prompt": "record this architectural decision",
+     "expect": "architecture",
+     "why": "an ADR"
+    },
+    {
+     "prompt": "write the interview guide",
+     "expect": "discovery",
+     "why": "research instrument"
+    }
+   ]
+  },
+  {
+   "expect": "launch",
+   "hits": [
+    "write the launch announcement",
+    "write the positioning for this product",
+    "check our pricing page claims are true",
+    "build the go-to-market plan",
+    "review this website copy before it goes live"
+   ],
+   "near_misses": [
+    {
+     "prompt": "write the user documentation",
+     "expect": "docs-authoring",
+     "why": "docs, not marketing"
+    },
+    {
+     "prompt": "are we allowed to ship yet",
+     "expect": "release",
+     "why": "the ship decision"
+    },
+    {
+     "prompt": "did the launch work",
+     "expect": "analytics",
+     "why": "post-launch measurement"
+    },
+    {
+     "prompt": "test that the price on the page matches checkout",
+     "expect": "qa",
+     "why": "exercising the funnel"
+    },
+    {
+     "prompt": "what do customers care about most",
+     "expect": "discovery",
+     "why": "research"
+    }
+   ]
+  },
+  {
+   "expect": "analytics",
+   "hits": [
+    "read the activation metric",
+    "write the post-launch review",
+    "define this metric properly with its denominator",
+    "analyse the signup funnel",
+    "did the experiment move anything"
+   ],
+   "near_misses": [
+    {
+     "prompt": "define the success metrics for this PRD",
+     "expect": "prd",
+     "why": "defined at PRD time"
+    },
+    {
+     "prompt": "instrument the events we need",
+     "expect": "dev",
+     "why": "implementation"
+    },
+    {
+     "prompt": "interview the users who churned",
+     "expect": "discovery",
+     "why": "qualitative research"
+    },
+    {
+     "prompt": "how many stories are accepted",
+     "expect": "hub",
+     "why": "hub counts, not product metrics"
+    },
+    {
+     "prompt": "measure time to first success for a new user",
+     "expect": "qa",
+     "why": "the first-run measurement is QA's perishable one"
+    }
+   ]
+  },
+  {
+   "expect": "ops-readiness",
+   "hits": [
+    "is this safe to deploy",
+    "have we rehearsed the rollback for this release",
+    "check our alerting and on-call before we ship",
+    "walk the runbook and tell me what is missing",
+    "are the certificates and quotas good past the release date"
+   ],
+   "near_misses": [
+    {
+     "prompt": "are we ready to ship",
+     "expect": "release",
+     "why": "the go/no-go is computed by release; ops-readiness supplies rows to it"
+    },
+    {
+     "prompt": "does privacy need to sign off on this change",
+     "expect": "security-review",
+     "why": "sign-offs are SECURITY's, not platform's"
+    },
+    {
+     "prompt": "what will customers ask about this release",
+     "expect": "support-readiness",
+     "why": "post-ship questions are SUPPORT's"
+    },
+    {
+     "prompt": "the deploy script is throwing a path error",
+     "expect": "none",
+     "why": "ordinary debugging, not a readiness assessment"
+    },
+    {
+     "prompt": "test that the failover actually keeps serving",
+     "expect": "qa",
+     "why": "exercising product behaviour is a QA case, not a readiness checkpoint"
+    }
+   ]
+  },
+  {
+   "expect": "security-review",
+   "hits": [
+    "do we need a security review before this ships",
+    "who signs off on the privacy impact of this change",
+    "check the dependencies and secrets for this build",
+    "is this release cleared from a compliance point of view",
+    "update the threat model for the new endpoint"
+   ],
+   "near_misses": [
+    {
+     "prompt": "try to break the auth on the new endpoint",
+     "expect": "qa",
+     "why": "exercising the product to find a defect is QA; the review records whether the process ran"
+    },
+    {
+     "prompt": "have we rehearsed the rollback",
+     "expect": "ops-readiness",
+     "why": "deploy and rollback are DEVOPS'"
+    },
+    {
+     "prompt": "write the security section of the release notes",
+     "expect": "release",
+     "why": "release notes are the release skill's"
+    },
+    {
+     "prompt": "rotate the expired certificate on node 3",
+     "expect": "none",
+     "why": "an operational task, not a review"
+    },
+    {
+     "prompt": "file the vulnerability you found as a bug",
+     "expect": "qa",
+     "why": "a vulnerability is a finding with a severity, graded by QA like any defect"
+    }
+   ]
+  },
+  {
+   "expect": "support-readiness",
+   "hits": [
+    "is support ready for this release",
+    "write the known-issues list for what we are shipping",
+    "what will customers ask after this change",
+    "set up the post-launch watch plan",
+    "who does support escalate to during the release window"
+   ],
+   "near_misses": [
+    {
+     "prompt": "write the user guide for the new feature",
+     "expect": "docs-authoring",
+     "why": "user-facing docs are the writer's; support readiness is the known-issue and watch plan"
+    },
+    {
+     "prompt": "read the metrics a week after launch",
+     "expect": "analytics",
+     "why": "reading the numbers is the analyst's; the watch plan is the commitment to look"
+    },
+    {
+     "prompt": "check our alerting fires",
+     "expect": "ops-readiness",
+     "why": "alerting is DEVOPS'"
+    },
+    {
+     "prompt": "turn these support tickets into insights",
+     "expect": "discovery",
+     "why": "tickets as a research corpus are discovery's user-authored evidence"
+    },
+    {
+     "prompt": "decide whether we ship with this bug open",
+     "expect": "release",
+     "why": "shipping against the evidence is the operator's call, recorded by release"
+    }
+   ]
+  }
+ ]
 }

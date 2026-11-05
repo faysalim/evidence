@@ -72,6 +72,10 @@ def green_base(hub):
     cli(hub, "q", "QA", "add", "case", "R-1", "-f", "scope=requirements",
         "-f", "graded_by=p", "-f", "action=contract 4.2", "-f", "oracle=independent recompute")
     cli(hub, "q", "QA", "move", "R-1", "PASS", "-f", "evidence=ok")
+    # Readiness outside QA: the verdict reads these, so a base with none computes NO VERDICT.
+    cli(hub, "ops", "DEVOPS", "add", "readiness", "RD-1",
+        "-f", "title=rollback rehearsed", "-f", "owner_role=DEVOPS")
+    cli(hub, "ops", "DEVOPS", "move", "RD-1", "MET", "-f", "evidence=rehearsed, 41s")
     cli(hub, "dm", "DELIVERY", "add", "release", "REL-1", "-f", "title=1.0")
     cli(hub, "d", "DEV", "move", "REL-1", "CANDIDATE", "-f", "build=sha256:abc")
     return hub

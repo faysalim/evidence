@@ -20,7 +20,7 @@ Two things are measured:
    under. A corpus that contradicts itself cannot grade anything.
 
 NOT RUN here, deliberately: the 150-case agent run. Each `claude plugin eval` case is a full
-Claude child on the operator's own credential and rate limit, and 15 skills x 10 prompts is a
+Claude child on the operator's own credential and rate limit, and one prompt per corpus row is a
 large unrequested spend. `--emit-evals` writes the cases so the operator can run as many as they
 want; `evals/` ships a representative subset that proves the harness works end to end.
 """
@@ -192,9 +192,17 @@ def main(argv=None):
         print("\n%d failure(s)" % len(failures))
         return 1
     print("  ok   no unguarded strong overlap; corpus is self-consistent")
-    print("\nNOT RUN: the agent-fired half of trigger testing. Each case is a full Claude child "
-          "on your credential;\n         15 skills x 10 prompts is a large spend. "
-          "`--emit-evals` writes them; evals/ ships a subset.")
+    # Counted, not hardcoded. The literal said "15 skills" after three more were added, which is
+    # the same drift this repo has now found in a README table, eleven skill READMEs and a status
+    # banner. Anything stating a count states it from the data.
+    prompts = sum(len(c.get("hits") or []) + len(c.get("near_misses") or []) for c in corpus["cases"])
+    print("\nNOT RUN: the agent-fired half of trigger testing -- whether the right skill actually "
+          "FIRES.\n         %d corpus row(s) across %d skill(s), %d prompts; each is a full Claude "
+          "child on\n         your credential, so this is a real spend and the operator decides it."
+          "\n         `--emit-evals` writes them; evals/ ships a subset of %d."
+          % (prompts, len(corpus["cases"]), prompts, prompts))
+    print("         What IS established here: no unguarded strong overlap, and the corpus names a\n"
+          "         neighbour for every near-miss. That is routing *hygiene*, not routing proof.")
     return 0
 
 

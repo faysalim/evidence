@@ -137,9 +137,11 @@ reads stay valid. All three are mine.
 
 | What | Why | What would unblock it |
 |---|---|---|
-| Linux path handling for `hub.py` and the lint | No Linux host in this environment | Any Linux host or container |
+| Linux path handling for `hub.py` and the lint | No Linux host in this environment. Everything here ran on Windows only, and this matters for a team rollout | Any Linux host or container. One `docker run` with the suite would settle it |
 | Permission-prompt behaviour in **default** mode | A human has to observe the prompt; `claude -p` was run with `acceptEdits` | Faisal runs the probe once |
-| Copy semantics on a **copied** install | A local-path marketplace loads in place, so `../` escapes would pass locally and fail for real users | A git-sourced marketplace, or accept the lint as the guard |
+| **Whether the right skill actually fires** | `check_overlap.py` is the static half: no unguarded overlap, and the corpus names a neighbour for every near-miss. That is routing *hygiene*, not routing proof. The agent-fired half is 180 prompts across 18 skills, each a full Claude child on the operator's credential | `--emit-evals` writes them; the operator decides the spend. `evals/` ships 7 |
+| **Any environment other than Claude Code** | The skills assume `${CLAUDE_PLUGIN_ROOT}`, the Skill tool and the plugin manifest. Nothing has been attempted elsewhere and no fallback is written | A stated target. The hub and its CLI are plain stdlib Python and portable; the skill-loading layer is not |
+| ~~Copy semantics on a **copied** install~~ | **CLOSED 2026-11-05.** The published repo was cloned fresh from the git remote and the whole suite run from the clone: 8/8 checks, 19 of 20 suites, same results as in place | — |
 
 ## Permission denials hit
 
@@ -155,9 +157,12 @@ Not worked around, by instruction: nothing. Recorded and continued.
 
 - Whether `claude plugin test` / `claude plugin eval` cover trigger evals in the shape the brief wants, or
   need a thin wrapper. Resolve during step 8.
-- Whether 15 skills survive the listing budget on a smaller context window. The budget test is the gate.
-- Whether the three next-up domain files belong in this restructure. Current plan: no — the restructure
-  should not also grow the method.
+- Whether 18 skills survive the listing budget on a smaller context window. The budget test is the gate,
+  and it currently fails on purpose at 9,579 characters: the remedy is a settings change, and for a team
+  it belongs in **managed** settings rather than being left to each person.
+- ~~Whether the three next-up domain files belong in this restructure.~~ **Resolved:**
+  `collaboration`, `cms` and `feature-flags` were added after an independent review named them,
+  taking the registry to 30.
 
 ## NEEDS FAISAL (full list with recommendations in `plugin.md` §8)
 

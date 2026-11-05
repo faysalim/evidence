@@ -71,6 +71,14 @@ Every condition names the rows that satisfy it, and a condition with **no rows a
 | Smoke row passed on the build the verdict names | Right bytes deployed is not the same as serving |
 | Every acceptance requirement has a `PASS` | Green against the docs is not green against the contract |
 | No story `DONE` but unaccepted; no decision awaiting the operator; no open risk; cleanup ledger empty | Work nobody has accepted is not shipped work |
+| **Every release-readiness checkpoint `MET`, or waived by the operator** | Until this condition existed, every row above was QA's, so **"ready to ship" meant "QA found nothing"** and the verdict said nothing about whether the rollback had been rehearsed, an alert would fire, anyone was on call, or privacy had signed off. An independent review named it the largest gap in the suite |
+
+Those checkpoints are `readiness` items, created and met by `/evidence:ops-readiness` (DEVOPS),
+`/evidence:security-review` (SECURITY) and `/evidence:support-readiness` (SUPPORT) — three roles that
+this suite did not have until the gap was found. `${CLAUDE_PLUGIN_ROOT}/shared/contracts/release-readiness.md`
+is the handoff. **A hub with no readiness rows yields `NO VERDICT`**, with the detail line naming
+exactly what the verdict is silent about; that is a refusal to call green on evidence nobody
+supplied, not a claim the release is unsafe.
 
 **You do not override a condition.** If one fails and the team ships anyway, that is the operator's
 decision, recorded as such:

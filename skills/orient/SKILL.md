@@ -47,7 +47,7 @@ are already built.
 
 ## Step 2 — Product class, from the product
 
-Pick from `${CLAUDE_PLUGIN_ROOT}/shared/domains/` — twenty-seven classes, indexed in its README. **Read the
+Pick from `${CLAUDE_PLUGIN_ROOT}/shared/domains/` — thirty classes, indexed in its README. **Read the
 closest one, and every one that applies**: a SaaS CRM is `crm.md` **and** `multi-tenant-saas.md`; an
 API-fronted licensing platform is `licensing-server.md` **and** `api-platform.md`. Take the union.
 

@@ -1,12 +1,13 @@
-# discovery — status: draft
+# discovery - status: exercised
 
-Written from first principles, not from a real engagement. `CONTRIBUTING.md` warns against exactly this,
-so the warning is on the tin: the structure here follows the two principles it applies (every number has a
-denominator; every claim states what it does not claim), and those parts are sound. The interview-guide
-heuristics are reasoned, not measured.
+Run against a real product by its author, with defects found and fixed. **Weaker than `proven`**:
+`shared/principles.md` principle 7 says the author does not grade their own work, and this status
+was graded by its author. What it buys is that the prose has met a real product at least once;
+what it does not buy is an independent verdict.
 
-**What is load-bearing and tested:** the `insight` lifecycle in `shared/hub/model.json` — `EVIDENCED`
-requires `evidence`, `sample_size` and `does_not_show`, and acceptance requires a different role. That is
-enforced by `hub.py` and covered by `test_hub.py`.
+**What is load-bearing and enforced:** the `discovery` lifecycles in `shared/hub/model.json`,
+checked by `hub.py` and covered by `shared/scripts/test_hub.py`. Those transitions and
+their required fields are not draft at any status.
 
-**What is draft:** everything prose. Open questions are at the end of `SKILL.md`.
+**What this status does not cover:** the heuristics, the checkpoint lists and the
+examples. Open questions are at the end of `SKILL.md` and are deliberate, not oversights.

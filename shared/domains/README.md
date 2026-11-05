@@ -17,6 +17,9 @@ next person in your field will need it.
 | `message-queue.md` | Broker / event streaming: offsets, ordering, retention, delivery semantics |
 | `data-pipeline.md` | ETL / streaming: sources and sinks, schema drift, backfills, exactly-once claims |
 | `file-sync-storage.md` | Files synced across devices: conflict, quota, share links, deletion |
+| `collaboration.md` | Real-time co-editing: convergence, lost updates, offline reconcile, live revocation |
+| `cms.md` | Content platform: authoring vs published surface, embargo leaks, schema migration |
+| `feature-flags.md` | Flag / experiment service: wrong variant, default-when-unreachable, exposure counts |
 | `backup-and-recovery.md` | Backups and restores: chain integrity, retention, immutability, RTO |
 | `search-and-ranking.md` | Index freshness, relevance as a measured claim, facet counts, permission-aware results |
 

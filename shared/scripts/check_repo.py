@@ -444,6 +444,25 @@ def check_coverage():
                  % (name, ms.group(1), banner.group(1)))
             bad += 1
 
+        # And the sibling README, which was the blind spot: checking the banner alone left ELEVEN
+        # skill READMEs claiming `draft` while their own frontmatter said `exercised`. A reader who
+        # opens the skill's directory reads the README first, so it is the most-seen of the three
+        # places this status appears and was the only unchecked one.
+        readme = os.path.join(os.path.dirname(path), "README.md")
+        if ms and os.path.isfile(readme):
+            rm = re.search(r"status:\s*(\w+)", read(readme))
+            if not rm:
+                fail("coverage", "%s/README.md states no status -- then it cannot be checked "
+                                 "against the skill's own" % name)
+                bad += 1
+            elif rm.group(1) != ms.group(1):
+                fail("coverage", "%s: frontmatter says status %r and README.md says %r"
+                     % (name, ms.group(1), rm.group(1)))
+                bad += 1
+        elif ms and "${CLAUDE_SKILL_DIR}/README.md" in text:
+            fail("coverage", "%s points at ${CLAUDE_SKILL_DIR}/README.md and has none" % name)
+            bad += 1
+
         # skills/orient Step 3 says: "Write conventions.md beside the profile, and have every
         # downstream skill read it." Exercising the suite found 2 of 15 did. analytics,
         # architecture, launch, prd and release referenced NEITHER -- exactly the skills that

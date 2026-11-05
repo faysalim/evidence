@@ -344,6 +344,17 @@ def main():
             g("add", "case", "R-1", "-f", "scope=requirements", "-f", "graded_by=licensing",
               "-f", "action=contract 4.2", "-f", "oracle=independent recompute")
             g("move", "R-1", "PASS", "-f", "evidence=ok")
+            # Readiness outside QA. A green that covers only QA evidence says nothing about
+            # whether the rollback was rehearsed or anyone is on call, which is why the verdict
+            # now reads these and why a hub with none of them computes NO VERDICT.
+            g("add", "readiness", "RD-1", "-f", "title=rollback rehearsed on the candidate",
+              "-f", "owner_role=DEVOPS", actor="ops1", role="DEVOPS")
+            g("move", "RD-1", "MET", "-f", "evidence=rehearsed 2026-03-04, 41s to previous digest",
+              actor="ops1", role="DEVOPS")
+            g("add", "readiness", "RD-2", "-f", "title=privacy sign-off for the new field",
+              "-f", "owner_role=SECURITY", actor="sec1", role="SECURITY")
+            g("move", "RD-2", "MET", "-f", "evidence=DPIA addendum signed 2026-03-05",
+              actor="sec1", role="SECURITY")
             g("add", "release", "REL-1", "-f", "title=2.5.1", actor="dm1", role="DELIVERY")
             g("move", "REL-1", "CANDIDATE", "-f", "build=sha256:abc", actor="dev1", role="DEV")
             g("move", "REL-1", "GREEN", "-f", "bounds=1 node, 20k keys",

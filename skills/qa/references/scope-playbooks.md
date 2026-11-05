@@ -36,10 +36,10 @@ one place:
 ## Contents
 
 - [1. Website and acquisition funnel](#1-website-and-acquisition-funnel)
-- [2. Desktop or CLI application, per platform](#2-desktop-or-cli-application-per-platform)
-- [3. SaaS / multi-tenant control plane](#3-saas--multi-tenant-control-plane)
+- [2. Primary product, per platform](#2-primary-product-per-platform)
+- [3. Control plane: admin, tenancy and configuration](#3-control-plane-admin-tenancy-and-configuration)
 - [4. Self-hosted / container deployment](#4-self-hosted--container-deployment)
-- [5. Licensing and entitlement lifecycle](#5-licensing-and-entitlement-lifecycle)
+- [5. Entitlement: licences, seats, quotas and their lifecycle](#5-entitlement-licences-seats-quotas-and-their-lifecycle)
 - [6. Secondary and free products](#6-secondary-and-free-products)
 - [7. Telemetry and privacy](#7-telemetry-and-privacy)
 - [8. Security and abuse](#8-security-and-abuse)
@@ -76,7 +76,7 @@ Walk the path a buyer walks, then walk every path a buyer might fall off.
 - Console errors, broken images, dead links, and accessibility basics (landmarks, labels, contrast,
   keyboard reachability of the funnel).
 
-## 2. Desktop or CLI application, per platform
+## 2. Primary product, per platform
 
 - Download from the real public path, install the way a user installs.
 - **CLI**: `--help`, `-h`, `--version`, bare invocation, nonsense subcommand, each documented example.
@@ -91,7 +91,7 @@ Walk the path a buyer walks, then walk every path a buyer might fall off.
   confirm it behaves identically to the input. This is the one test that cannot be faked.
 - Binary metadata and signing: see the evidence standard.
 
-## 3. SaaS / multi-tenant control plane
+## 3. Control plane: admin, tenancy and configuration
 
 - Sign up as a new customer would. Note every point of friction; the funnel is the product.
 - Create the full object graph a real customer needs, in order, through the UI — not the API — then verify
@@ -121,7 +121,7 @@ Walk the path a buyer walks, then walk every path a buyer might fall off.
   releases stale while the SaaS runs current code — then **upgrade the stale one, with data in it**, to
   current (scope 11). Comparison finds the gap; the upgrade finds what the gap costs a customer.
 
-## 5. Licensing and entitlement lifecycle
+## 5. Entitlement: licences, seats, quotas and their lifecycle
 
 The cross-product scope, and historically the richest. Run the whole arc on a test tenant:
 

@@ -371,6 +371,35 @@ def verdict(hub):
     else:
         conditions.append(("The hub itself validates", True, "validate: 0 problems"))
 
+    # Readiness outside QA. Until this condition existed, a green verdict meant "QA found nothing"
+    # and said nothing about whether the rollback had been rehearsed, an alert fired, anyone was
+    # on call, or privacy had signed off -- so the most consequential sentence in the suite was
+    # computed from one team's evidence. An independent review named this as the largest gap.
+    #
+    # No rows yields NO VERDICT, not NOT GREEN -- the same treatment every other condition with no
+    # rows gets (`shared/principles.md` §6, and the release skill says it in as many words). It is
+    # not a claim that the release is unsafe; it is a refusal to call GREEN on evidence nobody
+    # supplied. A team that keeps its ops checklist elsewhere imports it the way `orient` Step 5
+    # imports their runbooks and SLOs. The detail line names exactly what the verdict is silent
+    # about, so the refusal is readable rather than mysterious.
+    ready = [i for i in items.values() if i["type"] == "readiness"]
+    unmet = sorted(i["id"] for i in ready if i["state"] == "OPEN")
+    waived = sorted(i["id"] for i in ready if i["state"] == "WAIVED")
+    if not ready:
+        detail = ("none recorded -- this verdict covers QA evidence only and says nothing about "
+                  "rollback, alerting, on-call, runbooks, certificates, privacy, legal or support")
+    else:
+        by_role = {}
+        for i in ready:
+            by_role.setdefault(i["fields"].get("owner_role") or "unattributed", []).append(i["id"])
+        detail = "%d checkpoint(s) across %s" % (len(ready), ", ".join(sorted(by_role)))
+        if unmet:
+            detail = "still OPEN: " + ", ".join(unmet)
+        elif waived:
+            detail += "; waived by the operator: " + ", ".join(waived)
+    conditions.append(("Every release-readiness checkpoint is MET, or waived by the operator",
+                       bool(ready) and not unmet, detail))
+
     if all(ok for _, ok, _ in conditions):
         label = "GREEN within stated bounds"
     elif blocking or req_bad or guarding:

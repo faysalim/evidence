@@ -16,6 +16,9 @@
     "WRITER": "Technical writer",
     "PMM": "Product marketing",
     "ANALYST": "Data / product analyst",
+    "DEVOPS": "DevOps / platform / SRE: owns deploy, rollback, alerting and on-call",
+    "SECURITY": "Security, privacy and compliance: owns the sign-offs a release needs",
+    "SUPPORT": "Support / customer success: owns what happens after it ships",
     "OPERATOR": "The operator: the human who owns the decision, the budget and the release"
   },
   "field_vocabularies": {
@@ -1416,6 +1419,69 @@
           ],
           "different_actor_from": [
             "MITIGATED"
+          ]
+        }
+      ]
+    },
+    "readiness": {
+      "doc": "A release-readiness checkpoint owned by someone other than QA: a rollback rehearsed, an alert that fires, an on-call rota, a runbook, a certificate, a privacy or legal sign-off, a support macro, a post-launch watch plan. The release verdict reads these, so 'ready to ship' stops meaning 'QA found nothing'. MET needs evidence of the thing having been done, never an assurance that it will be. Only the operator may WAIVE one, with a reason, because deciding to ship without a rehearsed rollback is a decision and not an oversight. Import the team's own checkpoint list rather than adopting this suite's: skills/orient Step 3 says adopt, never impose.",
+      "initial": "OPEN",
+      "create": [
+        "DEVOPS",
+        "SECURITY",
+        "SUPPORT",
+        "DELIVERY",
+        "TECH_LEAD",
+        "OPERATOR"
+      ],
+      "requires_fields_on_create": [
+        "title",
+        "owner_role"
+      ],
+      "transitions": [
+        {
+          "from": [
+            "OPEN"
+          ],
+          "to": "MET",
+          "roles": [
+            "DEVOPS",
+            "SECURITY",
+            "SUPPORT",
+            "DELIVERY",
+            "TECH_LEAD"
+          ],
+          "requires_fields": [
+            "evidence"
+          ]
+        },
+        {
+          "from": [
+            "OPEN"
+          ],
+          "to": "WAIVED",
+          "roles": [
+            "OPERATOR"
+          ],
+          "requires_fields": [
+            "reason"
+          ]
+        },
+        {
+          "from": [
+            "MET"
+          ],
+          "to": "OPEN",
+          "roles": [
+            "DEVOPS",
+            "SECURITY",
+            "SUPPORT",
+            "DELIVERY",
+            "TECH_LEAD",
+            "QA"
+          ],
+          "requires_fields": [
+            "reason"
           ]
         }
       ]
