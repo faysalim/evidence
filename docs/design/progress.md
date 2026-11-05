@@ -16,15 +16,24 @@ Read `docs/design/final-report.md` first. `council-review.md` has all 66 defects
 dispositions; `plugin.md` has the design and its 13 decisions; `round1-changelog.md` holds the
 message that commit `0d4c25f` lost to shell quoting.
 
-**Two things need Faisal and cannot be done from here:**
+**Published 2026-11-05** at https://github.com/faysalim/evidence — `main` at `063e563`,
+212 files, Apache-2.0 detected. Renamed `product-suite` → `evidence` first, and the repo was
+created with an MIT default that the push replaced.
 
-1. `PE-1` — the README's install commands cannot work: `origin/main` is still the old standalone
-   skill and `plugin-suite` is unpushed. One `git push -u origin plugin-suite`.
-2. `PE-2` — the plugin exceeds the skill-listing budget, so 7 of 15 descriptions are dropped in a
-   real session. Needs a product decision; `disable-model-invocation` was measured and does not
-   help.
+**`PE-1` is CLOSED.** The README's two install commands were run verbatim against the real remote,
+and then the whole suite was run from the resulting install: 8 of 9 suites pass from
+`~/.claude/plugins/marketplaces/evidence-market`, `check_repo.py` 7/7, both fixtures rebuild with
+`validate` clean. That is what proves the `${CLAUDE_PLUGIN_ROOT}` paths resolve as installed.
 
-**Nothing is pushed.** 25 commits on `plugin-suite`; `main` untouched at `6db632e`.
+**One thing still needs Faisal:**
+
+- `PE-2` — the plugin exceeds the skill-listing budget, so 7 of 15 descriptions are dropped in a
+  real session. Needs a product decision; `disable-model-invocation` was measured and does not
+  help. Recommendation: ship `qa`, `dev`, `hub`, `orient` as `evidence` and move the 11 drafts to a
+  second plugin.
+
+The old `product-qa-skill` repo and this repo's `origin` are untouched, and the local directory is
+still named `product-qa`. The remote `plugin-suite` branch duplicates `main` and can be deleted.
 
 ## Test status
 
