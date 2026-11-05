@@ -66,20 +66,20 @@ def descriptions():
 
 def terms(text):
     words = re.findall(r"[a-z][a-z-]{3,}", text.lower())
-    return {w for w in words if w not in STOP and not w.startswith("product-suite")}
+    return {w for w in words if w not in STOP and not w.startswith("evidence")}
 
 
 def not_for_targets(text):
     """Which skills a description pushes away.
 
-    Every `product-suite:X` reference in a description counts, wherever it sits. The earlier
-    version anchored on "not for ... product-suite:X" within one sentence, which captured only
+    Every `evidence:X` reference in a description counts, wherever it sits. The earlier
+    version anchored on "not for ... evidence:X" within one sentence, which captured only
     the FIRST target per clause and so reported four pairs as unguarded when the boundary was
     plainly written. Capturing all references is sound because a description only ever names
     another skill in order to push work towards it -- there is no positive cross-reference in a
     description, and `check_repo.py skills` requires the "Not for" line to exist separately.
     """
-    return set(re.findall(r'product-suite:([a-z-]+)', text.lower()))
+    return set(re.findall(r'evidence:([a-z-]+)', text.lower()))
 
 
 def main(argv=None):
@@ -213,9 +213,9 @@ def emit(corpus):
                         newline="\n").write(
                     "---\nmax_turns: 2\nallowed_tools: [Skill]\n---\n\n%s\n" % item["prompt"])
                 target = item["expect"]
-                crit = ("The response must invoke the `product-suite:%s` skill and no other "
-                        "product-suite skill." % target) if target != "none" else (
-                    "The response must NOT invoke any product-suite skill: this prompt is "
+                crit = ("The response must invoke the `evidence:%s` skill and no other "
+                        "evidence skill." % target) if target != "none" else (
+                    "The response must NOT invoke any evidence skill: this prompt is "
                     "ordinary work that no skill in the suite should claim.")
                 io.open(os.path.join(d, "graders", "criteria.md"), "w", encoding="utf-8",
                         newline="\n").write(

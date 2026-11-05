@@ -1,6 +1,6 @@
 ---
 name: delivery
-description: Generate delivery status from the work-item hub instead of collecting it, maintain the RAID risk log, surface what is blocked and on whom, and plan milestones against dependencies the hub already knows. Use when the user wants a status report, delivery plan or milestones, a RAID or risk log, cross-team dependencies tracked, or an answer to why something is late. Not for prioritising the backlog - that is product-suite:backlog.
+description: Generate delivery status from the work-item hub instead of collecting it, maintain the RAID risk log, surface what is blocked and on whom, and plan milestones against dependencies the hub already knows. Use when the user wants a status report, delivery plan or milestones, a RAID or risk log, cross-team dependencies tracked, or an answer to why something is late. Not for prioritising the backlog - that is evidence:backlog.
 ---
 
 # Delivery
@@ -90,7 +90,7 @@ Milestones come from what must be true, in order, not from dividing a date range
 1. **Read the chain.** The dashboard's traceability view shows initiative → prd → requirement → story →
    case → release. A milestone is a point on it where something becomes usable.
 2. **Find the dependencies the hub already knows.** `blocks` links, and stories whose branch depends on
-   another's — `/product-suite:dev` states branch dependencies, and they are real schedule constraints.
+   another's — `/evidence:dev` states branch dependencies, and they are real schedule constraints.
 3. **Name the external dependencies as risks**, with an owner and a date. A certificate, an account, a
    vendor, a partner's API. These are `PROCURE`-class in QA's taxonomy and they are the ones that cannot be
    worked around by trying harder.
@@ -104,7 +104,7 @@ Milestones come from what must be true, in order, not from dividing a date range
 ## Existing product and ongoing delivery
 
 For work already in flight, do not re-plan from scratch. Import what exists
-(`/product-suite:orient` maps their tracker), then report the two things their current process almost
+(`/evidence:orient` maps their tracker), then report the two things their current process almost
 certainly does not: **how long each item has sat in its current state**, and **what is waiting on a human
 outside the team**. Those two are usually new information even to a team that has been running standups
 for a year, because neither is visible in a board.

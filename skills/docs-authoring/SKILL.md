@@ -1,6 +1,6 @@
 ---
 name: docs-authoring
-description: Write user and admin documentation from the product's observed behaviour rather than from tickets, then verify every claim by running it verbatim as a customer would, and enumerate the real surface to find what is undocumented. Use when the user wants user docs, admin guides, API reference or a quickstart written, reviewed or verified against the product. Not for marketing copy - that is product-suite:launch.
+description: Write user and admin documentation from the product's observed behaviour rather than from tickets, then verify every claim by running it verbatim as a customer would, and enumerate the real surface to find what is undocumented. Use when the user wants user docs, admin guides, API reference or a quickstart written, reviewed or verified against the product. Not for marketing copy - that is evidence:launch.
 ---
 
 # Docs authoring
@@ -76,7 +76,7 @@ is the point (`shared/principles.md` §2).
 
 ## Existing product: the gap is the deliverable
 
-For an existing product the first pass is not writing, it is measuring. `/product-suite:orient`'s
+For an existing product the first pass is not writing, it is measuring. `/evidence:orient`'s
 capability inventory gives you the real surface; compare it to the published docs and report three
 numbers with their denominators:
 

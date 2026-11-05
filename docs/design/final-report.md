@@ -1,4 +1,4 @@
-# product-suite — final report
+# evidence — final report
 
 Branch `plugin-suite`, 19 commits past the snapshot. **Nothing pushed, nothing merged, no PR, no
 history rewritten.**
@@ -113,7 +113,7 @@ in the listing (always-on stayed at 2,349 tok).
 
 **My recommendation: ship fewer always-on skills.** Keep `qa`, `dev`, `hub` and `orient` — the two
 with real provenance plus the two every other skill calls — as a plugin that auto-triggers, and
-move the 11 drafts behind explicit invocation in a second plugin (`product-suite-roles`) that a
+move the 11 drafts behind explicit invocation in a second plugin (`evidence-roles`) that a
 team enables when it wants them. That halves the listing cost, matches their draft status, and
 costs nothing in capability. The alternatives are cutting every description to ~265 characters,
 which guts the triggers and the "Not for" lines, or documenting `skillListingBudgetFraction` and
@@ -208,8 +208,8 @@ re-evaluated later, though the dashboard still shows `NOT GREEN` so the disagree
 The plugin is already installed on this machine from the working tree, so you can use it now:
 
 ```bash
-claude plugin list                       # product-suite@product-suite-market, enabled
-claude plugin details product-suite      # 15 skills, ~2,349 tok always-on
+claude plugin list                       # evidence@evidence-market, enabled
+claude plugin details evidence      # 15 skills, ~2,349 tok always-on
 ```
 
 Open the two worked engagements — these are the fastest way to see what it does:
@@ -225,7 +225,7 @@ Run a real one:
 cd <your project>
 python <this repo>/shared/scripts/hub.py --actor you --role QA init --engagement my-product
 python <this repo>/shared/scripts/hub.py --actor you --role QA iteration 1
-# then, in a Claude session:  /product-suite:orient
+# then, in a Claude session:  /evidence:orient
 ```
 
 Or just type what you want — "QA this release", "write acceptance criteria for this story", "what

@@ -1,6 +1,6 @@
 ---
 name: dev
-description: Build a story or fix a reported finding: learn an existing repo's real conventions and deploy branch first, work in an isolated worktree, write the test before the fix and prove it fails, copy the case's oracle into that test, and hand back a packet naming the build digest. Use when the user wants a story implemented, a bug or QA finding fixed, a fix handed back for verification, or a repo's conventions learned before a change. Not for finding or verifying bugs - that is product-suite:qa, and you never grade your own fix. Not for the technical design (product-suite:architecture) or slicing stories (product-suite:backlog).
+description: Build a story or fix a reported finding: learn an existing repo's real conventions and deploy branch first, work in an isolated worktree, write the test before the fix and prove it fails, copy the case's oracle into that test, and hand back a packet naming the build digest. Use when the user wants a story implemented, a bug or QA finding fixed, a fix handed back for verification, or a repo's conventions learned before a change. Not for finding or verifying bugs - that is evidence:qa, and you never grade your own fix. Not for the technical design (evidence:architecture) or slicing stories (evidence:backlog).
 ---
 
 # Dev
@@ -26,7 +26,7 @@ four things are established before the first edit, because each one has cost a r
 |---|---|
 | **Which branch actually deploys** | From the hosting config, not the repo default. One repo's `master` was a month stale while the live line was `release/2.5.0`, and a fix worktree was created from the wrong one |
 | **The project's own test style** | Where tests live, how they run, what a test is named. A fix delivered with a test nobody can run is a fix nobody will keep |
-| **The project's conventions** | Formatting, error handling, logging, how config is read. Adopt theirs; `/product-suite:orient` records them in `conventions.md`. Imposing your own makes the diff about style and buries the change |
+| **The project's conventions** | Formatting, error handling, logging, how config is read. Adopt theirs; `/evidence:orient` records them in `conventions.md`. Imposing your own makes the diff about style and buries the change |
 | **Commit identity** | If the operator has a repo-local git identity, verify it is in effect in **every worktree you create**. A global identity leaks a personal address into their history |
 
 For a **new** product none of this exists yet, so establish it once and write it down — the second engineer

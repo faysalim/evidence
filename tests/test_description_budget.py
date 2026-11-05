@@ -35,7 +35,7 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLUGIN = "product-suite"
+PLUGIN = "evidence"
 
 # The binding constraint is the SKILL LISTING budget, which the docs put at 1% of the model's
 # context window and which is shared across EVERY skill the user has -- not this plugin's own
@@ -98,14 +98,14 @@ def main():
     missing_not_for = [k for k, v in desc.items() if "not for" not in v.lower()]
     check("every description has a \"Not for\" line", not missing_not_for, missing_not_for)
 
-    # Every "Not for ... product-suite:X" must name a skill that exists, or the boundary
+    # Every "Not for ... evidence:X" must name a skill that exists, or the boundary
     # it draws points nowhere.
     bad_refs = []
     for name, text in desc.items():
-        for ref in re.findall(r'product-suite:([a-z-]+)', text):
+        for ref in re.findall(r'evidence:([a-z-]+)', text):
             if ref not in desc:
                 bad_refs.append("%s -> %s" % (name, ref))
-    check("every product-suite:X cross-reference names a real skill", not bad_refs, bad_refs)
+    check("every evidence:X cross-reference names a real skill", not bad_refs, bad_refs)
 
     print("\nmeasured always-on cost")
     if not shutil.which("claude"):

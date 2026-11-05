@@ -1,6 +1,6 @@
 ---
 name: prd
-description: Write a product requirements document: the problem, who has it, success metrics measurable with a stated denominator and baseline, and an explicit non-scope. For an existing product it reconstructs a current-state PRD from what the product does, then states the change as a delta. Use when the user wants a PRD, product brief, spec or one-pager written or reviewed, scope defined, or success criteria agreed before build. Not for stories - that is product-suite:backlog.
+description: Write a product requirements document: the problem, who has it, success metrics measurable with a stated denominator and baseline, and an explicit non-scope. For an existing product it reconstructs a current-state PRD from what the product does, then states the change as a delta. Use when the user wants a PRD, product brief, spec or one-pager written or reviewed, scope defined, or success criteria agreed before build. Not for stories - that is evidence:backlog.
 ---
 
 # PRD
@@ -65,7 +65,7 @@ instrumented  yes / no / NOT YET — if no, that is work in scope
 
 **A target with no baseline is not a target.** If the baseline is unknown, the first deliverable is
 measuring it, and that goes in scope. Create each as a `metric` item now, so
-`/product-suite:analytics` inherits a definition rather than inventing one after launch.
+`/evidence:analytics` inherits a definition rather than inventing one after launch.
 
 **§6 Non-scope.** Write what a reader would reasonably assume is included and is not, with the reason.
 "Not doing SSO, because the three named customers asking for it are all on the smaller plan" is useful; an
@@ -76,7 +76,7 @@ empty non-scope section means the PRD has no edges and every reviewer will imagi
 This is the part that separates this skill from a template. For an existing product, **do not write a PRD
 for the change.** Write two things:
 
-1. **A current-state PRD**, reconstructed from `/product-suite:orient`'s capability inventory — which was
+1. **A current-state PRD**, reconstructed from `/evidence:orient`'s capability inventory — which was
    enumerated from the product, not from its documents. Mark it `provenance: reconstructed`. It will be
    uncomfortable: it records what the product *does*, including the parts nobody designed and the parts the
    docs describe differently.

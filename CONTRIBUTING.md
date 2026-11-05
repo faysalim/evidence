@@ -111,7 +111,7 @@ exists to prevent.
 - Cross-references use `${CLAUDE_PLUGIN_ROOT}/…` for shared files and `${CLAUDE_SKILL_DIR}/…` for a
   skill's own, and must resolve. **Never** a `../` path: a marketplace install copies the plugin, so
   anything above the root is simply absent, and it will work for you and break for everyone else.
-- Always write the namespaced `/product-suite:<skill>` invocation. Never the bare form with the skill name
+- Always write the namespaced `/evidence:<skill>` invocation. Never the bare form with the skill name
   alone — `check_repo.py lint` fails on it, because bare names resolve by an origin order this plugin does
   not control and one of them already collides with a skill that ships by default.
 - No real hostnames, tenant ids, customer names, keys or tokens in examples — not even redacted ones.

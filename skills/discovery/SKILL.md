@@ -1,6 +1,6 @@
 ---
 name: discovery
-description: Plan and synthesise product research: interview guides, and insight items that each carry their evidence, sample size and what they do not show, separating observed from reported from inferred. Use when the user wants user research planned or synthesised, interviews or usability sessions prepared, findings turned into insights, or a problem validated before a PRD. Not for writing the PRD - that is product-suite:prd.
+description: Plan and synthesise product research: interview guides, and insight items that each carry their evidence, sample size and what they do not show, separating observed from reported from inferred. Use when the user wants user research planned or synthesised, interviews or usability sessions prepared, findings turned into insights, or a problem validated before a PRD. Not for writing the PRD - that is evidence:prd.
 ---
 
 # Discovery
@@ -88,7 +88,7 @@ two interviews and spending the rest confirming it.
 | | New | Existing |
 |---|---|---|
 | Who to talk to | People with the problem, who have never seen your product. Hardest part is finding them honestly rather than finding people who will agree | Your own users first, then churned users — who are the highest-signal and the least interviewed |
-| Free evidence already in the building | None. Say so | Support tickets, sales-loss reasons, the first-run trace in the product profile, and `/product-suite:analytics` readings |
+| Free evidence already in the building | None. Say so | Support tickets, sales-loss reasons, the first-run trace in the product profile, and `/evidence:analytics` readings |
 | The trap | Validating a solution you already chose. Record the solution you had in mind *before* starting, so the contamination is visible | Assuming the current product shapes the problem. Your users have adapted to it; their workarounds are evidence about your product, not about the need |
 
 For an existing product, **read the support tickets before writing the guide.** They are a free, large,

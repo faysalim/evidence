@@ -3,7 +3,7 @@
 Trigger evals, run with the built-in harness:
 
 ```bash
-claude plugin eval product-suite --eval-dir evals --trust-plugin
+claude plugin eval evidence --eval-dir evals --trust-plugin
 ```
 
 **This directory ships a representative subset, not the whole corpus.** The full corpus —

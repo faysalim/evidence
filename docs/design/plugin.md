@@ -1,4 +1,4 @@
-# product-suite — plugin design
+# evidence — plugin design
 
 Restructuring `product-qa` into a Claude Code plugin carrying one skill per deliverable, all sharing one
 work-item hub and one dashboard.
@@ -21,14 +21,14 @@ before anything was built, because the whole design collapses differently depend
 
 ### Scaffold evidence
 
-A throwaway plugin (`product-suite-scaffold`: one skill, one shared file, one shared script, its own
+A throwaway plugin (`evidence-scaffold`: one skill, one shared file, one shared script, its own
 marketplace manifest) was built, validated, installed through the marketplace route, and probed from a
 **cold session** (`claude -p`, which starts fresh and therefore loads the newly installed plugin — the
 authoring session's skill listing is fixed at startup and cannot see it).
 
 | # | Claim under test | Result | Evidence |
 |---|---|---|---|
-| 1 | `${CLAUDE_PLUGIN_ROOT}/shared/x.md` is **expanded in SKILL.md body text, for the model** | **PASS** | Cold session reported the text arrived as `E:/Personal/projects/product-suite-scaffold`, not as the literal `${CLAUDE_PLUGIN_ROOT}`; it read the file and quoted the marker line |
+| 1 | `${CLAUDE_PLUGIN_ROOT}/shared/x.md` is **expanded in SKILL.md body text, for the model** | **PASS** | Cold session reported the text arrived as `E:/Personal/projects/evidence-scaffold`, not as the literal `${CLAUDE_PLUGIN_ROOT}`; it read the file and quoted the marker line |
 | 2 | Reading it prompts for permission | **No prompt** | Same run. **Caveat:** run with `--permission-mode acceptEdits`, so this does not prove the default mode is silent. See NOT RUN below |
 | 3 | A shared script runs from the expanded path, via a model-run Bash command | **PASS** (Windows) | `HUB_OK_7Q4F argv=['probe','--from-skill'] file=E:\…\shared\scripts\hub.py`, invoked by the cold session itself |
 | 4 | Always-on listing cost is measurable | **PASS** | `claude plugin details`: `Always-on: ~79 tok`; per-component `~80` always-on, `~280` on-invoke |
@@ -39,7 +39,7 @@ floor in the platform docs (highest relevant: `--marketplace` on the shell, 2.1.
 ### Two things the scaffold could not prove, and one it disproved
 
 **Copy semantics are NOT exercised by a local-path marketplace.** `claude plugin list` reports
-`Read from: E:\Personal\projects\product-suite-scaffold` — the plugin loads **in place**. The platform docs
+`Read from: E:\Personal\projects\evidence-scaffold` — the plugin loads **in place**. The platform docs
 say marketplace and cache installs *copy* the plugin directory, and that a script reading `../shared` from
 inside a copied plugin "doesn't find them". So our own dev loop will happily resolve paths that break for
 every user installing from GitHub. **This is the single most dangerous failure shape in the project**: it
@@ -97,7 +97,7 @@ suite for exactly this reason.
 copied on a marketplace install.
 
 ```
-product-suite/
+evidence/
   .claude-plugin/
     plugin.json                  the manifest
     marketplace.json             the marketplace, same repo, listing this plugin at "./"
@@ -120,7 +120,7 @@ product-suite/
     triggers/                    trigger evals per skill
 ```
 
-Skills are referenced as `/product-suite:<name>` — namespaced invocation only (§6).
+Skills are referenced as `/evidence:<name>` — namespaced invocation only (§6).
 
 ---
 
@@ -317,7 +317,7 @@ tenant id or key appears in an example. That last check has already caught a liv
 **Evals use the built-in harness.** `claude plugin validate`, `claude plugin test` and `claude plugin eval`
 (with `claude plugin eval init`) for trigger and behaviour evals. Python tests are kept only for `hub.py`,
 the dashboard and `safe_edit.py`. Trigger evals cover auto-triggering from natural prompts *and*, as a
-separate case, explicit `/product-suite:<skill>` invocation.
+separate case, explicit `/evidence:<skill>` invocation.
 
 ---
 
@@ -327,7 +327,7 @@ One repo is both marketplace and plugin:
 
 ```bash
 /plugin marketplace add faysalim/<repo>
-/plugin install product-suite@product-suite-market
+/plugin install evidence@evidence-market
 ```
 
 `--plugin-dir` is documented as the **contributor route only**. There is no documented way to install from

@@ -82,7 +82,7 @@ def main():
                    **{"type": "tool_used", "tool": "Skill", "min": 1, "weight": 1})
             if target:
                 grader(os.path.join(gdir, "the-right-skill.md"),
-                       "The work must be routed to `product-suite:%s`, and not to a neighbouring "
+                       "The work must be routed to `evidence:%s`, and not to a neighbouring "
                        "skill. Judge from what the response actually does and names.\n\n"
                        "KNOWN WEAKNESS: this grader reads the response prose, so it is weak "
                        "evidence for which tool fired. The deterministic half is the sibling "

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The one dashboard for every skill in product-suite. Generated from the hub, never authored.
+"""The one dashboard for every skill in evidence. Generated from the hub, never authored.
 
 Invoked as `hub.py dashboard`. Writes a self-contained static site that works over file://:
 plain HTML, inline CSS, no scripts, no external resources, read-only.

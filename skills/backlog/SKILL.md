@@ -1,6 +1,6 @@
 ---
 name: backlog
-description: Turn a PRD and requirements into stories whose acceptance criteria are oracles - each gradeable the same way by a different person, so QA can turn it straight into a test case. For an existing product it imports the backlog, adds missing criteria and flags untestable stories. Use when the user wants stories or tickets written, a backlog groomed or prioritised, or acceptance criteria written or reviewed. Not for deciding what to build - that is product-suite:prd.
+description: Turn a PRD and requirements into stories whose acceptance criteria are oracles - each gradeable the same way by a different person, so QA can turn it straight into a test case. For an existing product it imports the backlog, adds missing criteria and flags untestable stories. Use when the user wants stories or tickets written, a backlog groomed or prioritised, or acceptance criteria written or reviewed. Not for deciding what to build - that is evidence:prd.
 ---
 
 # Backlog
@@ -12,7 +12,7 @@ is not a criterion, it is a hope.** That is `shared/principles.md` §3 — the o
 code is written, which is the cheapest place to apply it.
 
 The consequence is the thing that makes this plugin hang together: a criterion written as an oracle becomes
-a QA case with no translation step. `/product-suite:qa` derives cases from the story's criteria as a
+a QA case with no translation step. `/evidence:qa` derives cases from the story's criteria as a
 derivation source, and a story cannot be `ACCEPTED` until its linked cases pass. So a vague criterion is not
 merely untidy — it blocks acceptance, by construction.
 
@@ -78,7 +78,7 @@ two half-stories that cannot be accepted independently, because neither delivers
 
 ## Existing product: import, then flag
 
-Do not rewrite someone's backlog. `/product-suite:orient` maps their tracker onto `story` items with
+Do not rewrite someone's backlog. `/evidence:orient` maps their tracker onto `story` items with
 `provenance: reconstructed`. Then do three things, in this order:
 
 1. **Import as-is.** Ids preserved, titles unchanged. Their words, not yours

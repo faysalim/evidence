@@ -1,6 +1,6 @@
 ---
 name: requirements
-description: Turn a PRD and stakeholder input into numbered requirements traceable to the PRD, map the real business process including its exceptions, capture the business rules, and route every conflict to the operator as a decision memo instead of picking one reading. Use when the user wants requirements elicited or documented, a business process mapped, business rules captured, a legacy system specified, or conflicting stakeholder input resolved. Not for stories with acceptance criteria - that is product-suite:backlog.
+description: Turn a PRD and stakeholder input into numbered requirements traceable to the PRD, map the real business process including its exceptions, capture the business rules, and route every conflict to the operator as a decision memo instead of picking one reading. Use when the user wants requirements elicited or documented, a business process mapped, business rules captured, a legacy system specified, or conflicting stakeholder input resolved. Not for stories with acceptance criteria - that is evidence:backlog.
 ---
 
 # Requirements
@@ -86,7 +86,7 @@ Each bracket is either a requirement or a `decision`. **An exception with no sta
 ## Legacy systems
 
 For an existing product or a system being replaced, the specification is the behaviour, not the
-documentation. `/product-suite:orient`'s capability inventory is the starting point; where behaviour is
+documentation. `/evidence:orient`'s capability inventory is the starting point; where behaviour is
 undocumented:
 
 - **Observe it, and say that you observed it.** Mark the requirement `provenance: reconstructed`. A

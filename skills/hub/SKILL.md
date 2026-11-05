@@ -1,6 +1,6 @@
 ---
 name: hub
-description: Answer status questions from the shared work-item hub and render its dashboard: what is the status, what is waiting on me or on a role, what is blocked, show the traceability, validate the hub, and create items for roles with no skill of their own. Use when the user asks where something stands, what is waiting on whom, or wants the dashboard. Not for doing a role's work - use that role's skill: status reports with risks and milestones are product-suite:delivery, the ship verdict is product-suite:release, building and fixing are product-suite:dev. A question the hub cannot answer gets a plain does-not-know.
+description: Answer status questions from the shared work-item hub and render its dashboard: what is the status, what is waiting on me or on a role, what is blocked, show the traceability, validate the hub, and create items for roles with no skill of their own. Use when the user asks where something stands, what is waiting on whom, or wants the dashboard. Not for doing a role's work - use that role's skill: status reports with risks and milestones are evidence:delivery, the ship verdict is evidence:release, building and fixing are evidence:dev. A question the hub cannot answer gets a plain does-not-know.
 ---
 
 # Hub
@@ -142,7 +142,7 @@ it was authored. That is not pedantry: an imported "VERIFIED FIXED" that nobody 
 unearned pass this whole method exists to prevent.
 
 Where the prior artifacts are not a `qa-state.json` — a tracker export, a wiki, a spreadsheet — map them by
-hand with `add --provenance reconstructed`, and have `/product-suite:orient` record the mapping in the
+hand with `add --provenance reconstructed`, and have `/evidence:orient` record the mapping in the
 product profile so the next person does not invent a different one.
 
 ## The dashboard

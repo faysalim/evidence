@@ -1,10 +1,10 @@
 {
-  "name": "product-suite-market",
+  "name": "evidence-market",
   "owner": { "name": "faysalim", "url": "https://github.com/faysalim" },
   "description": "Evidence-first product development skills for a corporate product team.",
   "plugins": [
     {
-      "name": "product-suite",
+      "name": "evidence",
       "source": "./",
       "description": "One skill per deliverable across the product lifecycle, sharing one work-item hub and one dashboard."
     }

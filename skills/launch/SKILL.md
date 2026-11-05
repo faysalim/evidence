@@ -1,6 +1,6 @@
 ---
 name: launch
-description: Positioning, launch plan and customer-facing copy where every product claim links to a passing test case or is flagged unverified, and every price, limit and plan name is checked against the source of truth rather than the previous copy. Use when the user wants launch messaging, positioning, announcement or website copy, or a go-to-market plan written or reviewed. Not for the ship decision - that is product-suite:release.
+description: Positioning, launch plan and customer-facing copy where every product claim links to a passing test case or is flagged unverified, and every price, limit and plan name is checked against the source of truth rather than the previous copy. Use when the user wants launch messaging, positioning, announcement or website copy, or a go-to-market plan written or reviewed. Not for the ship decision - that is evidence:release.
 ---
 
 # Launch
@@ -68,7 +68,7 @@ the **structured data** says, what the checkout charges, and what the plan is ca
 UI. Those five disagree more often than any of them is wrong alone — and the structured data is the one
 nobody looks at, which is why it was the blocker.
 
-`/product-suite:qa`'s acquisition-surface scope exercises the same ground from the testing side; where both
+`/evidence:qa`'s acquisition-surface scope exercises the same ground from the testing side; where both
 run, reconcile once rather than filing twice.
 
 ## The launch plan
@@ -85,7 +85,7 @@ Short, and ordered by what is irreversible:
 5. **What support needs before, not after.** The three questions this launch will generate, with answers.
    Support finding out at launch is the most common self-inflicted launch failure.
 6. **The metric** that tells you whether the positioning worked, inheriting its definition from the PRD
-   (`/product-suite:analytics` reads it).
+   (`/evidence:analytics` reads it).
 
 ## New product and existing product
 

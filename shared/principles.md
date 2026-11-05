@@ -158,4 +158,4 @@ but its customers will.
 Things that sound like they belong here and do not, because they are decisions rather than rules:
 which methodology a team uses, which tracker, how long an iteration is, what the severity names are in the
 client's own system. Those are the operator's, recorded in the product profile by
-`/product-suite:orient` and mapped once — never imposed.
+`/evidence:orient` and mapped once — never imposed.

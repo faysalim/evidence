@@ -66,13 +66,13 @@ Proved in a **cold** `claude -p` session against a marketplace install:
 3. A shared script runs from the expanded path via model-run Bash. PASS on Windows.
 4. `claude plugin details`: `~79 tok` always-on for one skill; `~80`/`~280` per component. PASS.
 
-Throwaway scaffold lives at `E:/Personal/projects/product-suite-scaffold` and is installed at user scope as
-`product-suite-scaffold@product-suite-scaffold-market`. **Clean-up at the end:**
+Throwaway scaffold lives at `E:/Personal/projects/evidence-scaffold` and is installed at user scope as
+`evidence-scaffold@evidence-scaffold-market`. **Clean-up at the end:**
 
 ```bash
-claude plugin uninstall product-suite-scaffold@product-suite-scaffold-market
-claude plugin marketplace remove product-suite-scaffold-market
-rm -rf /e/Personal/projects/product-suite-scaffold
+claude plugin uninstall evidence-scaffold@evidence-scaffold-market
+claude plugin marketplace remove evidence-scaffold-market
+rm -rf /e/Personal/projects/evidence-scaffold
 ```
 
 ## Self-found, to fix in the post-council apply pass
@@ -84,7 +84,7 @@ reads stay valid. All three are mine.
 |---|---|---|
 | `SF-1` | **`.gitignore:8` (`qa-state.json`) silently excluded both fixtures' generated view.** `fix-state.json` is committed, `qa-state.json` is not, so a clone gets half a fixture — and `tests/test_fixtures.py` cannot catch it because it rebuilds from scratch rather than reading the committed copy. The ignore rule was written for a QA repo where `qa-state.json` held real engagement data; it is now also a legitimate committed artifact under `tests/fixtures/`. | Scope the ignore to the repo root, or negate it under `tests/fixtures/`. **And add a check** that every file the fixtures' README claims is committed, is committed — the durable fix, since the rule is "the repo cannot lie about itself" |
 | `SF-2` | **`evals/results/` is committed** — 14 files of run reports including HTML. Run artefacts, not source, and the same class as the existing ignore rule about QA run artefacts. | gitignore it and remove it from the index |
-| `SF-3` | **`NOTICE` still names `product-qa`.** | Rename to `product-suite` |
+| `SF-3` | **`NOTICE` still names `product-qa`.** | Rename to `evidence` |
 
 ## NOT RUN — carried to the final report, never silently passed
 

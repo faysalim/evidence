@@ -183,7 +183,7 @@ def check_lint():
             for m in re.finditer(r'(?<![:\w/>])/%s(?![\w-])' % re.escape(name), text):
                 line = text[:m.start()].count("\n") + 1
                 fail("lint", "%s:%d writes the bare `/%s` form. Bare names resolve by an origin "
-                             "order we do not control; document /product-suite:%s."
+                             "order we do not control; document /evidence:%s."
                      % (rel(path), line, name, name))
                 bad += 1
     if not bad:

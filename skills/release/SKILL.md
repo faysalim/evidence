@@ -1,6 +1,6 @@
 ---
 name: release
-description: Call a release: compute the go/no-go from the hub rather than asserting it, state the bounds the verdict covers and what it does not, write release notes from what actually shipped, and record the operator's decision when they ship without a green. Use when the user asks whether something is ready to ship, or wants a go/no-go, release-readiness assessment or release notes. Not for testing the build - that is product-suite:qa.
+description: Call a release: compute the go/no-go from the hub rather than asserting it, state the bounds the verdict covers and what it does not, write release notes from what actually shipped, and record the operator's decision when they ship without a green. Use when the user asks whether something is ready to ship, or wants a go/no-go, release-readiness assessment or release notes. Not for testing the build - that is evidence:qa.
 ---
 
 # Release
@@ -96,7 +96,7 @@ hub.py list --type finding --state CLOSED
 - **Do not list what did not ship.** Deferred work goes in the plan, not the notes.
 - **Every claim in the notes is checkable.** If a note says "export is now 3× faster", the measurement
   exists as a `case` or a `metric`, or the note does not go in. This is `shared/principles.md` §2 applied
-  to customer-facing prose, and `/product-suite:launch` enforces the same rule on marketing copy.
+  to customer-facing prose, and `/evidence:launch` enforces the same rule on marketing copy.
 
 ## New product and existing product
 

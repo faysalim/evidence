@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The work-item hub: the only write path for every skill in product-suite.
+"""The work-item hub: the only write path for every skill in evidence.
 
 Design, in one paragraph. Many writers touch this hub -- parallel agents, sessions hours apart,
 different machines reconciled by git -- so there is no shared mutable file and no lock. Each

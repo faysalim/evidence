@@ -6,7 +6,7 @@ min: 1
 weight: 2
 ---
 
-The work must route to `product-suite:hub`. Deterministic: this matches the actual Skill
+The work must route to `evidence:hub`. Deterministic: this matches the actual Skill
 tool call in the trace, including the namespaced form. The earlier version asked an llm
 judge to infer the tool call from the response prose, which voted FAIL on runs whose
 traces prove the right skill fired -- the product reporting on itself, which this

@@ -1,6 +1,6 @@
 ---
 name: orient
-description: Establish the product profile and baseline before any other skill runs: new or existing product, its product class, the team's methodology, toolchain and existing conventions. For an existing product it builds a capability inventory from the running product and maps their artifacts onto hub item types. Use when starting work on an unfamiliar product or repo, or when another skill reports no profile. Not for testing - that is product-suite:qa.
+description: Establish the product profile and baseline before any other skill runs: new or existing product, its product class, the team's methodology, toolchain and existing conventions. For an existing product it builds a capability inventory from the running product and maps their artifacts onto hub item types. Use when starting work on an unfamiliar product or repo, or when another skill reports no profile. Not for testing - that is evidence:qa.
 ---
 
 # Orient
@@ -77,7 +77,7 @@ and it goes in the profile as a gap rather than a convention. Say it plainly and
 
 ## Step 4 — For an existing product: inventory the product, not the documents
 
-This is the heart of the skill, and it is `/product-suite:qa`'s Step 1 applied before anyone tests
+This is the heart of the skill, and it is `/evidence:qa`'s Step 1 applied before anyone tests
 anything. **Establish each of these from the artifact, and record how you established it:**
 
 | What | How |
@@ -101,7 +101,7 @@ Existing products arrive with artifacts. Map rather than rewrite:
 
 | They have | Becomes | Note |
 |---|---|---|
-| A backlog or tracker export | `story` items | `provenance: reconstructed`. Stories with no testable criterion are flagged, not fixed — that is `/product-suite:backlog` |
+| A backlog or tracker export | `story` items | `provenance: reconstructed`. Stories with no testable criterion are flagged, not fixed — that is `/evidence:backlog` |
 | A PRD, spec or wiki page | `prd`, `requirement` | A reconstructed current-state PRD comes first; the change is a delta against it |
 | An architecture diagram or ADR folder | `adr` | Record the architecture that *is*, then the decision to change it |
 | A bug tracker | `finding` | Ids preserved. States **not** inherited: nobody verified them here |
@@ -141,7 +141,7 @@ rather than substance.
 ## Open questions
 
 - Whether the capability inventory should become `case` items directly (one per route, env var and flag) or
-  stay a profile artifact that `/product-suite:qa` derives from. Today it is the latter; the former would
+  stay a profile artifact that `/evidence:qa` derives from. Today it is the latter; the former would
   make coverage computable from the hub alone.
 - Whether `conventions.md` belongs in the hub as an item with a lifecycle, so changing a convention is an
   event with an owner rather than a file edit.

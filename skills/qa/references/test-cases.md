@@ -152,7 +152,7 @@ who disagrees with your enumeration can say so. Eight sources, in order of autho
    id `J-<n>`, owned by **one** agent or the lead, run as a single actor with **no operator-supplied
    shortcut at any step**. Per-family `PASS` rows do not sum to a journey: the origin engagement's trial
    flow was broken end to end while the form, the issuing API and the activation each passed in isolation.
-8. **The story's acceptance criteria, one row per gradeable clause.** `/product-suite:backlog`
+8. **The story's acceptance criteria, one row per gradeable clause.** `/evidence:backlog`
    writes them as oracles precisely so they arrive here needing no translation — but a criterion
    with three clauses is three cases, not one. The fixture's own story asked for delivery within
    five minutes, offline activation, and a 14-day expiry, and the single linked case covered one

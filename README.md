@@ -1,4 +1,4 @@
-# product-suite
+# evidence
 
 A Claude Code plugin for product development: **one skill per deliverable, every role covered, all sharing
 one work-item hub and one dashboard.** Evidence-first, and honest about what it did not check.
@@ -20,11 +20,11 @@ the rules are stated once in `shared/principles.md` rather than fifteen times.
 ## Install
 
 ```
-/plugin marketplace add faysalim/product-qa-skill
-/plugin install product-suite@product-suite-market
+/plugin marketplace add faysalim/evidence
+/plugin install evidence@evidence-market
 ```
 
-Skills are then invoked as `/product-suite:qa`, `/product-suite:dev`, `/product-suite:hub` and so on —
+Skills are then invoked as `/evidence:qa`, `/evidence:dev`, `/evidence:hub` and so on —
 **always namespaced.** Bare names resolve by an origin order nobody controls, and `docs` already collides
 with a skill that ships by default, which is why this plugin's writer skill is `docs-authoring`.
 
@@ -53,8 +53,8 @@ does not inherit the old verdicts, because nobody verified them here.
 ### Contributor install
 
 ```bash
-git clone https://github.com/faysalim/product-qa-skill.git
-claude --plugin-dir ./product-qa-skill
+git clone https://github.com/faysalim/evidence.git
+claude --plugin-dir ./evidence
 ```
 
 That loads the plugin in place for one session, which is the right loop for editing it. It is **not** the
@@ -127,7 +127,7 @@ python shared/scripts/hub.py --actor you --role QA iteration 1
 python shared/scripts/hub.py --actor you --role QA add case S1-01 -f action="..." -f oracle="..."
 ```
 
-`/product-suite:hub` has the six-command first engagement and the conventions the verdict reads.
+`/evidence:hub` has the six-command first engagement and the conventions the verdict reads.
 The options work before or after the subcommand.
 
 **Storage is one append-only log per actor** — `hub/events/<role>/<actor>.jsonl` — so no two writers ever
@@ -198,7 +198,7 @@ python -I tests/test_description_budget.py      # the measured always-on cost
 python -I tests/triggers/check_overlap.py       # trigger overlap, from the descriptions
 python -I tests/fixtures/build.py --all         # rebuild both fixtures end to end
 claude plugin validate .
-claude plugin eval product-suite --eval-dir evals
+claude plugin eval evidence --eval-dir evals
 ```
 
 The repo checks replace the old "a PR must update these four places" rule. A rule that depends on

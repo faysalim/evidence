@@ -1,6 +1,6 @@
 ---
 name: architecture
-description: Document the architecture a product actually has before changing it, then write the technical design as a change against that, recording each consequential choice as an ADR with the options rejected and what would prove it wrong. Covers the durability, consistency and failure-mode contracts the product class implies. Use when the user wants a technical design, ADR, system diagram, or an existing system's architecture documented. Not for product scope - that is product-suite:prd.
+description: Document the architecture a product actually has before changing it, then write the technical design as a change against that, recording each consequential choice as an ADR with the options rejected and what would prove it wrong. Covers the durability, consistency and failure-mode contracts the product class implies. Use when the user wants a technical design, ADR, system diagram, or an existing system's architecture documented. Not for product scope - that is evidence:prd.
 ---
 
 # Architecture
@@ -11,14 +11,14 @@ Two rules govern this skill, and both come from the same place.
 
 **Document what is, before designing what changes.** For an existing product the architecture in anyone's
 head is a few years stale, and a design written against it specifies a system that does not exist.
-`/product-suite:orient` establishes which build is live and what the product really exposes; this skill
+`/evidence:orient` establishes which build is live and what the product really exposes; this skill
 turns that into a current-state architecture and then designs the delta.
 
 **State the contracts, especially the ones nobody has written down.** What consistency does the store
 promise? What happens to an acknowledged write when a node dies? Is delivery at-least-once or
 exactly-once? The product class in `${CLAUDE_PLUGIN_ROOT}/shared/domains/` tells you which contracts are
 load-bearing. **An absent contract is the first finding, not a gap to fill with an assumption** — because
-`/product-suite:qa` will grade the behaviour at the severity its consequence earns regardless, and
+`/evidence:qa` will grade the behaviour at the severity its consequence earns regardless, and
 customers will too.
 
 Items move only through `python "${CLAUDE_PLUGIN_ROOT}/shared/scripts/hub.py"`.
