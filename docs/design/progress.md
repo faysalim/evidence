@@ -10,34 +10,30 @@ rewrite history or delete branches.
 
 ## Where we are
 
-**DONE.** Build complete, two council-and-verify rounds complete, final report written.
+**Published and exercised.** https://github.com/faysalim/evidence — MIT, installable, and the
+README's own install commands were run against the real remote with the whole suite then run from
+the resulting install.
 
-Read `docs/design/final-report.md` first. `council-review.md` has all 66 defects with repros and
-dispositions; `plugin.md` has the design and its 13 decisions; `round1-changelog.md` holds the
-message that commit `0d4c25f` lost to shell quoting.
+Read `docs/design/exercise.md` first: seven skills run against a real product, twelve defects in
+the suite and two in the product. Then `final-report.md` §7, `council-review.md` for the earlier
+66, `listing-budget.md` for why the two-plugin split was rejected.
 
-**Published 2026-11-05** at https://github.com/faysalim/evidence — `main` at `063e563`,
-212 files, Apache-2.0 detected. Renamed `product-suite` → `evidence` first, and the repo was
-created with an MIT default that the push replaced.
+**Statuses:** proven 2 (qa, dev) · exercised 7 (hub, orient, delivery, release, docs-authoring,
+launch, requirements) · draft 6 (analytics, architecture, backlog, design, discovery, prd).
+Enforced by `check_repo.py coverage`, because the README has been wrong about this count twice.
 
-**`PE-1` is CLOSED.** The README's two install commands were run verbatim against the real remote,
-and then the whole suite was run from the resulting install: 8 of 9 suites pass from
-`~/.claude/plugins/marketplaces/evidence-market`, `check_repo.py` 7/7, both fixtures rebuild with
-`validate` clean. That is what proves the `${CLAUDE_PLUGIN_ROOT}` paths resolve as installed.
+**13 suites pass.** `test_description_budget.py` fails on purpose: the listing cost is a standing
+conscience about what this plugin costs everyone else, and the verified remedy for a real machine
+is `{"skillListingBudgetFraction": 0.02}` in `~/.claude/settings.json`.
 
-**`PE-2` is resolved, and my diagnosis of it was wrong.** The listing was over budget because this
-machine has **85 skills / 37,942 chars**, not because this plugin has 15. It is 19% of that; removing
-it entirely would still overflow. The fix is `{"skillListingBudgetFraction": 0.02}` in
-`~/.claude/settings.json`, measured: `0.013` is the first value that fits. **The two-plugin split is
-rejected** — it would need a second copy of `shared/`, which is the drift failure `principles.md`
-opens by naming. See `docs/design/listing-budget.md`.
+**Nothing is blocking.** What remains is work only a real engagement can do:
 
-Nothing is blocking. Open items are the three LOW defects and four design limits in
-`council-review.md`, plus: no skill declares its role or status in machine-readable form, so "every
-role is covered" is a prose claim no check can verify.
-
-The old `product-qa-skill` repo and this repo's `origin` are untouched, and the local directory is
-still named `product-qa`. The remote `plugin-suite` branch duplicates `main` and can be deleted.
+- Six drafts have never been pointed at a product. Their commands run, their states are checked
+  against the model, and the profile contract is enforced for them — but that is a different
+  claim and the README says so.
+- `discovery` is NOT RUN for a stated reason: its method needs real users.
+- Four design limits and the `skillOverrides` question remain documented in `council-review.md`
+  and `listing-budget.md`.
 
 ## Test status
 

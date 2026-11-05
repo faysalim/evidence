@@ -185,7 +185,56 @@ design limits recorded rather than fixed, the most notable being that a hand-wri
 replays without a problem — the computed-verdict check is a write-time precondition and cannot be
 re-evaluated later, though the dashboard still shows `NOT GREEN` so the disagreement is visible.
 
-## 7. Install and try it
+## 7. Exercised against a real product — 2026-11-05
+
+The twelve unproven skills had never been run. Seven now have been, against a live
+distributed data store, its real docs and its real public comparison page.
+
+**Twelve defects in the suite, two in the product.** The first appeared inside twenty minutes.
+`docs/design/exercise.md` lists every one with severity and what it broke; the largest:
+
+- `orient` promises "have **every** downstream skill read" the profile and `conventions.md`.
+  **Two of fifteen did.** `analytics`, `architecture`, `launch`, `prd` and `release` referenced
+  neither — exactly the skills that otherwise guess the product class and impose vocabulary on a
+  team. Thirteen skills now carry the step and `check_repo.py coverage` fails if any drops it.
+- `hub.py status` on an empty hub told the reader to run `hub.py init`, which is **rejected** for
+  missing `--actor`/`--role`. The first thing a new engagement saw was advice that fails.
+- `orient` Step 6 requires stating what you could not establish and warns that downstream skills
+  "will otherwise assume you looked" — and the field it wrote was **read by nothing**.
+- Enumerating a capability inventory "from code" with no scope rule: my own first count read
+  compiled DLLs and reported 154 environment variables against a real 102.
+
+**Statuses now:** `proven` 2 (`qa`, `dev`) · `exercised` 7 (`hub`, `orient`, `delivery`,
+`release`, `docs-authoring`, `launch`, `requirements`) · `draft` 6 (`analytics`,
+`architecture`, `backlog`, `design`, `discovery`, `prd`). The count is enforced, because the
+README has already been wrong about it twice.
+
+`discovery` is **NOT RUN** and cannot be exercised here: its method needs real users to
+interview, and inventing them would be the exact failure the suite exists to prevent.
+
+**Three new checks, each proven to fail before it was accepted:** every documented `hub.py`
+command is now executed in document order as the role its skill declares (26 commands);
+every state named in prose is checked against the model; and every role, status and
+README count is enforced.
+
+**The three LOW defects left open after the review rounds are closed**, and reproducing them
+showed two were understated: `validate` exited 0 over a hub that did not exist, and a single
+stray byte raised a traceback out of the fold rather than reporting one bad line. The third
+was recorded as cosmetic and is page-level data loss — `F-1` and `f-1` wrote one dashboard
+page between them.
+
+### Two product findings, handed back
+
+**57 of 102 production environment variables are undocumented**, three documented names do not
+exist in the code, and the undocumented set includes `ZARIS_CLIENT_PORT` and
+`ZARIS_CLUSTER_PORT`. Denominator and exclusions stated in `exercise.md`.
+
+**A public comparison claim is unfalsifiable as published:** "18.5M ops/sec at 3 nodes vs Redis
+7.57M", with no rig, workload, baseline or link — directly below a row that *is* qualified. Two
+evidence standards in one table. `skills/launch` already names this as a defect in itself, so
+this is the skill working rather than a gap in it.
+
+## 8. Install and try it
 
 The plugin is already installed on this machine from the working tree, so you can use it now:
 
