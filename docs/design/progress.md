@@ -14,6 +14,13 @@ rewrite history or delete branches.
 README's own install commands were run against the real remote with the whole suite then run from
 the resulting install.
 
+**NOT PUSHED: commit `81c4141`** (the second exercise — `architecture` and `prd`). `git push
+evidence plugin-suite:main` was denied by the auto-mode permission classifier as Data Exfiltration.
+Not worked around. The commit is local, the tree is clean, and `check_repo` plus 15 of 16 suites
+pass on it. Remote `main` is still at `ec4578d`, so the public repo currently shows
+`architecture` and `prd` as `draft` and the uncorrected "57 of 102" product finding. The push needs
+the operator.
+
 Read `docs/design/exercise.md` first: **two exercises**. Seven skills against a real product's code
 and docs (twelve suite defects, two product); then `architecture` and `prd` against the same
 product's own certification artifacts (eight suite defects, six product, and one correction — the
