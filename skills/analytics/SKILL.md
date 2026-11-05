@@ -2,12 +2,12 @@
 name: analytics
 description: Read product metrics against the denominator and baseline the PRD stated, compare to that baseline rather than a feeling, write the post-launch review including the metrics that did not move, and feed findings back as insights. Use when the user wants metrics read or defined, a launch or experiment assessed, a funnel or retention analysed, or a post-launch review. Not for defining success criteria - that is evidence:prd. Not for instrumenting code - that is evidence:dev. Not for qualitative research - that is evidence:discovery.
 roles: ANALYST
-status: draft
+status: exercised
 ---
 
 # Analytics
 
-`status: draft` — see `${CLAUDE_SKILL_DIR}/README.md`.
+`status: exercised` -- run against a real product; weaker than `proven`. See `${CLAUDE_SKILL_DIR}/README.md`.
 
 Analytics is where a denominatorless number does the most damage, because a number looks like evidence
 even when it is not. *"Activation is up 12%"* — of what, measured how, compared to when, excluding which
@@ -59,6 +59,9 @@ name          Activation rate
 definition    % of signups completing first success within 7 days
 denominator   signups in the period, EXCLUDING internal, test and reactivated accounts
 baseline      measured value, with the window it was measured over
+evidence      WHERE the baseline came from -- the artifact, query or document, quoted
+              Required to reach `BASELINED`. A reading already had to be sourced; the
+              baseline every reading is later compared against did not, which is backwards
 target        value and date, from the PRD
 instrumented  which events, since when -- and whether the window predates instrumentation
 window        the period this reading covers, and why that period
@@ -76,13 +79,24 @@ younger than the window, the honest reading is "not measurable yet", which the h
 2. **State the denominator in the result, every time.** `1,240 of 9,870 signups (12.6%)`, not `12.6%`. The
    percentage alone cannot be sanity-checked by anyone.
 3. **Compare to the stated baseline**, not to last week and not to a recollection. If the baseline was
-   never measured, say that — the comparison does not exist and no amount of analysis creates it.
-4. **Segment before concluding.** An aggregate that did not move often hides two segments moving in
+   never measured, say that — the comparison does not exist and no amount of analysis creates it. And
+   **read the denominator off the instrument, never off the PRD's recollection of it.** Exercising this
+   skill, a baseline inherited as "49 of 512" turned out to be 49 of **128** — the product states its
+   own bound in the validation artifact — so the rate was 38%, not 9.6%. A factor of four, from one
+   number nobody had to source. That is why `evidence` is now required to reach `BASELINED`.
+4. **For a product with repeated acceptance runs, the unit of analysis is the series, not the run.**
+   Reading the latest run — or the one that happens to be open — is a selection effect with the same
+   shape as reporting only the metrics that improved. Exercising this skill against three
+   certification rungs of one product: the 4-hour run was clean on durability (0 missing of 3.1M
+   keys) and the 3-hour run had **lost two acknowledged keys**. A confident "durability is clean,
+   this is an availability problem" came from reading one of the three. List the runs you read *and
+   the ones you did not*, the way you list the metrics that did not move.
+5. **Segment before concluding.** An aggregate that did not move often hides two segments moving in
    opposite directions, which is a different finding with a different action.
-5. **Check the instrumentation against reality.** Count the events, then count the thing they claim to
+6. **Check the instrumentation against reality.** Count the events, then count the thing they claim to
    count, independently. A funnel step that reports zero is usually a tracking bug; this is §3 — the
    product's own counters are the thing under test, not the oracle.
-6. **Report what did not move.** A post-launch review listing only the metrics that improved is a selection
+7. **Report what did not move.** A post-launch review listing only the metrics that improved is a selection
    effect, and everyone reading it knows that, which is why they stop trusting the reviews.
 
 ## The post-launch review

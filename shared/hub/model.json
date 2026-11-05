@@ -1288,7 +1288,8 @@
           ],
           "requires_fields": [
             "denominator",
-            "baseline"
+            "baseline",
+            "evidence"
           ]
         },
         {

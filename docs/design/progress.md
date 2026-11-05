@@ -18,26 +18,31 @@ Both exercises are on `main` (`ec4578d..8971046`). The second one's push was den
 permission classifier as Data Exfiltration and was **not** worked around; the operator ran it. Worth
 keeping in the record: pushing is an operator action here, so plan for it rather than assume it.
 
-Read `docs/design/exercise.md` first: **two exercises**. Seven skills against a real product's code
+Read `docs/design/exercise.md` first: **three exercises**. Seven skills against a real product's code
 and docs (twelve suite defects, two product); then `architecture` and `prd` against the same
 product's own certification artifacts (eight suite defects, six product, and one correction — the
 first exercise's published "57 of 102" could not be reproduced, and the method that let me state a
 denominator in prose is what is fixed). Then `final-report.md` §7, `council-review.md` for the
 earlier 66, `listing-budget.md` for why the two-plugin split was rejected.
 
-**Statuses:** proven 2 (qa, dev) · exercised 9 (hub, orient, delivery, release, docs-authoring,
-launch, requirements, architecture, prd) · draft 4 (analytics, backlog, design, discovery).
+The third pointed `analytics` at the product's three certification rungs instead of one, and
+`backlog` at its real 29-id requirements document: six suite defects, five product, and the most
+serious finding of the three -- **the 3-hour rung lost two acknowledged keys**, which corrects the
+second exercise's own "durability is clean" claim, made from the one run I happened to open.
+
+**Statuses:** proven 2 (qa, dev) · exercised 11 (hub, orient, delivery, release, docs-authoring,
+launch, requirements, architecture, prd, analytics, backlog) · draft 2 (design, discovery).
 Enforced by `check_repo.py coverage`, because the README has been wrong about this count twice —
 and the check now also compares each skill's frontmatter with its own body banner, after seven
 files were found disagreeing with themselves.
 
-**15 of 16 suites pass.** `test_description_budget.py` fails on purpose: the listing cost is a
+**17 of 18 suites pass.** `test_description_budget.py` fails on purpose: the listing cost is a
 standing conscience about what this plugin costs everyone else, and the verified remedy for a real
 machine is `{"skillListingBudgetFraction": 0.02}` in `~/.claude/settings.json`.
 
 **Nothing is blocking.** What remains is work only a real engagement can do:
 
-- Four drafts have never been pointed at a product. Their commands run, their states are checked
+- Two drafts have never been pointed at a product. Their commands run, their states are checked
   against the model, and the profile contract is enforced for them — but that is a different
   claim and the README says so.
 - `discovery` is NOT RUN for a stated reason: its method needs real users.

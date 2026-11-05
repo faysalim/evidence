@@ -154,7 +154,8 @@ def main():
         cli(hub, "an", "ANALYST", "add", "metric", "MM-1", "-f", "name=x",
             "-f", "denominator=signups, excluding internal")
         rc = cli(hub, "an", "ANALYST", "move", "MM-1", "BASELINED",
-                 "-f", "denominator=signups", "-f", "baseline=0")
+                 "-f", "denominator=signups", "-f", "baseline=0",
+                 "-f", "evidence=counted the rows; there were none")
         check("   but a baseline of 0 is still a reading", rc == 0, "rc=%r" % rc)
 
         print("\nreplay gaps -- a hand-written line must not do what the CLI refuses")

@@ -313,7 +313,8 @@ def build_existing(hub):
     # --- analytics: a reading the analyst makes and the PM interprets -----------------------
     run(hub, "analyst", "ANALYST", "move", "M-1", "BASELINED",
         "-f", "denominator=trials started, excluding internal and test mailboxes",
-        "-f", "baseline=no prior self-serve trials existed; this reading IS the baseline")
+        "-f", "baseline=no prior self-serve trials existed; this reading IS the baseline",
+        "-f", "evidence=signup table, 2026-02-01..2026-03-02; no trial rows before 2026-02-01")
     run(hub, "analyst", "ANALYST", "move", "M-1", "READ",
         "-f", "value=19 of 240 trials converted within 30 days (7.9%)",
         "-f", "denominator=240 trials started in the 30 days after launch",

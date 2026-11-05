@@ -115,8 +115,8 @@ matches the declarations.** Three levels, and a skill may not claim more than it
 | Status | Means | Skills |
 |---|---|---|
 | `proven` | Carries a real engagement's provenance, where its absence cost something | `qa`, `dev` |
-| `exercised` | Run against a real product by its author, defects found and fixed. **Weaker than proven** — principle 7 says the author does not grade their own work | `hub`, `orient`, `delivery`, `release`, `docs-authoring`, `launch`, `requirements`, `architecture`, `prd` |
-| `draft` | Written from first principles, never run. Exactly what `CONTRIBUTING.md` warns against | **Four are marked `status: draft`** — `analytics`, `backlog`, `design`, `discovery` |
+| `exercised` | Run against a real product by its author, defects found and fixed. **Weaker than proven** — principle 7 says the author does not grade their own work | `hub`, `orient`, `delivery`, `release`, `docs-authoring`, `launch`, `requirements`, `architecture`, `prd`, `analytics`, `backlog` |
+| `draft` | Written from first principles, never run. Exactly what `CONTRIBUTING.md` warns against | **Two are marked `status: draft`** — `design`, `discovery` |
 
 That last count is checked, not asserted. It had to be: this README claimed thirteen, was corrected to
 eleven, and both were wrong, because `orient` carried no marker at all and so was invisible to a hand
@@ -131,7 +131,7 @@ that *every* downstream skill reads the profile and `conventions.md`, and two of
 referenced neither, which are exactly the skills that would otherwise guess the product class and
 impose vocabulary on a team. Every defect is listed in `docs/design/exercise.md` with what it broke.
 
-The four drafts are not untested — every documented command in all fifteen is executed by
+The two drafts are not untested — every documented command in all fifteen is executed by
 `tests/test_documented_commands.py`, every state they name is checked against the model, and the
 profile contract is enforced for all of them. They have simply never been pointed at a real product,
 and that is a different claim.

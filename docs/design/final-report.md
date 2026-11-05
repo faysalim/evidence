@@ -240,9 +240,31 @@ suite's own untested invention. None of the team's five Decisions states one —
 dated `## Addendum` recording that the decision was later found wrong. Those addenda are
 falsifiers, written after a failed run paid for them.
 
-**Statuses now:** `proven` 2 (`qa`, `dev`) · `exercised` 9 (`hub`, `orient`, `delivery`,
-`release`, `docs-authoring`, `launch`, `requirements`, `architecture`, `prd`) · `draft` 4
-(`analytics`, `backlog`, `design`, `discovery`). The count is enforced, because the README has
+### 7c. A third exercise - `analytics` and `backlog`
+
+`analytics` against the product's three certification rungs rather than one; `backlog` against its
+real 29-id requirements document. Six suite defects, five product, and the most serious finding of
+all three exercises:
+
+- **The 3-hour rung lost two acknowledged keys** (`NotFound` at final validation, absent from the
+  acknowledgement snapshot's Deleted, Ambiguous and Failed sets). §7b reported "durability is
+  clean" -- true of the 4-hour rung, which was the one I opened. `analytics` now makes the
+  **series** the unit of analysis, because reading one run of several is a selection effect with the
+  same shape as reporting only the metrics that improved.
+- **A baseline needed no evidence while a reading did.** Exactly backwards: the baseline is what
+  every later reading is compared against. I was its victim first -- §7b's "49 of 512" was
+  inferred, and the instrument states its own bound as 128 per pass, so the rate was 38%, not 9.6%.
+- **`backlog`'s criterion test passed a criterion citing an authority that does not exist** --
+  "within the documented RTO", where no RTO with a value exists in the repository. The most
+  convincing kind of untestable criterion, because it reads as rigour.
+- **9 acceptance criteria governed 29 requirement ids**, so one P0 requirement was covered by no
+  clause while its theme displayed a perfectly good criterion.
+- **`link_types` was declared in the model and enforced nowhere on write** -- and §7b had just put
+  an undeclared one into `architecture` as the prescribed command.
+
+**Statuses now:** `proven` 2 (`qa`, `dev`) · `exercised` 11 (`hub`, `orient`, `delivery`,
+`release`, `docs-authoring`, `launch`, `requirements`, `architecture`, `prd`, `analytics`,
+`backlog`) · `draft` 2 (`design`, `discovery`). The count is enforced, because the README has
 already been wrong about it twice.
 
 `discovery` is **NOT RUN** and cannot be exercised here: its method needs real users to

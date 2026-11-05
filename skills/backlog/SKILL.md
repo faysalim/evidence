@@ -2,12 +2,12 @@
 name: backlog
 description: Turn a PRD and requirements into stories whose acceptance criteria are oracles - each gradeable the same way by a different person, so QA can turn it straight into a test case. For an existing product it imports the backlog, adds missing criteria and flags untestable stories. Use when the user wants stories or tickets written, a backlog groomed or prioritised, or acceptance criteria written or reviewed. Not for deciding what to build - that is evidence:prd.
 roles: PO
-status: draft
+status: exercised
 ---
 
 # Backlog
 
-`status: draft` — see `${CLAUDE_SKILL_DIR}/README.md`.
+`status: exercised` -- run against a real product; weaker than `proven`. See `${CLAUDE_SKILL_DIR}/README.md`.
 
 This skill exists for one sentence: **an acceptance criterion a different person cannot grade the same way
 is not a criterion, it is a hope.** That is `shared/principles.md` §3 — the oracle rule — applied before any
@@ -29,6 +29,15 @@ Before a criterion goes in, it must survive four questions:
    complete", not "no errors in the log". `shared/principles.md` §3.
 3. **What is the input that would make this fail?** If you cannot name one, the criterion asserts nothing.
 4. **Could a stranger grade it without asking you?** If not, rewrite it.
+5. **If the criterion cites an authority, open it.** A documented SLO, a spec, a runbook, "the documented
+   RTO", "the published limits" — go and read it, and check it states a *value*. **A citation to a
+   document that does not say is the most convincing kind of untestable criterion**, because it passes
+   question 2 with flying colours: "the documented RTO" is a perfectly good answer to "what independently
+   says pass or fail?" until you discover nothing documents it. Exercising this skill found exactly that:
+   a requirement read *"a full-cluster restart restores data from the latest snapshot within the
+   documented RTO"*, and no RTO with a number existed anywhere in the repository. That criterion cannot
+   be graded by anyone, and it is the one that looks the most rigorous on the page. Same shape as a false
+   `Enforced:` line — see `shared/principles.md` §3.
 
 | Not a criterion | A criterion |
 |---|---|
@@ -92,9 +101,28 @@ Do not rewrite someone's backlog. `/evidence:orient` maps their tracker onto `st
    yourself picks an interpretation on the team's behalf, which is the failure
    `shared/principles.md` §10 names.
 
+**Check the grain of their criteria against the grain of their ids.** This is the import defect that
+hides best. Exercising this skill against a real requirements document found **29 requirement ids
+(`CR-A1`…`CR-I2`) governed by 9 theme-level `Acceptance:` lines** — so one criterion covered up to four
+requirements, and some requirements were covered by **no clause at all** while their theme displayed a
+perfectly good acceptance criterion.
+
+The worked case: theme D held `CR-D1` (lossless scale-in drain), `CR-D2` (HPA/KEDA autoscaling with a
+documented step-size and cooldown policy) and `CR-D3` (spot reclamation), under two clauses — "repeated
+automated scale-in/out under load loses **0** keys" and "spot reclamation keeps the store serving with
+RF≥2". Clause one covers D1. Clause two covers D3. **Nothing covers D2's documented policy**, and clause
+one would pass with D1 shipped and D2 never written, because a manual scale-in can lose zero keys with
+no autoscaling policy in existence.
+
+A coarser-grained criterion does not merely under-specify: it makes the gap invisible, because the
+theme *has* a criterion. So count both grains and report the pair, not one number.
+
 A useful number to report, with its denominator: *"of 34 stories in the next two sprints, 11 have criteria
 that can be graded by someone other than their author; 23 do not."* That is a measurement of the backlog,
-and it is usually the most surprising thing this skill produces.
+and it is usually the most surprising thing this skill produces. Report the coverage **grain** beside it,
+and count it rather than estimate it: *"9 acceptance criteria govern 29 requirement ids; every criterion
+is stated per theme and none per id."* Then work the uncovered ids case by case — that is a grading, so
+say who graded it, because one reader's grading is a reading and not a verdict (§7).
 
 ## Prioritising
 

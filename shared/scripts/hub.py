@@ -1209,6 +1209,22 @@ def cmd_link(args):
     for side in (args.id, args.target):
         if side not in h.items:
             raise HubError("no item %s in the hub; a link must join two real items" % side)
+    # `link_types` is declared in the model and was enforced nowhere on write. `link A
+    # blocked_by B` printed `A --blocked_by--> B` and exited 0; `validate` then mentioned it as a
+    # NOTE, which does not fail. Exercising `architecture` put exactly that into a skill as the
+    # prescribed command, so a reader would have run something that succeeds and records what the
+    # hub cannot read -- worse than a command that fails, because nothing says so.
+    declared = h.model.get("link_types") or []
+    if declared and args.rel not in declared:
+        import difflib
+        near = difflib.get_close_matches(args.rel, declared, n=3, cutoff=0.55)
+        near += [d for d in declared
+                 if d not in near and (d in args.rel or args.rel in d)]
+        raise HubError(
+            "%r is not a link type. The model declares %s.%s A link the hub cannot read is "
+            "worse than one it refuses: the write succeeds and nothing downstream sees it."
+            % (args.rel, ", ".join(sorted(declared)),
+               (" Did you mean %s?" % ", ".join(near[:3])) if near else ""))
     append_event(hub, role, actor, {"op": "link", "item": args.id, "rel": args.rel,
                                     "target": args.target,
                                     "after": last_event_for(h, args.id)

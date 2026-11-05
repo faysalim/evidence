@@ -112,8 +112,12 @@ item with its own owner — a `story` if it is planned, a `risk` if it is not �
 in the hub rather than buried in prose:
 
 ```
-hub.py link <the adr> blocked_by <the risk or story carrying the unfinished half>
+hub.py link <the risk or story carrying the unfinished half> blocks <the adr>
 ```
+
+Note the direction: the model declares `blocks`, not `blocked_by`, and the vocabulary is closed —
+writing this the other way round was the first thing exercising this skill got wrong, and the hub
+accepted it silently until `link` learned to check.
 
 An `adr` in `ACCEPTED` with nothing recording its unfinished half reads as done. That is a reporting
 rule, not an enforced one: nothing checks it, which is why it is written here and in the lead's

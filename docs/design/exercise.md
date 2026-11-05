@@ -256,13 +256,107 @@ to them, and it is not one I could have made without reading their history.
 - **I set a product class the suite has no file for** and the tool let me. That is `X-2`; I was its
   first victim.
 
+---
+
+# Third exercise — `analytics` and `backlog`, 2026-11-05
+
+`analytics` against the product's **three certification rungs** rather than one; `backlog` against
+its real 157-line cloud-readiness requirements document — 9 themes, **29 ids** `CR-A1`…`CR-I2`, each
+theme carrying one `**Acceptance:**` line.
+
+Six defects in the suite, five in the product, and the most serious finding of all three exercises.
+
+## Defects in the suite
+
+| id | Where | Defect | Severity |
+|---|---|---|---|
+| `Y-1` | `metric`, model | **A reading had to be sourced and the baseline did not.** `BASELINED` required `denominator` and `baseline`; `READ` required `value`, `denominator` and `evidence`. So the number every future reading is compared against needed no provenance, while the readings did — exactly backwards, since an unsourced baseline silently poisons all of them. `analytics` says "compare to the stated baseline, not to a recollection", and the hub could not tell one from the other | major |
+| `Y-2` | `analytics` | **The unit of analysis was the run, not the series.** Steps 3–5 say to compare to a baseline, segment a population, and verify instrumentation — nothing said that reading one acceptance run out of several is itself a selection effect, with the same shape as reporting only the metrics that improved. It produced a confidently wrong verdict: see `P-7` | major |
+| `Y-3` | `backlog` | **The criterion test passed a criterion that cites an authority which does not exist.** Question 2 asks "what independently says pass or fail?", and *"within the documented RTO"* is an excellent answer to it — until you look and find no RTO with a value anywhere in the repository. A citation to a document that does not say is the most convincing kind of untestable criterion, because it reads as rigour. Now question 5: open the thing it cites | major |
+| `Y-4` | `backlog` | **Criteria stated at a coarser grain than the ids they govern.** 9 acceptance lines for 29 requirement ids, so one criterion covered up to four requirements and some were covered by **no clause at all** — while their theme displayed a perfectly good criterion. See `P-10`. A coarse criterion does not merely under-specify; it makes the gap invisible | major |
+| `Y-5` | `hub.py link` | `link_types` is declared in `model.json` — thirteen of them — and was **enforced nowhere on write**. `link A blocked_by B` printed `A --blocked_by--> B` and exited 0; `validate` then mentioned it as a *note*, which does not fail. Worse, the second exercise had just put that exact command into `architecture` as the prescribed way to record a decision's unfinished half, so a reader would have run something that succeeds and records what the hub cannot read | major |
+| `Y-6` | `test_link_vocabulary.py` | My own new check scanned skills for undeclared link types and **passed** — because the bad example it was written for used `<angle bracket>` placeholders, and its `\S+` for the subject skipped the line. The check missed the one defect that prompted it. Placeholders are now collapsed before matching | medium |
+
+`Y-1`, `Y-5` and `Y-6` have regression tests proven to fail first: `tests/test_baseline_evidence.py`
+and `tests/test_link_vocabulary.py`. The latter also asserts that **every link type documented in any
+skill or reference is declared in the model**, which is what would have caught `blocked_by` in review
+instead of in a hub three steps later.
+
+## Defects in the product
+
+**P-7 — the 3-hour rung lost two acknowledged keys.** This is the most serious finding across all
+three exercises, and it is a **correction to my own earlier claim.** The second exercise reported
+"durability is clean: Missing 0, Corrupt 0, Version Regressions 0" — true of the 4-hour rung, which
+was the one I opened. Reading the series:
+
+| rung | duration | CRUD ops | MissingKeys | OwnershipConvergenceFailures | failed keys |
+|---|---|---|---|---|---|
+| 2h | 02:03:22 | 1,546,650 | 0 | 0 | 0 |
+| 3h | 03:01:38 | 2,127,375 | **2** | 0 | 29 |
+| 4h | 04:03:54 | 3,162,600 | 0 | 13 | 49 |
+
+The two keys are `…:0000:000000000003` and `…:0000:000000000007`, `FailureType: NotFound`,
+`ExpectedVersion: 1` — created once, never updated, absent at final validation. They appear in
+**none** of the acknowledgement snapshot's `Deleted` (5 entries), `Ambiguous` (96) or `Failed`
+(11,568) sets. The run is FAIL at 66% confidence. That is acknowledged-write loss by the product's
+own validator, against the no-loss invariant in `consistency-and-durability-model.md` §5.
+*Does not claim* a root cause: both keys are among the earliest writes of the run, so a
+validator-ledger race at start-up is not excluded by this artifact, and the acknowledgement snapshot
+is `Truncated: True` to the most recent 300,000 entries — which would have dropped sequences 3 and 7
+from the *Acknowledged* list, though not from the three failure sets checked above.
+
+**P-8 — the second exercise's own denominator was wrong by a factor of four.** It recorded the
+metric baseline as "49 of 512 replicated segments". The product states its own bound in
+`replica-validation.json`: *"Bounded to latest 128 keys per validation pass."* The real reading is
+**49 of 128 — 38%, not 9.6%** — and because the pass samples the *latest* 128 keys, the failures are
+concentrated in recently-written keys, which is a stronger signal than a uniform sample would be.
+The 512 was inferred and nothing required me to source it. That is `Y-1`.
+
+**P-9 — a P1 requirement's acceptance criterion cannot be graded by anyone.** `CR-F` (durability &
+disaster recovery): *"a full-cluster restart restores data from the latest snapshot within the
+documented RTO."* `RTO` appears in three tracked files — one of them a PNG, one the requirements
+document itself — and **nowhere with a value**. The criterion delegates its oracle to a document that
+does not exist. It connects directly to `RISK-2`: there is no availability contract to cite.
+
+**P-10 — one requirement is covered by no acceptance clause, in a theme that looks fully specified.**
+Theme D (P0, the known blocker) holds `CR-D1` lossless scale-in drain, `CR-D2` HPA/KEDA autoscaling
+*with a documented step-size and cooldown policy*, and `CR-D3` spot reclamation — under two clauses:
+"repeated automated scale-in/out under load loses **0** keys" and "spot reclamation keeps the store
+serving with RF≥2". Clause one covers D1, clause two covers D3, and **nothing covers D2's documented
+policy** — clause one passes with D1 shipped and D2 never written, because a manual scale-in can lose
+zero keys with no autoscaling policy in existence.
+
+**P-11 — two more criteria are not gradeable by a stranger.** `CR-G`: "a cloud operator sees Zaris
+health in their existing monitoring stack **within minutes, no bespoke wiring**" — no number, and
+"bespoke" is undefined. `CR-I`: "the Operator converges it **safely**, including drain-safe
+scale-in" — "safely" names no invariant. Graded against the five criterion questions by one reader,
+so this is a reading and not a verdict (§7). On that grading: of 9 acceptance lines, 5 are oracles,
+1 is partial (`CR-C`'s "rotation propagates to nodes" has no time bound), and 3 are not gradeable.
+
+## Mistakes I made in this exercise
+
+- **I was the victim of `Y-1` before I found it.** I wrote "49 of 512" as a baseline in the previous
+  exercise, inferred rather than read, and the hub asked me for nothing. The fix is the gate that
+  would have stopped me.
+- **I claimed "durability is clean" from one run of three.** The 3-hour rung was sitting in the same
+  artifacts directory the whole time. `Y-2` is that mistake turned into an instruction.
+- **I wrote `6 ids are named by no clause` into the skill without counting.** Caught it on reread,
+  within minutes of having corrected exactly that sin in `analytics`. Replaced with the two figures
+  I did verify (9 criteria, 29 ids, every criterion theme-level) and an instruction to grade the
+  rest case by case and name the grader.
+- **My own new check passed while the defect it was written for sat two files away** (`Y-6`).
+- **I read `�` in a console dump and checked the codepoints before reacting.** It was U+2014 and a
+  cp1252 console. The first exercise reported mojibake that was its own console read; this time the
+  check cost one command.
+
 ## What is still not exercised
 
-Four skills remain `status: draft`: `analytics`, `backlog`, `design`, `discovery`. They are not
-untested — every documented command in all fifteen runs, every state they name is checked against
-the model, and the profile contract is enforced for all of them — but none has been pointed at a
-real product, and that is a different claim.
+Two skills remain `status: draft`: `design` and `discovery`. They are not untested — every
+documented command in all fifteen runs, every state they name is checked against the model, and the
+profile contract is enforced for both — but neither has been pointed at a real product, and that is
+a different claim.
 
-`discovery` in particular cannot be exercised here at all: its method needs real users to interview,
-and inventing them would be the exact failure the suite exists to prevent. It is **NOT RUN**, for a
-stated reason, rather than quietly passed.
+`discovery` cannot be exercised here at all: its method needs real users to interview, and inventing
+them would be the exact failure the suite exists to prevent. It is **NOT RUN**, for a stated reason,
+rather than quietly passed. `design` is weak ground on this product: its surface is a management
+console and a CLI, with little of the flow-and-state work the skill is about.
