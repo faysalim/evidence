@@ -2,7 +2,7 @@
 name: docs-authoring
 description: Write user and admin documentation from the product's observed behaviour rather than from tickets, then verify every claim by running it verbatim as a customer would, and enumerate the real surface to find what is undocumented. Use when the user wants user docs, admin guides, API reference or a quickstart written, reviewed or verified against the product. Not for marketing copy - that is evidence:launch.
 roles: WRITER
-status: draft
+status: exercised
 ---
 
 # Docs authoring

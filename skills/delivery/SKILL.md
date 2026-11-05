@@ -2,7 +2,7 @@
 name: delivery
 description: Generate delivery status from the work-item hub instead of collecting it, maintain the RAID risk log, surface what is blocked and on whom, and plan milestones against dependencies the hub already knows. Use when the user wants a status report, delivery plan or milestones, a RAID or risk log, cross-team dependencies tracked, or an answer to why something is late. Not for prioritising the backlog - that is evidence:backlog.
 roles: DELIVERY
-status: draft
+status: exercised
 ---
 
 # Delivery

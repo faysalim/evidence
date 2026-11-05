@@ -2,7 +2,7 @@
 name: launch
 description: Positioning, launch plan and customer-facing copy where every product claim links to a passing test case or is flagged unverified, and every price, limit and plan name is checked against the source of truth rather than the previous copy. Use when the user wants launch messaging, positioning, announcement or website copy, or a go-to-market plan written or reviewed. Not for the ship decision - that is evidence:release.
 roles: PMM
-status: draft
+status: exercised
 ---
 
 # Launch

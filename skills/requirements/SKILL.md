@@ -2,7 +2,7 @@
 name: requirements
 description: Turn a PRD and stakeholder input into numbered requirements traceable to the PRD, map the real business process including its exceptions, capture the business rules, and route every conflict to the operator as a decision memo instead of picking one reading. Use when the user wants requirements elicited or documented, a business process mapped, business rules captured, a legacy system specified, or conflicting stakeholder input resolved. Not for stories with acceptance criteria - that is evidence:backlog.
 roles: BA
-status: draft
+status: exercised
 ---
 
 # Requirements
