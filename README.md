@@ -42,25 +42,6 @@ like "QA this release", "write acceptance criteria for this story", or "what is 
 > `tests/test_description_budget.py` fails on purpose until it is fixed, rather than reporting green over
 > it.
 
-### Migrating from the standalone `product-qa` skill
-
-**If you installed the old skill at `~/.claude/skills/product-qa`, remove it.**
-
-```bash
-rm -rf ~/.claude/skills/product-qa
-```
-
-On Windows, delete `%USERPROFILE%\.claude\skills\product-qa`.
-
-Both will load — the names differ (`product-qa` versus `evidence:qa`), so they do not collide outright,
-which is the problem: their **descriptions** overlap heavily, so a request like "QA this release" can route
-to either, and you cannot tell from the answer which version of the method you got. The old skill's content
-is all still here: the QA method is `skills/qa/`, and what more than one role needs moved to `shared/`.
-
-Your existing report directories still work. `python shared/scripts/hub.py import <report-dir>` reads an
-old `qa-state.json`, **preserves every finding id**, and marks everything `provenance: reconstructed` — it
-does not inherit the old verdicts, because nobody verified them here.
-
 ### Contributor install
 
 ```bash
@@ -239,7 +220,7 @@ docs/design/           design doc, decisions, progress, final report
 
 ## License
 
-Apache-2.0 — see `LICENSE` and `NOTICE`. Use it commercially, adapt the domain files to your own product,
+MIT — see `LICENSE`. Use it commercially, adapt the domain files to your own product,
 keep your adaptations private. The only obligation is attribution.
 
 ## Provenance
