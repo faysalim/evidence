@@ -382,23 +382,61 @@ def verdict(hub):
     # supplied. A team that keeps its ops checklist elsewhere imports it the way `orient` Step 5
     # imports their runbooks and SLOs. The detail line names exactly what the verdict is silent
     # about, so the refusal is readable rather than mysterious.
+    # The question is PER RELEASE and PER BUILD, exactly as it already is for QA's gate rows a few
+    # lines above. The first version of this condition asked neither: one row, MET with no build,
+    # linked to no release, satisfied the gate for a hub holding two releases on two digests. That
+    # is the defect the CR-3 comment above was written about, repeated in new code.
     ready = [i for i in items.values() if i["type"] == "readiness"]
-    unmet = sorted(i["id"] for i in ready if i["state"] == "OPEN")
-    waived = sorted(i["id"] for i in ready if i["state"] == "WAIVED")
-    if not ready:
+    gated = {}                       # release id -> rows linked to it
+    unlinked = []
+    for i in ready:
+        targets = [l["target"] for l in i.get("links", []) if l.get("rel") == "gates"]
+        if not targets:
+            unlinked.append(i["id"])
+        for rel_id in targets:
+            gated.setdefault(rel_id, []).append(i)
+
+    problems, satisfied, stale = [], [], []
+    for rel_id, build in sorted(builds.items()):
+        rows = gated.get(rel_id, [])
+        if not rows:
+            problems.append("%s (%s) has no readiness checkpoint at all" % (rel_id, build))
+            continue
+        for i in rows:
+            row_build = i["fields"].get("build")
+            if i["state"] == "OPEN":
+                problems.append("%s still OPEN for %s" % (i["id"], rel_id))
+            elif row_build != build:
+                # Evidence is about a build. A rehearsal on the previous candidate is not
+                # evidence about this one, and saying nothing would let it pass as if it were.
+                stale.append("%s was %s on %s, but %s is %s"
+                             % (i["id"], i["state"].lower(), row_build or "no build",
+                                rel_id, build))
+            else:
+                satisfied.append("%s %s" % (i["id"], i["state"].lower()))
+
+    if not builds:
+        ok = False
+        detail = ("no in-flight release names a build, so there is nothing to scope readiness to")
+    elif not ready:
+        ok = False
         detail = ("none recorded -- this verdict covers QA evidence only and says nothing about "
                   "rollback, alerting, on-call, runbooks, certificates, privacy, legal or support")
     else:
-        by_role = {}
-        for i in ready:
-            by_role.setdefault(i["fields"].get("owner_role") or "unattributed", []).append(i["id"])
-        detail = "%d checkpoint(s) across %s" % (len(ready), ", ".join(sorted(by_role)))
-        if unmet:
-            detail = "still OPEN: " + ", ".join(unmet)
-        elif waived:
-            detail += "; waived by the operator: " + ", ".join(waived)
-    conditions.append(("Every release-readiness checkpoint is MET, or waived by the operator",
-                       bool(ready) and not unmet, detail))
+        ok = not problems and not stale
+        bits = []
+        if problems:
+            bits.append("; ".join(problems))
+        if stale:
+            bits.append("STALE, not counted: " + "; ".join(stale))
+        if unlinked:
+            bits.append("linked to no release, so counting for nothing: " + ", ".join(
+                sorted(unlinked)))
+        if ok:
+            bits.append("; ".join(satisfied))
+        detail = " | ".join(bits)
+    conditions.append(("Every release-readiness checkpoint is MET or waived, on this release's "
+                       "build", ok, detail))
 
     if all(ok for _, ok, _ in conditions):
         label = "GREEN within stated bounds"

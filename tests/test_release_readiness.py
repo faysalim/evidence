@@ -53,6 +53,14 @@ def check(label, cond, detail=""):
         FAILURES.append(label)
 
 
+def release(hub, rid="REL-1", build="sha256:abc"):
+    """Readiness is scoped to a release and a build, so the probes need both."""
+    run(hub, "add", "release", rid, "-f", "title=%s" % rid, "--actor", "d1", "--role", "DELIVERY")
+    run(hub, "move", rid, "CANDIDATE", "-f", "build=%s" % build,
+        "--actor", "v1", "--role", "DEV")
+    return rid, build
+
+
 def verdict_of(hub):
     import hub as H           # noqa: N813
     import dashboard as D
@@ -84,8 +92,8 @@ def main():
         if row:
             _n, ok, detail = row[0]
             check("with no rows it does not hold", not ok, detail[:160])
-            check("and the detail says what the verdict is silent about",
-                  all(w in detail.lower() for w in ("rollback", "on-call")), detail[:200])
+            check("and the detail explains why it cannot speak",
+                  "release" in detail.lower() and "build" in detail.lower(), detail[:200])
         check("an empty hub is NO VERDICT, never GREEN", label != "GREEN within stated bounds",
               label)
 
@@ -105,7 +113,12 @@ def main():
         rc, out = run(hub, "move", "RD-1", "MET",
                       "-f", "evidence=rehearsed 2026-03-04, 41s, 0 rows lost",
                       "--actor", "o1", "--role", "DEVOPS")
-        check("MET with evidence is accepted", rc == 0, out.strip()[:140])
+        check("MET with evidence but no build is REJECTED", rc != 0, out.strip()[:140])
+        rc, out = run(hub, "move", "RD-1", "MET",
+                      "-f", "evidence=rehearsed 2026-03-04, 41s, 0 rows lost",
+                      "-f", "build=sha256:abc",
+                      "--actor", "o1", "--role", "DEVOPS")
+        check("MET with evidence and a build is accepted", rc == 0, out.strip()[:140])
 
         # --- only the operator waives ---------------------------------------------------------
         for role in ("DEVOPS", "SECURITY", "SUPPORT", "DELIVERY", "QA"):
@@ -114,18 +127,20 @@ def main():
             run(hub2, "add", "readiness", "RD-9", "-f", "title=alert fires",
                 "-f", "owner_role=DEVOPS", "--actor", "o1", "--role", "DEVOPS")
             rc, out = run(hub2, "move", "RD-9", "WAIVED", "-f", "reason=no time",
-                          "--actor", "x1", "--role", role)
+                          "-f", "build=sha256:abc", "--actor", "x1", "--role", role)
             check("%s may not waive a checkpoint" % role, rc != 0,
                   "exit %d: %s" % (rc, out.strip()[:130]))
         hub3 = os.path.join(tmp, "waive-op")
         run(hub3, "init", "--actor", "h1", "--role", "HEAD_OF_PRODUCT")
+        rid, _b = release(hub3)
         run(hub3, "add", "readiness", "RD-9", "-f", "title=alert fires",
             "-f", "owner_role=DEVOPS", "--actor", "o1", "--role", "DEVOPS")
+        run(hub3, "link", "RD-9", "gates", rid, "--actor", "o1", "--role", "DEVOPS")
         rc, out = run(hub3, "move", "RD-9", "WAIVED", "--actor", "op", "--role", "OPERATOR")
         check("even the operator needs a reason", rc != 0, "exit %d: %s" % (rc, out.strip()[:140]))
         rc, out = run(hub3, "move", "RD-9", "WAIVED",
                       "-f", "reason=shipping for the customer deadline, rollback is manual",
-                      "--actor", "op", "--role", "OPERATOR")
+                      "-f", "build=sha256:abc", "--actor", "op", "--role", "OPERATOR")
         check("the operator may waive with a reason", rc == 0, out.strip()[:140])
         _label, _f, conds = verdict_of(hub3)
         row = [(n, ok, d) for n, ok, d in conds if "readiness" in n.lower()][0]
@@ -136,8 +151,10 @@ def main():
         # --- an OPEN checkpoint denies, naming the id -----------------------------------------
         hub4 = os.path.join(tmp, "open")
         run(hub4, "init", "--actor", "h1", "--role", "HEAD_OF_PRODUCT")
+        rid4, _b4 = release(hub4)
         run(hub4, "add", "readiness", "RD-5", "-f", "title=on-call named",
             "-f", "owner_role=DEVOPS", "--actor", "o1", "--role", "DEVOPS")
+        run(hub4, "link", "RD-5", "gates", rid4, "--actor", "o1", "--role", "DEVOPS")
         _label, _f, conds = verdict_of(hub4)
         row = [(n, ok, d) for n, ok, d in conds if "readiness" in n.lower()][0]
         check("an OPEN checkpoint denies the condition", not row[1], row[2][:160])

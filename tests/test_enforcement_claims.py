@@ -162,14 +162,14 @@ def main():
                 "add", "readiness", "RD-1", "-f", "title=rollback rehearsed",
                 "-f", "owner_role=DEVOPS", actor="o1", role="DEVOPS")
         refused("another readiness role may not meet it",
-                "move", "RD-1", "MET", "-f", "evidence=trust me",
+                "move", "RD-1", "MET", "-f", "evidence=trust me", "-f", "build=sha256:abc",
                 actor="s1", role="SUPPORT", needle="owner_role is DEVOPS")
         refused("nor may TECH_LEAD, which computes the verdict it would be feeding",
                 "move", "RD-1", "MET", "-f", "evidence=we can roll back",
                 actor="t1", role="TECH_LEAD", needle="may not move")
         allowed("the owning role may, with evidence",
                 "move", "RD-1", "MET", "-f", "evidence=rehearsed 2026-03-04, 41s",
-                actor="o1", role="DEVOPS")
+                "-f", "build=sha256:abc", actor="o1", role="DEVOPS")
 
         print("\nthe guards that are not principles but are claimed in the skills")
         refused("a forbidden state cannot be reached at creation",

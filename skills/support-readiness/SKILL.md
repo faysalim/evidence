@@ -52,9 +52,14 @@ which you must read before assuming anyone looked.
 ```
 hub.py add readiness RD-3 -f title="known-issue list published for the candidate" \
        -f owner_role=SUPPORT --role SUPPORT
-hub.py move RD-3 MET -f evidence="7 open findings not fixed in 2.5.1, each with a workaround \
-       and an id; published to the support wiki 2026-03-05" --role SUPPORT
+hub.py link RD-3 gates REL-7 --role SUPPORT
+hub.py move RD-3 MET -f build=sha256:abc -f evidence="7 open findings not fixed in 2.5.1, each \
+       with a workaround and an id; published to the support wiki" --role SUPPORT
 ```
+
+**The list is about a candidate, and only SUPPORT may meet a SUPPORT row.** `MET` requires `build`
+and the row must be linked to the release it gates — a known-issue list written for the previous
+candidate is exactly the kind of stale evidence the verdict now names rather than counts.
 
 ## The known-issue list is generated, not remembered
 

@@ -61,9 +61,17 @@ add a checkpoint per fault that has no owner.
 ```
 hub.py add readiness RD-1 -f title="rollback rehearsed on the candidate build" \
        -f owner_role=DEVOPS --role DEVOPS
-hub.py move RD-1 MET -f evidence="rehearsed 2026-03-04 14:10Z, 41s to the previous digest, \
-       0 rows lost, log at <path>" --role DEVOPS
+hub.py link RD-1 gates REL-7 --role DEVOPS
+hub.py move RD-1 MET -f build=sha256:abc -f evidence="rehearsed 2026-03-04 14:10Z, 41s to \
+       the previous digest, 0 rows lost, log at <path>" --role DEVOPS
 ```
+
+**Three things that will refuse you, and each is the point.** Only the role in `owner_role` may
+move a row to `MET` — one team does not sign off another's gate, and a review found SUPPORT
+signing off a SECURITY row with `evidence="trust me"` before this was enforced. `MET` requires a
+`build`, because a rehearsal on the previous candidate is not evidence about this one. And a row
+must be **linked to the release it gates**, or it counts for nothing: the verdict reads only rows
+linked to the release being judged whose build matches it, and names the rest as stale.
 
 `MET` requires `evidence`, and the hub refuses it otherwise. **`title` and `owner_role` are
 required at creation** so a checkpoint can never sit in the hub without someone's name against it.

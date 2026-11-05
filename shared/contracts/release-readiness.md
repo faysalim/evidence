@@ -11,7 +11,7 @@ verdict condition that reads them.
 
 ---
 
-## The contract, in four sentences
+## The contract, in six sentences
 
 1. **Only the role named in a row's `owner_role` may move it to `MET`.** Enforced, on the CLI and
    on replay. A review found DEVOPS creating a row owned by SECURITY and SUPPORT signing it off
@@ -20,9 +20,16 @@ verdict condition that reads them.
    `DELIVERY`, `TECH_LEAD` and `OPERATOR` may **create** rows and may never meet them.
 2. **`MET` means it happened**, with a time and a result. Not that it is documented, planned or
    possible. `shared/principles.md` §1.
-3. **Only the operator may `WAIVE`**, with a reason in their own words. Shipping without a rehearsed
+3. **Every row is linked to the release it gates and stamped with that release's build.**
+   `hub.py link RD-1 gates REL-7`, then `MET -f build=<digest>`. The verdict counts only rows
+   linked to the release being judged whose build matches it; a row on the previous candidate, or
+   linked to nothing, is **named as stale** rather than silently counted. A review found one
+   buildless unlinked row satisfying the gate for a hub holding two releases on two digests.
+4. **A waiver is scoped to a build too**, and is re-openable. Waiving a missing rollback rehearsal
+   on candidate `abc` says nothing about `def`.
+5. **Only the operator may `WAIVE`**, with a reason in their own words. Shipping without a rehearsed
    rollback is a legitimate decision and must be visible and attributed.
-4. **The release skill does not override a checkpoint.** It computes; the condition either holds or
+6. **The release skill does not override a checkpoint.** It computes; the condition either holds or
    it does not, and the operator's `SHIPPED` against a non-green is the recorded override.
 
 ## What the verdict does with them

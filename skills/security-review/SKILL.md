@@ -57,9 +57,14 @@ in as acceptance requirements, source 0, the highest-authority oracle there is. 
 ```
 hub.py add readiness RD-2 -f title="privacy sign-off: new field is personal data" \
        -f owner_role=SECURITY --role SECURITY
-hub.py move RD-2 MET -f evidence="DPIA addendum signed by the DPO 2026-03-05; covers the new \
-       field only, not the existing export path" --role SECURITY
+hub.py link RD-2 gates REL-7 --role SECURITY
+hub.py move RD-2 MET -f build=sha256:abc -f evidence="DPIA addendum signed by the DPO \
+       2026-03-05; covers the new field only, not the existing export path" --role SECURITY
 ```
+
+**A review is about a build, and only SECURITY may meet a SECURITY row.** `MET` requires `build`
+because a scan of last month's tree says nothing about this candidate, and the row must be linked
+to the release it gates or the verdict counts it for nothing.
 
 **A vulnerability is never a `readiness` item.** If you find one, file a `finding` at the severity
 its consequence earns. Readiness checkpoints are about whether the *process* that should have caught

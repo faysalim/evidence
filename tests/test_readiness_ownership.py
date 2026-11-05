@@ -91,7 +91,9 @@ def main():
                 hub = fresh(tmp, "own-%s-%s" % (owner, actor_role))
                 run(hub, "add", "readiness", "RD-1", "-f", "title=a gate",
                     "-f", "owner_role=%s" % owner, "--actor", "c1", "--role", "DEVOPS")
-                rc, out = run(hub, "move", "RD-1", "MET", "-f", "evidence=it happened, 2026-03-04",
+                rc, out = run(hub, "move", "RD-1", "MET",
+                              "-f", "evidence=it happened, 2026-03-04",
+                              "-f", "build=sha256:abc",
                               "--actor", "a1", "--role", actor_role)
                 if actor_role == owner:
                     check("%s may meet its own %s checkpoint" % (actor_role, owner), rc == 0,
@@ -108,7 +110,7 @@ def main():
             rc, out = run(hub, "add", "readiness", "RD-2", "-f", "title=rollback rehearsed",
                           "-f", "owner_role=DEVOPS", "--actor", "r1", "--role", role)
             check("%s may create a checkpoint" % role, rc == 0, out.strip()[:140])
-            rc, out = run(hub, "move", "RD-2", "MET", "-f", "evidence=we can roll back",
+            rc, out = run(hub, "move", "RD-2", "MET", "-f", "evidence=we can roll back", "-f", "build=sha256:abc",
                           "--actor", "r1", "--role", role)
             check("%s may NOT meet one -- it computes the verdict it would be feeding" % role,
                   rc != 0, "exit %d: %s" % (rc, out.strip()[:140]))
@@ -117,11 +119,12 @@ def main():
         hub = fresh(tmp, "waive")
         run(hub, "add", "readiness", "RD-3", "-f", "title=alert fires",
             "-f", "owner_role=DEVOPS", "--actor", "o1", "--role", "DEVOPS")
-        rc, _ = run(hub, "move", "RD-3", "WAIVED", "-f", "reason=no time",
+        rc, _ = run(hub, "move", "RD-3", "WAIVED", "-f", "reason=no time", "-f", "build=sha256:abc",
                     "--actor", "o1", "--role", "DEVOPS")
         check("the owning role may not waive its own checkpoint", rc != 0)
         rc, out = run(hub, "move", "RD-3", "WAIVED",
                       "-f", "reason=shipping for the deadline; rollback stays manual",
+                      "-f", "build=sha256:abc",
                       "--actor", "op", "--role", "OPERATOR")
         check("the operator may waive with a reason", rc == 0, out.strip()[:140])
 

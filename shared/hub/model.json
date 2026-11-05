@@ -29,6 +29,7 @@
     "instrumented": ["yes", "no", "not yet"]
   },
   "link_types": [
+    "gates",
     "realizes",
     "refines",
     "implements",
@@ -1452,7 +1453,8 @@
           ],
           "role_from_field": "owner_role",
           "requires_fields": [
-            "evidence"
+            "evidence",
+            "build"
           ]
         },
         {
@@ -1464,12 +1466,14 @@
             "OPERATOR"
           ],
           "requires_fields": [
-            "reason"
+            "reason",
+            "build"
           ]
         },
         {
           "from": [
-            "MET"
+            "MET",
+            "WAIVED"
           ],
           "to": "OPEN",
           "roles": [
