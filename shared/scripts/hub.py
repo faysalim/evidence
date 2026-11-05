@@ -159,15 +159,31 @@ def read_all_events(hub):
     events, notes = [], []
     root = os.path.join(hub, "events")
     if not os.path.isdir(root):
-        return events, ["no events directory at %s" % root]
+        # UNREADABLE, not a note: `validate` promotes these to problems, and "this hub is not
+        # there" must never read as "this hub is clean". Pointed at a mistyped path, the old
+        # note exited 0 and congratulated the operator.
+        return events, ["UNREADABLE no events directory at %s -- there is no hub here" % root]
     for dirpath, _dirnames, filenames in os.walk(root):
         for name in sorted(filenames):
             if not name.endswith(".jsonl"):
                 continue
             path = os.path.join(dirpath, name)
             rel = os.path.relpath(path, root).replace("\\", "/")
-            with io.open(path, "r", encoding="utf-8") as fh:
-                for lineno, line in enumerate(fh, 1):
+            # Read bytes and decode per line. Opening the file as text meant a single stray
+            # byte anywhere in any log raised UnicodeDecodeError out of the fold -- a traceback
+            # instead of a finding, which is the strongest possible violation of this hub's own
+            # rule that one bad line must not make the whole hub unreadable.
+            with io.open(path, "rb") as fh:
+                raw_lines = fh.read().split(b"\n")
+            decoded = []
+            for lineno, raw in enumerate(raw_lines, 1):
+                try:
+                    decoded.append((lineno, raw.decode("utf-8")))
+                except UnicodeDecodeError as exc:
+                    notes.append("UNREADABLE %s line %d is not valid UTF-8: %s"
+                                 % (rel, lineno, exc))
+            if decoded:
+                for lineno, line in decoded:
                     line = line.strip()
                     if not line or line.startswith("//"):
                         continue
@@ -395,6 +411,19 @@ class Hub:
             self.problems.append("%s line %d re-creates item %s, which already exists; ids are "
                                  "names and are never reused"
                                  % (ev.get("_src"), ev.get("_line"), iid))
+            return
+        # Same check the CLI makes, here because the fold is what every write path reaches.
+        # Adding it only to cmd_add left a hand-written log free to create F-9 beside f-9,
+        # validate reporting zero problems, and the dashboard writing one page for both --
+        # which is precisely the shape of the duplicate-hiding critical found in review:
+        # a guard at a call site instead of in the function every path calls.
+        clash = next((i for i in self.items if i.lower() == str(iid or "").lower()), None)
+        if clash:
+            self.problems.append(
+                "%s line %d creates %s, which differs from the existing %s only in case. They "
+                "collide as filenames on Windows and macOS, so the dashboard writes one page "
+                "for both and one item's page is lost"
+                % (ev.get("_src"), ev.get("_line"), iid, clash))
             return
         tdef = type_def(self.model, ev.get("type"))
         state = ev.get("state") or tdef["initial"]
@@ -1028,6 +1057,15 @@ def cmd_add(args):
     if args.id in h.items:
         raise HubError("item %s already exists. Ids are names, not positions: never reuse or "
                        "renumber them." % args.id)
+    # Ids that differ only in case collide on any case-insensitive filesystem, which is every
+    # default Windows and macOS install. The dashboard writes one page per item as
+    # item-<id>.html, so F-1 and f-1 produced a single file and one finding's page silently
+    # overwrote the other's. Recorded as cosmetic in review; it is page-level data loss.
+    clash = next((i for i in h.items if i.lower() == args.id.lower()), None)
+    if clash:
+        raise HubError("item %s already exists and %s differs from it only in case. They would "
+                       "collide as filenames on Windows and macOS, and the dashboard would write "
+                       "one page for both. Pick a distinct id." % (clash, args.id))
     tdef = type_def(h.model, args.type)
     creators = tdef.get("create") or []
     if creators and role not in creators:
