@@ -640,7 +640,17 @@ def render_index(hub):
     items = hub.items
     findings = [i for i in items.values() if i["type"] == "finding"]
     cases = [i for i in items.values() if i["type"] == "case"]
-    body = ['<h1>%s</h1>' % esc(hub.meta.get("engagement") or "engagement")]
+    # An unnamed engagement used to render as the bare word "engagement", in both the <h1>
+    # and the <title> -- a label with no value, which reads to a first-time user as a
+    # placeholder the tool forgot to fill in. `init --engagement NAME` exists and no skill
+    # mentioned it, so every engagement that followed the skills got exactly this. Say what
+    # is missing and how to fix it instead.
+    engagement = hub.meta.get("engagement")
+    body = ['<h1>%s</h1>' % esc(engagement or "unnamed engagement")]
+    if not engagement:
+        body.append('<p class="sub">This hub has no name. '
+                    '<code>hub.py init --engagement "&lt;product and date&gt;"</code> sets it; '
+                    'on an existing hub, <code>hub.py iteration --note</code> records why.</p>')
     body.append('<p class="sub">iteration %s · %d items · %d events · generated %s</p>' % (
         esc(hub.meta.get("iteration")), len(items), len(hub.applied),
         esc(datetime.now(timezone.utc).isoformat(timespec="seconds"))))
@@ -663,7 +673,7 @@ def render_index(hub):
     body.append("<h2>Awaiting the operator</h2>" + render_operator_queue(hub))
     body.append("<h2>Traceability</h2>" + render_traceability(hub))
     body.append("<h2>Time in state and reopens</h2>" + render_time_in_state(hub))
-    return page(hub.meta.get("engagement") or "engagement", "".join(body))
+    return page(engagement or "unnamed engagement", "".join(body))
 
 
 def render(hub, outdir):

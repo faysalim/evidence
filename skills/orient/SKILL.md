@@ -25,6 +25,17 @@ Read `${CLAUDE_PLUGIN_ROOT}/shared/principles.md` first. Items move only through
 hub.py status
 ```
 
+If there is no hub, create it **with a name** — the product and the date, so a dashboard opened in
+six months says what it is about:
+
+```
+hub.py init --engagement "Zaris 2.1.1 baseline, 2026-11" --actor <you> --role HEAD_OF_PRODUCT
+```
+
+`init` needs `--actor` and `--role` like every other write: creating the hub is itself an
+attributable act. Skip `--engagement` and every page of the dashboard is titled "unnamed
+engagement", which is what exercising this skill produced before it said so.
+
 | Mode | How you know | What changes |
 |---|---|---|
 | **NEW** | No product in production, no users, no prior artifacts | The profile is authored. Everything downstream is a first draft, and nothing is `reconstructed` |

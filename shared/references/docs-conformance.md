@@ -127,8 +127,25 @@ Enumerate from the code, then subtract what is documented. The remainder is the 
 | Feature flags | The flag registry or their read sites |
 | Error codes | The enum or constant table |
 
-Then diff. An undocumented environment variable is a support ticket with a long fuse; an undocumented
-endpoint is either dead code or an unannounced API someone will build on. Report both.
+**Scope the enumeration before you trust the number, and state how you scoped it.** Three traps, all
+hit while exercising this method against a real codebase:
+
+- **Build output.** A grep that reaches into `bin/`, `obj/`, `dist/`, `target/` or `node_modules/`
+  counts compiled copies of the same symbol, and on a binary it yields `Binary file ... matches` as
+  if that were a result. Restricting to source files took one real count from 154 to 138.
+- **Test and benchmark code.** A certification harness's knobs are not product surface. Separating
+  them took 138 to 102, and the honest claim names both figures and the rule used to split them.
+- **The reverse direction is a finding too.** Three documented variables did not exist in the code
+  at all. A documented surface the product does not have is worse than an undocumented one, because
+  a reader will try it and conclude the product is broken.
+
+Then diff, both ways, and state the denominator and the exclusions with the result — "57 of 102
+production environment variables are undocumented, counting distinct reads in non-test source,
+excluding build output" is checkable, and a reader who disagrees with the enumeration can say so.
+"Documentation is incomplete" is not.
+
+An undocumented environment variable is a support ticket with a long fuse; an undocumented endpoint
+is either dead code or an unannounced API someone will build on. Report both.
 
 A useful standing rule: **every environment variable has an entry in a dedicated reference page, and that
 page is re-synced on every docs pass.** It is cheap to maintain and it makes this diff trivial next time.
