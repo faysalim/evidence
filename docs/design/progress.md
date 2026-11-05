@@ -19,6 +19,10 @@ permission classifier as Data Exfiltration and **not** worked around; the operat
 Worth keeping in the record: pushing is an operator action here, so plan for it rather than assume
 it — and the commit that records a denied push is itself a commit that then needs pushing.
 
+`docs/design/release-checklist-map.md` maps every readiness checkpoint to an owning
+skill, and states plainly that the 100-item release list the review referred to has never reached
+this repo -- so the unowned count against it is UNKNOWN, not zero.
+
 Read `docs/design/exercise.md` first: **four exercises**. Seven skills against a real product's code
 and docs (twelve suite defects, two product); then `architecture` and `prd` against the same
 product's own certification artifacts (eight suite defects, six product, and one correction — the
