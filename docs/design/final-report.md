@@ -119,21 +119,25 @@ costs nothing in capability. The alternatives are cutting every description to ~
 which guts the triggers and the "Not for" lines, or documenting `skillListingBudgetFraction` and
 accepting that users with many plugins silently lose the drafts.
 
-### `PE-1` — the README's install path cannot work · **one push**
+### `PE-1` -- CLOSED 2026-11-05, by running it
 
-`origin/main` is still the old standalone skill with no `.claude-plugin/`, and `plugin-suite` is
-unpushed, so both documented install paths fail at step one. The install the council reviewed used
-`claude plugin marketplace add E:\Personal\projects\product-qa`, which appears nowhere in the
-README. **This is exactly the "README that only works for its author" defect the plugin's own
-principles name.** Pushing was forbidden for this run, so it is yours:
+The repo is published at **https://github.com/faysalim/evidence** and the README's install
+commands were executed verbatim against it:
 
 ```
-git push -u origin plugin-suite
+/plugin marketplace add faysalim/evidence
+/plugin install evidence@evidence-market
 ```
 
-Then re-run the README's two commands on a clean machine and paste the output into the README,
-which is the only way to know the GitHub-sourced path works — copy semantics are untested because a
-local-path marketplace loads in place.
+Both succeeded. The marketplace cloned 212 files at `063e563` into
+`~/.claude/plugins/marketplaces/evidence-market`, registered all 15 skills, and -- the part that
+actually matters -- **the full suite passes when run from that installed copy, not just from the
+checkout**: 8 of 9 suites green, `check_repo.py` 7/7, and both fixtures rebuild with `validate`
+clean. That is what proves the `${CLAUDE_PLUGIN_ROOT}` paths resolve as installed rather than only
+where they were written. The one failure is the deliberate budget test (`PE-2`).
+
+This was the finding I could not close myself, because closing it needed a push. It is closed by
+doing the thing, not by reasoning that it should work.
 
 ### Smaller ones
 
