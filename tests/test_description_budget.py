@@ -100,9 +100,13 @@ def main():
     check("listing cost %d chars <= %d (half of a 200k window's 1%% budget, leaving room for "
           "the skills the user already has)" % (total, TOTAL_CHAR_CEILING),
           total <= TOTAL_CHAR_CEILING,
-          "total=%d of the %d-char budget; in a real session the overflow DROPS descriptions, "
-          "starting with the least-invoked skills -- which here are the drafts. Trim, reduce the "
-          "always-on skill count, or set skillOverrides to name-only for the drafts."
+          "total=%d of the %d-char budget on a 200k-window model; the overflow DROPS "
+          "descriptions, starting with the least-invoked skills -- which here are the drafts. "
+          "The VERIFIED remedy is the one the tool itself names: raise "
+          "skillListingBudgetFraction in settings (0.013 was the first value that fit a real "
+          "85-skill machine; 0.02 leaves headroom). Trimming descriptions also works. "
+          "skillOverrides name-only SHOULD be the surgical answer and did nothing in four "
+          "attempts via --settings -- see docs/design/listing-budget.md before relying on it."
           % (total, LISTING_BUDGET_200K))
 
     missing_not_for = [k for k, v in desc.items() if "not for" not in v.lower()]
