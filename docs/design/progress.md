@@ -14,9 +14,10 @@ rewrite history or delete branches.
 README's own install commands were run against the real remote with the whole suite then run from
 the resulting install.
 
-Both exercises are on `main` (`ec4578d..8971046`). The second one's push was denied by the auto-mode
-permission classifier as Data Exfiltration and was **not** worked around; the operator ran it. Worth
-keeping in the record: pushing is an operator action here, so plan for it rather than assume it.
+All three exercises are on `main` (`ec4578d..2a41363`). Both pushes were denied by the auto-mode
+permission classifier as Data Exfiltration and **not** worked around; the operator ran each one.
+Worth keeping in the record: pushing is an operator action here, so plan for it rather than assume
+it — and the commit that records a denied push is itself a commit that then needs pushing.
 
 Read `docs/design/exercise.md` first: **three exercises**. Seven skills against a real product's code
 and docs (twelve suite defects, two product); then `architecture` and `prd` against the same
