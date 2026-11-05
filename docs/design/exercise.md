@@ -349,14 +349,125 @@ so this is a reading and not a verdict (§7). On that grading: of 9 acceptance l
   cp1252 console. The first exercise reported mojibake that was its own console read; this time the
   check cost one command.
 
+---
+
+# Fourth exercise — `design` and `discovery`, 2026-11-05
+
+Both of these were recorded above as unexercisable. **Both claims were wrong, and the operator said
+so.** `discovery` was declared NOT RUN because "its method needs real users to interview"; `design`
+was called weak ground because the product was "a console and a CLI". The operator's response —
+*"I don't like discovery depending on real users. This is a blocker. It must be independent"* — was
+correct, and acting on it found the largest single framing defect in the suite.
+
+## The blocker: `discovery` made access to people a precondition
+
+Not a limitation of research. A defect in the skill, measurable in its own text:
+
+| | mentions |
+|---|---|
+| `interview` + `session` | **17** |
+| `ticket` + `analytics` | 5 |
+| `issue`, `forum`, `artifact` | **0** |
+| templates shipped | 1 — `interview-guide.md` |
+
+And one table cell carried the whole blocker. For a **new** product, under *"free evidence already
+in the building"*, the skill said: **"None. Say so."**
+
+That is false. The problem exists in public before your product does: competitors' issue trackers,
+the forum threads where people describe the workaround, Q&A sites. All user-authored, none of it
+needing a single user of your own. The framing made the skill unrunnable for exactly the products
+where discovery matters most — infrastructure, developer tools, anything self-hosted where you
+cannot reach your users, anything pre-launch. My "NOT RUN" was the skill's framing talking, not a
+fact about research.
+
+**It was exercisable all along, in the same workspace.** 158 user-authored items across 6 platforms
+and 17 search queries, each with a title, URL, author, date and text — 157 with non-empty text, 104
+with named authors, 108 dated. No interviews, no invention.
+
+## Defects in the suite
+
+| id | Where | Defect | Severity |
+|---|---|---|---|
+| `Z-1` | `discovery` | Interviews treated as the precondition and artifacts as a warm-up; "None. Say so" for a new product. Fixed with an evidence-source hierarchy where user-authored public artifacts are a first-class primary corpus, and one rule kept absolute: **never invent a user, quote, persona or count** — independence from interviews, not from evidence | blocker |
+| `Z-2` | `insight`, model | **`confidence` was declared in prose and enforced nowhere** — the field the skill itself calls "the field that does the most work", whose stated purpose is preventing "a synthesis that presents inferred as observed". An insight reached `EVIDENCED` and then `ACCEPTED` with no value at all, so that failure was not merely unprevented, it was *undetectable*: a reader cannot tell `observed` from nobody-said. **Third field found declared-in-prose and unchecked**, after `domains` and `link_types` | major |
+| `Z-3` | `discovery` | The `observed \| reported \| inferred` taxonomy was built for interviews and had no slot for an unprompted public artifact. A timestamped forum post with an attributable handle is not `observed` — you were not there — and `reported` understates it, since nobody elicited it and a third party can re-read it. Added **`authored`** | major |
+| `Z-4` | `discovery` | "Count" says the unprompted/agreed-when-asked split is most of the signal, and gave no analogue for a corpus — where **the elicitation is the search query**, not a question in a room. See the figures below | major |
+| `Z-5` | `discovery` | No rule requiring the **sampling frame** — the query set and platforms that produced the corpus — to be recorded as part of the denominator. `sample_size` covered interview shape only | major |
+| `Z-6` | `design` | The eight-state table never asked **where** each state is handled, so a state audit is wrong in both directions: centralised handling is a correct answer and an invisible one. My own first pass proved it — see below | major |
+| `Z-7` | `analytics` | `ANALYST` may create `insight` items, and `analytics` documented them with "evidence and does_not_show" — missing `sample_size` and `confidence`, the latter now required. A cross-reference gap introduced by `Z-2`'s fix and caught in the same pass | minor |
+
+`Z-2` and `Z-3` have a regression test proven to fail first, `tests/test_confidence_vocabulary.py`,
+which also checks the planted-log replay path and asserts that **the vocabulary `discovery`
+documents is exactly the one the model declares.**
+
+### `Z-4`, worked: most of a finding was my own search terms coming back
+
+Themes counted across 158 items by case-insensitive regex on title+text, each item counted once per
+theme — then split by whether the query that *found* the item already named the theme:
+
+| theme | total | unprompted | elicited |
+|---|---|---|---|
+| latency / timeouts | 38 | **26** | 12 |
+| licence change / relicensing | 24 | **9** | 15 |
+| API choice confusion | 8 | 7 | 1 |
+| Redis single-threaded | 6 | 6 | 0 |
+| L1/L2 hybrid invalidation | 6 | 6 | 0 |
+| large objects | 4 | 4 | 0 |
+| RAM cost / memory footprint | 3 | 3 | 0 |
+
+"The licence change matters to people" reads as 24 of 158 (16.5%) and is **9 of 158 (5.7%)**
+unprompted — 15 of the 24 were found by queries containing "licen". Five of the seventeen queries
+name a theme term. A corpus assembled from your own hypothesis will confirm it; this is the
+"validating a solution you already chose" trap arriving through the sampling frame rather than
+through a leading question, and the skill only warned about it for new products and only about
+solutions.
+
+### `Z-6`, worked: my first design audit was wrong twice over
+
+Auditing 19 console screens for per-screen error handling reported 11 of 19 covered. Both halves
+were wrong. **Writes** were handled centrally in the data layer with a specific message per
+operation and a rollback — good design, invisible to a screen-level audit. **Reads** had no global
+handler at all (the query client sets only `retry: 1`), so the screens were the only line, and the
+real figures were **5 of 19** using the product's own shared `ErrorState` and **8 of 19** surfacing
+a read failure by any means. Same product, opposite conclusions, from one unasked question.
+
+## Findings in the product
+
+**Insight — latency is what users raise unprompted; memory cost is not.** 26 of 158 items raise
+latency/timeouts unprompted; RAM or memory cost, 3 of 158. `confidence: authored`. That matters for
+positioning, because ~10x Redis memory is this product's known honest weakness and this corpus says
+it is a minority concern among the people writing about the problem — while the strength is the
+majority one. *Does not show* prevalence among .NET developers generally; the frame is queries
+chosen to find this product's market, and it does not show that latency is their top priority, only
+that it is what they write down.
+
+**Design, major — a failed read renders identically to a healthy empty cluster.** On a 19-screen
+monitoring console, 14 screens do not use the shared `ErrorState` the product itself ships, and
+there is no global query error handler. The screens in that group include every diagnostic one —
+dashboard, runtime health, partition map, membership, metrics. For a distributed-store console,
+*"no nodes"* and *"I could not reach the manager"* are the two states an operator most needs told
+apart, and they are rendered the same. Evidence kind 1 — the product's own two surfaces disagreeing,
+with the shared component sitting right there — so not a matter of taste. Severity follows what it
+leads into: an operator concluding the cluster is fine because the console could not read it.
+
+**Design, major — writes and reads are held to different standards.** Every mutation in
+`lib/queries.ts` has an `onError` naming the operation and rolling back; queries have none. The
+product demonstrates on the write path that it knows how to do this.
+
+## Mistakes I made in this exercise
+
+- **I declared a skill unexercisable and was wrong**, and the corpus that disproved it was sitting
+  in a sibling directory of the same workspace. The operator had to push twice.
+- **I called `design` weak ground on a product with a 29-component React console** — 19 screens, SSE,
+  auth, a session guard. I had read a file from that console earlier in the same session.
+- **My first design audit produced a false count in both directions** (`Z-6`), and the only reason it
+  did not get reported is that I checked for a global handler before writing it up. That check cost
+  one command; the single-language grep two exercises earlier cost three false findings.
+- **I wrote `user.s` into a skill** avoiding an apostrophe in shell quoting, and caught it on reread.
+
 ## What is still not exercised
 
-Two skills remain `status: draft`: `design` and `discovery`. They are not untested — every
-documented command in all fifteen runs, every state they name is checked against the model, and the
-profile contract is enforced for both — but neither has been pointed at a real product, and that is
-a different claim.
-
-`discovery` cannot be exercised here at all: its method needs real users to interview, and inventing
-them would be the exact failure the suite exists to prevent. It is **NOT RUN**, for a stated reason,
-rather than quietly passed. `design` is weak ground on this product: its surface is a management
-console and a CLI, with little of the flow-and-state work the skill is about.
+Nothing. All fifteen skills have now been run against a real product. That is `exercised`, not
+`proven` — `shared/principles.md` §7 says the author does not grade their own work, and every one of
+these was graded by its author. The next step up requires someone else's engagement, which is not
+mine to award.

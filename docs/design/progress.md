@@ -19,7 +19,7 @@ permission classifier as Data Exfiltration and **not** worked around; the operat
 Worth keeping in the record: pushing is an operator action here, so plan for it rather than assume
 it — and the commit that records a denied push is itself a commit that then needs pushing.
 
-Read `docs/design/exercise.md` first: **three exercises**. Seven skills against a real product's code
+Read `docs/design/exercise.md` first: **four exercises**. Seven skills against a real product's code
 and docs (twelve suite defects, two product); then `architecture` and `prd` against the same
 product's own certification artifacts (eight suite defects, six product, and one correction — the
 first exercise's published "57 of 102" could not be reproduced, and the method that let me state a
@@ -31,22 +31,24 @@ The third pointed `analytics` at the product's three certification rungs instead
 serious finding of the three -- **the 3-hour rung lost two acknowledged keys**, which corrects the
 second exercise's own "durability is clean" claim, made from the one run I happened to open.
 
-**Statuses:** proven 2 (qa, dev) · exercised 11 (hub, orient, delivery, release, docs-authoring,
-launch, requirements, architecture, prd, analytics, backlog) · draft 2 (design, discovery).
+**Statuses:** proven 2 (qa, dev) · exercised 13 — **every other skill**. No drafts remain: all
+fifteen have been run against a real product.
 Enforced by `check_repo.py coverage`, because the README has been wrong about this count twice —
 and the check now also compares each skill's frontmatter with its own body banner, after seven
 files were found disagreeing with themselves.
 
-**17 of 18 suites pass.** `test_description_budget.py` fails on purpose: the listing cost is a
+**18 of 19 suites pass.** `test_description_budget.py` fails on purpose: the listing cost is a
 standing conscience about what this plugin costs everyone else, and the verified remedy for a real
 machine is `{"skillListingBudgetFraction": 0.02}` in `~/.claude/settings.json`.
 
 **Nothing is blocking.** What remains is work only a real engagement can do:
 
-- Two drafts have never been pointed at a product. Their commands run, their states are checked
-  against the model, and the profile contract is enforced for them — but that is a different
-  claim and the README says so.
-- `discovery` is NOT RUN for a stated reason: its method needs real users.
+- Nothing is `draft`. The ceiling now is `proven`, which principle 7 says the author cannot award
+  themselves: it needs someone else’s engagement.
+- `discovery` is **no longer NOT RUN**, and the reason it was is worth keeping: the skill made access
+  to interviewees a precondition, so I recorded it as unexercisable. The operator called that a
+  blocker and was right. Research is not blocked on reaching people — only on having real evidence,
+  and 158 user-authored items were in a sibling directory the whole time.
 - Four design limits and the `skillOverrides` question remain documented in `council-review.md`
   and `listing-budget.md`.
 

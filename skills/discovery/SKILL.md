@@ -1,13 +1,13 @@
 ---
 name: discovery
-description: Plan and synthesise product research: interview guides, and insight items that each carry their evidence, sample size and what they do not show, separating observed from reported from inferred. Use when the user wants user research planned or synthesised, interviews or usability sessions prepared, findings turned into insights, or a problem validated before a PRD. Not for writing the PRD - that is evidence:prd.
+description: Plan and synthesise product research from whatever real evidence exists - user-authored forum threads and issue trackers, support tickets, observed sessions, analytics, interviews - into insight items that each carry their evidence, sampling frame and what they do not show, separating observed from authored from reported from inferred. Never invents a user. Use when the user wants user research planned or synthesised, interviews or usability sessions prepared, findings turned into insights, or a problem validated before a PRD. Not for writing the PRD - that is evidence:prd.
 roles: RESEARCHER
-status: draft
+status: exercised
 ---
 
 # Discovery
 
-`status: draft` — see `${CLAUDE_SKILL_DIR}/README.md`.
+`status: exercised` -- run against a real product; weaker than `proven`. See `${CLAUDE_SKILL_DIR}/README.md`.
 
 Discovery's characteristic failure is not a bad interview. It is an insight nobody can argue with because
 nobody can see what it rests on: *"users want simpler onboarding"*, with no sample, no quote and no
@@ -36,6 +36,53 @@ preserved, never renumbered. The ten principles in `${CLAUDE_PLUGIN_ROOT}/shared
 the only thing here that is not theirs to set — and `status` prints what orient could not establish,
 which you must read before assuming anyone looked.
 
+## Evidence sources: interviews are one, and rarely the first available
+
+**Research is not blocked on access to people.** This skill was written interview-first and treated
+everything else as a warm-up, which made it unrunnable for exactly the products where discovery
+matters most: infrastructure, developer tools, anything self-hosted where you cannot reach your
+users, anything pre-launch. That framing was a defect, not a limitation of research.
+
+What is never acceptable is *inventing* a user, a quote, a persona or a count. Independence from
+interviews, not independence from evidence. If no evidence of any kind exists, the deliverable is
+saying so.
+
+| Source | What it can support | Watch for |
+|---|---|---|
+| **Observed sessions** | Strongest claims about behaviour | Small n; the observer changes the behaviour |
+| **User-authored public artifacts** — forum threads, issue trackers, Q&A sites, review sites, competitors' issues | Unprompted, timestamped, attributable, re-readable by a third party. **Often the largest corpus available and the only one for a pre-launch product** | The sampling frame is yours, not theirs — see below |
+| **Support tickets, sales-loss reasons** | Real failures, already sampled | Skewed to users who bothered to write |
+| **Interviews** | Depth, and the *why* behind a behaviour | Elicited; people misremember frequency and motive |
+| **Analytics** | What happened, at scale | No *why*; and see `/evidence:analytics` on denominators |
+| **Nothing** | Nothing. Say so, and say what you tried to find | Do not fill it with a persona |
+
+A new product has no users and that does not mean no evidence: **the problem exists in public before
+your product does.** Competitors' issue trackers, the forum threads where people describe the
+workaround, the questions asked on Q&A sites — all of it is user-authored and none of it needs your
+product to exist.
+
+### State the sampling frame, not just the sample size
+
+For interviews the shape is who you spoke to. For an artifact corpus **the shape is the query set and
+the platforms**, and it is part of the denominator. Without it a prevalence figure means nothing,
+because *you* chose what to go and look for.
+
+Exercising this skill on 158 user-authored items across 6 platforms and 17 search queries, that
+mattered more than any other single step — see the next section.
+
+### The elicitation line, for a corpus
+
+"Count" below says the difference between *unprompted* and *agreed-when-asked* is most of the
+signal. In a corpus the elicitation is **the search query that found the item**, not a question in a
+room, and the same rule applies: an item whose theme was already named by the query that surfaced it
+is elicited, not unprompted.
+
+This is not a technicality. On that corpus, "the Redis licence change matters to people" read as 24
+of 158 items — and **9 of 158 once the items found by queries containing "licen" were separated
+out.** Fifteen of the twenty-four were my own search terms coming back to me. A corpus assembled
+from your own hypothesis will confirm it, which is the "validating a solution you already chose"
+trap arriving through the sampling frame rather than through a leading question.
+
 ## What this skill produces
 
 | Hub item | When |
@@ -60,13 +107,22 @@ does_not_show The boundary. What a reader must not conclude from this
 confidence    observed | reported | inferred
 ```
 
-`confidence` is the field that does the most work, because the three are routinely blurred:
+`confidence` is the field that does the most work, because the values are routinely blurred:
 
 - **observed** — you watched it happen. Strongest, and rarest.
-- **reported** — someone told you. Useful, and people misremember their own behaviour, especially about
-  frequency and about why they did something.
+- **authored** — the user wrote it down themselves, unprompted, in public, with a timestamp and an
+  attributable handle, and a third party can go and re-read it. Not *observed* — you were not there —
+  but stronger than *reported* in the ways that usually matter: nobody elicited it, no interviewer
+  shaped it, and it is independently checkable rather than resting on your notes. This value exists
+  because the original three were written for interviews, and classing a forum thread as "reported"
+  understated it while "observed" overstated it.
+- **reported** — someone told you, in response to your asking. Useful, and people misremember their own
+  behaviour, especially about frequency and about why they did something.
 - **inferred** — you concluded it from something else. Legitimate, and it is *your* claim rather than the
   user's, so it is labelled as yours.
+
+An **authored** item that your own query named is not unprompted — see the elicitation line above.
+The handle, the date and the URL go in `evidence`, so the claim can be re-read rather than trusted.
 
 A synthesis that presents inferred as observed is the research equivalent of a `PASS` with no evidence.
 
@@ -107,7 +163,7 @@ two interviews and spending the rest confirming it.
 | | New | Existing |
 |---|---|---|
 | Who to talk to | People with the problem, who have never seen your product. Hardest part is finding them honestly rather than finding people who will agree | Your own users first, then churned users — who are the highest-signal and the least interviewed |
-| Free evidence already in the building | None. Say so | Support tickets, sales-loss reasons, the first-run trace in the product profile, and `/evidence:analytics` readings |
+| Free evidence already in the building | **Not none.** The problem predates your product: competitors' issue trackers, the forum threads where people describe the workaround, Q&A sites. User-authored, unprompted, and available before you have a single user | All of the above, plus support tickets, sales-loss reasons, the first-run trace in the product profile, and `/evidence:analytics` readings |
 | The trap | Validating a solution you already chose. Record the solution you had in mind *before* starting, so the contamination is visible | Assuming the current product shapes the problem. Your users have adapted to it; their workarounds are evidence about your product, not about the need |
 
 For an existing product, **read the support tickets before writing the guide.** They are a free, large,

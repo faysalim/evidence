@@ -115,8 +115,8 @@ matches the declarations.** Three levels, and a skill may not claim more than it
 | Status | Means | Skills |
 |---|---|---|
 | `proven` | Carries a real engagement's provenance, where its absence cost something | `qa`, `dev` |
-| `exercised` | Run against a real product by its author, defects found and fixed. **Weaker than proven** — principle 7 says the author does not grade their own work | `hub`, `orient`, `delivery`, `release`, `docs-authoring`, `launch`, `requirements`, `architecture`, `prd`, `analytics`, `backlog` |
-| `draft` | Written from first principles, never run. Exactly what `CONTRIBUTING.md` warns against | **Two are marked `status: draft`** — `design`, `discovery` |
+| `exercised` | Run against a real product by its author, defects found and fixed. **Weaker than proven** — principle 7 says the author does not grade their own work | `hub`, `orient`, `delivery`, `release`, `docs-authoring`, `launch`, `requirements`, `architecture`, `prd`, `analytics`, `backlog`, `design`, `discovery` |
+| `draft` | Written from first principles, never run. Exactly what `CONTRIBUTING.md` warns against | **None.** All fifteen have been run against a real product |
 
 That last count is checked, not asserted. It had to be: this README claimed thirteen, was corrected to
 eleven, and both were wrong, because `orient` carried no marker at all and so was invisible to a hand

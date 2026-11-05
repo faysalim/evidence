@@ -262,9 +262,32 @@ all three exercises:
 - **`link_types` was declared in the model and enforced nowhere on write** -- and §7b had just put
   an undeclared one into `architecture` as the prescribed command.
 
-**Statuses now:** `proven` 2 (`qa`, `dev`) · `exercised` 11 (`hub`, `orient`, `delivery`,
-`release`, `docs-authoring`, `launch`, `requirements`, `architecture`, `prd`, `analytics`,
-`backlog`) · `draft` 2 (`design`, `discovery`). The count is enforced, because the README has
+### 7d. A fourth exercise - `design` and `discovery`
+
+Both had been recorded as unexercisable. **Both claims were wrong**, and the operator said so:
+*"I don't like discovery depending on real users. This is a blocker. It must be independent."*
+
+- **`discovery` made access to people a precondition.** Its own text: 17 mentions of
+  interview/session, 5 of ticket/analytics, **zero** of issue/forum/artifact, one shipped template
+  (the interview guide) - and for a new product, under "free evidence already in the building",
+  the words **"None. Say so."** That is false: the problem exists in public before your product
+  does. It was exercisable all along against 158 user-authored items across 6 platforms, sitting in
+  a sibling directory of the same workspace.
+- **`confidence` was declared in prose and enforced nowhere** - the field `discovery` calls "the
+  field that does the most work", whose purpose is stopping inferred being presented as observed.
+  An insight reached ACCEPTED without one, making that failure undetectable rather than unprevented.
+  Third such field after `domains` and `link_types`.
+- **A fourth confidence value, `authored`**, because the original three were interview-shaped: a
+  timestamped public post with an attributable handle is not `observed` and `reported` understates it.
+- **The elicitation line for a corpus is the search query.** "The licence change matters" read as
+  24 of 158 items and is **9 of 158** unprompted; 15 were my own search terms returning to me.
+- **`design`'s state audit never asked where a state is handled.** My first pass on a 19-screen
+  console reported 11 of 19 covered; writes were handled centrally and invisibly to that audit,
+  reads had no global handler at all, and the real figures were 5 and 8 of 19.
+
+**Statuses now:** `proven` 2 (`qa`, `dev`) · `exercised` 13 - every other skill. **No drafts
+remain.** The ceiling is now `proven`, which principle 7 says the author cannot award themselves.
+The count is enforced, because the README has
 already been wrong about it twice.
 
 `discovery` is **NOT RUN** and cannot be exercised here: its method needs real users to

@@ -2,12 +2,12 @@
 name: design
 description: Turn stories into flows and designs covering the failure, empty, partial and permission-denied states as well as the happy path, and run design reviews whose findings are provable rather than matters of taste. Use when the user wants a flow, screen, interaction or design system work designed or reviewed, a usability problem diagnosed, or error and empty states specified. Not for testing a build - that is evidence:qa.
 roles: DESIGNER, DESIGN_LEAD
-status: draft
+status: exercised
 ---
 
 # Design
 
-`status: draft` — see `${CLAUDE_SKILL_DIR}/README.md`.
+`status: exercised` -- run against a real product; weaker than `proven`. See `${CLAUDE_SKILL_DIR}/README.md`.
 
 A design review fails the moment one of its findings can be answered with *"that's subjective"*, because
 after that nobody reads the section. So this skill holds design findings to the same evidence bar as
@@ -64,6 +64,22 @@ skipped are the ones users actually hit:
 engagement's worst findings were all failure paths that looked finished: a form that showed success
 regardless of outcome, a success panel over a swallowed submission.
 
+### Record *where* each state is handled, or the audit is wrong in both directions
+
+A state can be handled at the screen, in a shared component, in the data layer, or by a global
+default — and **centralised handling is both a correct answer and an invisible one.** Auditing only
+the screens produces false findings; assuming a global net exists produces missed ones.
+
+Exercising this skill on a real 19-screen console, the first pass counted per-screen error handling
+and reported 11 of 19 as covered. That was wrong twice over. Writes were handled centrally in the
+data layer, with a specific message per operation and a rollback — invisible to a screen-level
+audit, and done well. Reads had no global handler at all, so the screens were the only line, and the
+real figure was **5 of 19 using the shared error component, 8 of 19 surfacing a read failure by any
+means.** Same product, opposite conclusions, from one unasked question.
+
+So add a column. For each of the eight states: *handled where, and what happens if that layer is
+absent?*
+
 ## Error messages are a product surface
 
 `experience.md` has the full method. The part that belongs in a design deliverable: each message names
@@ -81,6 +97,16 @@ is what teaches people to skip the section.
 
 1. **The product already does it right somewhere else.** Removes taste from the argument entirely — it is
    the product's own two surfaces disagreeing. Cite both.
+
+   **The fastest route to this evidence in a real codebase is the shared component the product
+   already ships.** If there is an `ErrorState`, an `Empty`, a toast helper — then "this screen does
+   not use the thing you built for this" is a finding nobody can call subjective, and it comes with
+   its own fix. On that 19-screen console the product shipped both `ErrorState` and `Empty`; 5 and 7
+   screens used them. The 14 that did not included every diagnostic screen, so a failed read
+   rendered identically to a healthy empty cluster — which for a monitoring console inverts the one
+   distinction its users need most. Severity follows what it leads into
+   (`shared/vocabulary.md`): an operator concluding the cluster is fine because the console could
+   not reach it is not cosmetic.
 2. **A blocked or abandoned goal**, stated as a goal: "a viewer cannot find how to request access; the
    path exists only in an email they no longer have."
 3. **A measurement**: time, steps, exits from the product, doc round-trips, or a count of distinct

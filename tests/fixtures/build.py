@@ -327,7 +327,9 @@ def build_existing(hub):
     run(hub, "analyst", "ANALYST", "move", "I-1", "EVIDENCED",
         "-f", "evidence=14 of 19 converters activated within 24h; 3 of 221 non-converters did",
         "-f", "sample_size=240 trials, one 30-day window, one product",
-        "-f", "does_not_show=causation, nor anything about trials that never activated at all")
+        "-f", "does_not_show=causation, nor anything about trials that never activated at all",
+        # measured in the data, not described to anyone
+        "-f", "confidence=observed")
     run(hub, "pm", "PM", "move", "I-1", "ACCEPTED")
 
     # --- cleanup verified by re-listing -----------------------------------------------------
@@ -355,7 +357,9 @@ def build_new(hub):
     run(hub, "researcher", "RESEARCHER", "move", "I-1", "EVIDENCED",
         "-f", "evidence=6 of 9 coordinators described losing at least one request last month",
         "-f", "sample_size=9 coordinators across 3 teams; no requesters interviewed",
-        "-f", "does_not_show=how many requests are lost, nor what they were worth")
+        "-f", "does_not_show=how many requests are lost, nor what they were worth",
+        # they described it in interviews; people misremember frequency
+        "-f", "confidence=reported")
     run(hub, "pm", "PM", "move", "I-1", "ACCEPTED")
 
     run(hub, "pm", "PM", "add", "prd", "PRD-1",

@@ -42,7 +42,7 @@ which you must read before assuming anyone looked.
 | Hub item | Note |
 |---|---|
 | `metric` | `DEFINED` → `BASELINED` (requires `denominator` and `baseline`) → `READ` (requires `value`, `denominator`, `evidence`) → `INTERPRETED` **by the PM, not by you** |
-| `insight` | What the reading taught you, feeding back into discovery with its own evidence and `does_not_show` |
+| `insight` | What the reading taught you, feeding back into discovery with its own `evidence`, `sample_size`, `does_not_show` and `confidence` — a reading supports `observed` only where the data records the behaviour itself; otherwise it is `inferred`, and it is your claim, not the user's. See `/evidence:discovery` for the vocabulary |
 | `finding` | When the data shows the product is broken — a funnel step with a 100% drop is a bug, not a conversion problem |
 
 The last transition matters: **the analyst reads, a different role interprets.** That is §7. A reading and
@@ -108,7 +108,7 @@ What moved            and whether the window is long enough to say so
 What did not move     including the ones you hoped for. This section is not optional
 What we cannot tell   instrumentation gaps, windows too short, confounds (a price change,
                       a seasonal effect, another release in the same week)
-Insights              fed back as insight items, with evidence and does_not_show
+Insights              fed back as insight items, with evidence, does_not_show and confidence
 Recommendation        and who owns the decision it implies
 ```
 

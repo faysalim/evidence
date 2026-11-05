@@ -454,6 +454,7 @@ class Hub:
         for problem in (field_authority_problem(self.model, ev.get("type"), ev.get("role"),
                                                 ev.get("fields")),
                         severity_problem(self.model, ev.get("type"), ev.get("fields")),
+                        confidence_problem(self.model, ev.get("type"), ev.get("fields")),
                         guards_problem(ev.get("fields"))):
             if problem:
                 self.problems.append("%s line %d: %s"
@@ -492,6 +493,7 @@ class Hub:
                                  % (ev.get("_src"), ev.get("_line"), iid))
             return
         for problem in (severity_problem(self.model, item["type"], ev.get("fields")),
+                        confidence_problem(self.model, item["type"], ev.get("fields")),
                         guards_problem(ev.get("fields")),
                         link_field_problem(self.items, item["id"], item["type"],
                                            ev.get("fields"))):
@@ -927,6 +929,32 @@ def severity_problem(model, item_type, fields):
     return None
 
 
+def confidence_problem(model, item_type, fields):
+    """`confidence` separates what you watched from what you were told from what you concluded.
+
+    skills/discovery calls it "the field that does the most work" and names the failure it
+    prevents: "a synthesis that presents inferred as observed is the research equivalent of a
+    PASS with no evidence". It was declared in prose and enforced nowhere, so an insight could
+    reach ACCEPTED with no value at all -- which makes that failure undetectable rather than
+    merely unprevented, because a reader cannot tell `observed` from nobody-said.
+
+    Third field found declared-in-prose and unchecked, after `domains` and `link_types`.
+    """
+    if "confidence" not in (fields or {}):
+        return None
+    levels = tuple(model.get("confidence_levels") or ())
+    if not levels:
+        return None
+    value = fields["confidence"]
+    if not isinstance(value, str):
+        return ("confidence must be one of %s, not %r" % (", ".join(levels), value))
+    if value.strip().lower() not in levels:
+        return ("%r is not a confidence level. The model declares %s. 'high'/'medium'/'low' is "
+                "the usual wrong answer: these values record HOW the claim was established, not "
+                "how sure you feel about it." % (value, ", ".join(levels)))
+    return None
+
+
 def guards_problem(fields):
     """`guards` must be an object with a known ceiling, or the verdict cannot read the stake."""
     if "guards" not in (fields or {}):
@@ -1146,6 +1174,7 @@ def cmd_add(args):
     for problem in (create_problem(h.model, args.type, args.state, fields),
                     field_authority_problem(h.model, args.type, role, fields),
                     severity_problem(h.model, args.type, fields),
+                    confidence_problem(h.model, args.type, fields),
                     guards_problem(fields)):
         if problem:
             raise HubError(problem)
@@ -1167,6 +1196,7 @@ def cmd_move(args):
         raise HubError("no item %s in the hub" % args.id)
     fields = kv(args.field)
     for problem in (severity_problem(h.model, item["type"], fields),
+                    confidence_problem(h.model, item["type"], fields),
                     guards_problem(fields)):
         if problem:
             raise HubError(problem)
