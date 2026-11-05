@@ -1185,16 +1185,34 @@ def cmd_status(args):
     hub_dir = resolve_hub(args)
     exists = os.path.isdir(os.path.join(hub_dir, "events"))
     if not exists:
+        # The hint must be a command that RUNS. The earlier wording ended "otherwise
+        # `hub.py init`", and that is rejected for missing --actor/--role -- so the first
+        # thing a new engagement saw was advice that failed. Found by exercising
+        # skills/orient against a real product; a hint you cannot paste is worse than none,
+        # because it reads as a tool that does not work.
         print(json.dumps({"hub": hub_dir, "found": False,
                           "next": "no hub. If a prior qa-state.json or report dir exists, run "
-                                  "`hub.py import <dir>`; otherwise `hub.py init`."}, indent=1))
+                                  "`hub.py --hub %s import <dir> --actor NAME --role ROLE`; "
+                                  "otherwise `hub.py --hub %s init --actor NAME --role ROLE`. "
+                                  "Every write is attributable, init included."
+                                  % (hub_dir, hub_dir)}, indent=1))
         return 0
     h = Hub(hub_dir)
     by_state = {}
     for item in h.items.values():
         by_state.setdefault(item["type"], {}).setdefault(item["state"], 0)
         by_state[item["type"]][item["state"]] += 1
-    print(json.dumps({
+    # `not_established` is surfaced here because skills/orient Step 6 REQUIRES the orienting
+    # role to state what they could not establish, and warns that "every downstream skill
+    # reads the profile and will otherwise assume you looked". Exercising orient against a
+    # real product showed the profile accepted the field and NOTHING read it -- so the one
+    # safeguard against downstream silent assumption was prose with no consumer. `status` is
+    # the first thing every skill reads, so it is where the warning has to appear.
+    profile = h.meta.get("profile") or {}
+    unestablished = profile.get("not_established") or []
+    if isinstance(unestablished, str):
+        unestablished = [unestablished]
+    out = {
         "hub": hub_dir, "found": True,
         "engagement": h.meta.get("engagement"),
         "iteration": h.meta.get("iteration"),
@@ -1202,7 +1220,18 @@ def cmd_status(args):
         "by_type_state": by_state,
         "problems": len(h.validate()),
         "skew": len(h.skew),
-    }, indent=1, ensure_ascii=False))
+        "profile_mode": profile.get("mode"),
+        "not_established": list(unestablished),
+    }
+    if not profile:
+        out["next"] = ("no profile. Run /evidence:orient first, or every skill after this "
+                       "one guesses the product class, the deploy branch and their vocabulary.")
+    elif not unestablished:
+        out["not_established_warning"] = (
+            "the profile claims nothing was left unestablished. orient Step 6 requires that "
+            "paragraph; an empty list means either a complete orientation or one that did not "
+            "record its gaps, and a reader cannot tell which.")
+    print(json.dumps(out, indent=1, ensure_ascii=False))
     return 0
 
 

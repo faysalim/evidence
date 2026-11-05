@@ -2,7 +2,7 @@
 name: orient
 description: Establish the product profile and baseline before any other skill runs: new or existing product, its product class, the team's methodology, toolchain and existing conventions. For an existing product it builds a capability inventory from the running product and maps their artifacts onto hub item types. Use when starting work on an unfamiliar product or repo, or when another skill reports no profile. Not for testing - that is evidence:qa.
 roles: HEAD_OF_PRODUCT
-status: draft
+status: exercised
 ---
 
 # Orient
@@ -86,7 +86,7 @@ anything. **Establish each of these from the artifact, and record how you establ
 |---|---|
 | Which branch actually deploys | The hosting config, not the repo default. One repo's `master` was a month stale while the live line was `release/2.5.0` |
 | Which build is live, per component | A version endpoint, an image digest, or a string you can grep in the served asset. Record the commit delta from the branch tip |
-| What the product actually exposes | The route table, every environment-variable read, the option parser, the config schema. This is the **capability inventory**, and it is enumerated from code, never from the docs |
+| What the product actually exposes | The route table, every environment-variable read, the option parser, the config schema. This is the **capability inventory**, and it is enumerated from code, never from the docs. **Exclude build output and vendored dependencies, and say which directories you excluded** — a grep that reaches into `bin/`, `obj/`, `dist/` or `node_modules/` counts compiled copies of the same symbol and silently inflates the denominator. Exercising this skill, that mistake turned 102 real reads into 154, with binary-match lines among them. Separate test-only knobs from production ones too, and state the split: a certification harness's flags are not product surface |
 | What the docs claim it exposes | The published surface. The difference, both ways, is your first set of findings |
 | What data it keeps, and what it promises about it | Consistency, durability, delivery guarantees — stated or **absent**. An absent contract is itself the first finding |
 | Who the users actually are | There is rarely one. An admin, an end user, an implementation partner, a support agent |
@@ -128,9 +128,21 @@ first success, the live build per component, the capability count with its denom
 between code, docs and backlog. Record it as an `initiative` item if the work has a name, or as profile
 fields if it does not.
 
-Finish by stating, in one short paragraph, **what you could not establish and why** — the credentials you
-were not given, the environment you could not reach, the component whose build you could not identify.
-Every downstream skill reads the profile and will otherwise assume you looked.
+Finish by recording **what you could not establish and why** — the credentials you were not given, the
+environment you could not reach, the component whose build you could not identify. Every downstream skill
+reads the profile and will otherwise assume you looked.
+
+Put it in the profile's `not_established` field, one entry per gap, not only in prose:
+
+```
+hub.py profile --set 'not_established=["deploy_branch: no deployment pipeline, only one CI workflow",
+                                       "live build per component: no version endpoint reachable"]'
+```
+
+`hub.py status` prints that list to every skill that reads it, and warns when it is **empty** — because
+an empty list means either a complete orientation or one that did not record its gaps, and a reader
+cannot tell which. A paragraph in a report nobody opens is not a safeguard. This was prose with no
+consumer until exercising this skill showed the field was accepted and read by nothing.
 
 ## For the lead
 
