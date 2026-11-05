@@ -397,8 +397,17 @@ def check_coverage():
         path = os.path.join(skills_dir, name, "SKILL.md")
         if not os.path.isfile(path):
             continue
-        head = read(path).split("\n---", 2)
-        fm = head[1] if len(head) > 2 else head[0]
+        # Frontmatter is the block between the FIRST two `---` lines, and nothing else. The
+        # earlier `split("\n---", 2)` then `head[1] if len>2 else head[0]` read the BODY as
+        # frontmatter for any skill containing a `---` rule -- which fails closed on a real
+        # skill, and worse, would PASS a skill whose body happened to contain a `roles:` line
+        # while its actual frontmatter declared nothing.
+        text = read(path)
+        fm = ""
+        if text.startswith("---\n"):
+            end = text.find("\n---", 3)
+            fm = text[4:end] if end != -1 else ""
+        mr = re.search(r"^roles:\s*(.+)$", fm, re.M)
         mr = re.search(r"^roles:\s*(.+)$", fm, re.M)
         ms = re.search(r"^status:\s*(\S+)\s*$", fm, re.M)
         if not mr:
