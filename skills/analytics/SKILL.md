@@ -63,11 +63,12 @@ evidence      WHERE the baseline came from -- the artifact, query or document, q
               Required to reach `BASELINED`. A reading already had to be sourced; the
               baseline every reading is later compared against did not, which is backwards
 target        value and date, from the PRD
-instrumented  which events, since when -- and whether the window predates instrumentation
+instrumented  yes / no / not yet -- the same closed vocabulary `/evidence:prd` sets it with
+events_since  which events, and from when. A window that predates them is not a comparison
 window        the period this reading covers, and why that period
 ```
 
-**`instrumented ... since when` is the field that prevents the most common wrong conclusion.** A metric
+**`events_since` is the field that prevents the most common wrong conclusion.** A metric
 compared against a baseline from before its events existed is not a comparison. If the instrumentation is
 younger than the window, the honest reading is "not measurable yet", which the hub has a state for:
 `NOT_MEASURABLE`.

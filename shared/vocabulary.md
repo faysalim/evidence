@@ -51,6 +51,19 @@ recover. Severity there is consequence × **reach**, so state reach on the findi
 only / one role / one platform / operators under incident. Anything that **tells the user something
 false** is always both a product bug and an experience blocker, under one shared id.
 
+## Priority: deliberately NOT a vocabulary here
+
+`severity` above is closed, declared and enforced: it is this suite's word for how bad a defect is,
+and the verdict reads it. **`priority` is the operator's field and stays open on purpose.** It holds
+whatever scale the team already uses — `P0`/`P1`, MoSCoW, a sprint number — because
+`/evidence:orient` Step 3 says to adopt their scale and map it once, not to impose one.
+
+This is written down because "open by design" and "nobody got round to it" look identical to a
+reader otherwise. A sweep for closed vocabularies that were enforced nowhere found four real ones
+(`confidence`, `mode`, `instrumented`, `provenance` on the replay path); `priority` came up in the
+same sweep and is the one that should **not** be closed. The model still restricts *who* may set it
+to `OPERATOR`, which is the part that matters.
+
 ## Closing action: what actually closes a finding
 
 "Bug" collapses the distinction the operator needs to plan. A report that says "22 bugs" when

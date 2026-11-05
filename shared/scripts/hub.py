@@ -454,7 +454,8 @@ class Hub:
         for problem in (field_authority_problem(self.model, ev.get("type"), ev.get("role"),
                                                 ev.get("fields")),
                         severity_problem(self.model, ev.get("type"), ev.get("fields")),
-                        confidence_problem(self.model, ev.get("type"), ev.get("fields")),
+                        vocabulary_problem(self.model, ev.get("fields"),
+                                           ev.get("provenance")),
                         guards_problem(ev.get("fields"))):
             if problem:
                 self.problems.append("%s line %d: %s"
@@ -493,7 +494,8 @@ class Hub:
                                  % (ev.get("_src"), ev.get("_line"), iid))
             return
         for problem in (severity_problem(self.model, item["type"], ev.get("fields")),
-                        confidence_problem(self.model, item["type"], ev.get("fields")),
+                        vocabulary_problem(self.model, ev.get("fields"),
+                                           ev.get("provenance")),
                         guards_problem(ev.get("fields")),
                         link_field_problem(self.items, item["id"], item["type"],
                                            ev.get("fields"))):
@@ -929,29 +931,52 @@ def severity_problem(model, item_type, fields):
     return None
 
 
-def confidence_problem(model, item_type, fields):
-    """`confidence` separates what you watched from what you were told from what you concluded.
+# Why a generic checker rather than one function per field. Three exercises each found a field whose
+# values were a closed set in the prose and an open set in the code -- `domains`, `link_types`, then
+# `confidence`. Three is a habit, so the sweep that followed declared all of them in ONE place,
+# `model.json: field_vocabularies`, and checks them through ONE function wired into every write and
+# every replay path. A per-field function is how `provenance` ended up guarded by argparse on the
+# CLI and by nothing on the fold, so a hand-written log could store what the CLI refused.
+VOCAB_HINTS = {
+    "confidence": "these values record HOW the claim was established, not how sure you feel about "
+                  "it, so 'high'/'medium'/'low' is the usual wrong answer",
+    "mode": "thirteen skills branch on this field; a typo puts every one of them on the NEW branch "
+            "of a product that already exists, which skills/orient calls the expensive direction",
+    "instrumented": "'not yet' is a real answer and means the measuring is in scope; prose about "
+                    "which events and since when belongs in `evidence` or `window`",
+    "provenance": "`reconstructed` means read back off the product rather than authored here",
+}
 
-    skills/discovery calls it "the field that does the most work" and names the failure it
-    prevents: "a synthesis that presents inferred as observed is the research equivalent of a
-    PASS with no evidence". It was declared in prose and enforced nowhere, so an insight could
-    reach ACCEPTED with no value at all -- which makes that failure undetectable rather than
-    merely unprevented, because a reader cannot tell `observed` from nobody-said.
 
-    Third field found declared-in-prose and unchecked, after `domains` and `link_types`.
-    """
-    if "confidence" not in (fields or {}):
+def vocabulary_problem(model, fields, provenance=None):
+    """Any field whose values the model declares as a closed set."""
+    vocabs = model.get("field_vocabularies") or {}
+    if not vocabs:
         return None
-    levels = tuple(model.get("confidence_levels") or ())
-    if not levels:
-        return None
-    value = fields["confidence"]
-    if not isinstance(value, str):
-        return ("confidence must be one of %s, not %r" % (", ".join(levels), value))
-    if value.strip().lower() not in levels:
-        return ("%r is not a confidence level. The model declares %s. 'high'/'medium'/'low' is "
-                "the usual wrong answer: these values record HOW the claim was established, not "
-                "how sure you feel about it." % (value, ", ".join(levels)))
+    candidates = dict(fields or {})
+    if provenance is not None:
+        # `provenance` rides on the event, not in `fields`.
+        candidates["provenance"] = provenance
+    for field, value in candidates.items():
+        allowed = vocabs.get(field)
+        if not allowed or value is None or is_blank(value):
+            continue
+        if not isinstance(value, str):
+            return ("%s must be one of %s, not %r" % (field, ", ".join(allowed), value))
+        if value.strip().lower() not in [str(a).lower() for a in allowed]:
+            hint = VOCAB_HINTS.get(field)
+            # A reason smuggled into the value is the common way this fails -- "NOT YET --
+            # instrumenting is in scope" reads naturally and is not a value. Say where it goes.
+            # Longest match first, or "NOT YET -- the reason" is reported as the value 'no'.
+            smuggled = next((a for a in sorted(allowed, key=lambda x: -len(str(x)))
+                             if str(value).strip().lower().startswith(str(a).lower())), None)
+            extra = ""
+            if smuggled:
+                extra = (" The value is %r; the reason why belongs in a field of its own, not "
+                         "inside it." % smuggled)
+            return ("%r is not a valid `%s` value. The model declares %s.%s%s"
+                    % (value, field, ", ".join(allowed), extra,
+                       (" " + hint[0].upper() + hint[1:] + ".") if hint else ""))
     return None
 
 
@@ -1133,6 +1158,11 @@ def cmd_profile(args):
     actor, role = identity(args)
     fields = kv(args.set)
     check_domains(fields)
+    # `mode` lives here and nowhere else, and thirteen skills branch on it. `mode=exsiting` used to
+    # be stored in silence, which put every one of them on the NEW branch of a live product.
+    problem = vocabulary_problem(Hub(hub).model, fields)
+    if problem:
+        raise HubError(problem)
     append_event(hub, role, actor, {"op": "profile", "fields": fields})
     print("profile updated")
     return 0
@@ -1174,7 +1204,7 @@ def cmd_add(args):
     for problem in (create_problem(h.model, args.type, args.state, fields),
                     field_authority_problem(h.model, args.type, role, fields),
                     severity_problem(h.model, args.type, fields),
-                    confidence_problem(h.model, args.type, fields),
+                    vocabulary_problem(h.model, fields, getattr(args, "provenance", None)),
                     guards_problem(fields)):
         if problem:
             raise HubError(problem)
@@ -1196,7 +1226,7 @@ def cmd_move(args):
         raise HubError("no item %s in the hub" % args.id)
     fields = kv(args.field)
     for problem in (severity_problem(h.model, item["type"], fields),
-                    confidence_problem(h.model, item["type"], fields),
+                    vocabulary_problem(h.model, fields),
                     guards_problem(fields)):
         if problem:
             raise HubError(problem)

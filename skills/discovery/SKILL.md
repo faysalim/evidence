@@ -104,7 +104,7 @@ evidence      Quotes, observed behaviour, counts. Verbatim where it is a quote
 sample_size   n, and WHO: "6 of 9 admins at 3 customers; no end users"
 method        Interview / observed session / support-ticket read / analytics pull
 does_not_show The boundary. What a reader must not conclude from this
-confidence    observed | reported | inferred
+confidence    observed | authored | reported | inferred
 ```
 
 `confidence` is the field that does the most work, because the values are routinely blurred:

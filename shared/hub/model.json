@@ -18,12 +18,12 @@
     "ANALYST": "Data / product analyst",
     "OPERATOR": "The operator: the human who owns the decision, the budget and the release"
   },
-  "confidence_levels": [
-    "observed",
-    "authored",
-    "reported",
-    "inferred"
-  ],
+  "field_vocabularies": {
+    "confidence": ["observed", "authored", "reported", "inferred"],
+    "mode": ["new", "existing"],
+    "provenance": ["authored", "derived", "reconstructed"],
+    "instrumented": ["yes", "no", "not yet"]
+  },
   "link_types": [
     "realizes",
     "refines",

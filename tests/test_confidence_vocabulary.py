@@ -70,7 +70,9 @@ def evidenced(hub, iid, *extra):
 def main():
     model = json.loads(io.open(os.path.join(ROOT, "shared", "hub", "model.json"),
                                encoding="utf-8").read())
-    declared = tuple(model.get("confidence_levels") or ())
+    # The vocabulary moved into  when the sweep put all four in one place.
+    # Two declarations of one vocabulary is the defect this file is about, so there is only one.
+    declared = tuple((model.get("field_vocabularies") or {}).get("confidence") or ())
     print("model declares confidence levels: %s" % (", ".join(declared) or "NONE"))
     check("the vocabulary is declared in the model", set(declared) == set(EXPECTED),
           "declared %r, expected %r" % (declared, EXPECTED))

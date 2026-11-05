@@ -100,7 +100,11 @@ def build_existing(hub):
         "-f", "name=trial-to-paid conversion",
         "-f", "definition=paid conversions within 30 days / trials started",
         "-f", "denominator=trials started, excluding internal and test mailboxes",
-        "-f", "instrumented=NOT YET -- instrumenting is in scope")
+        # The value is the enum; the reason why lives in a field of its own. Writing
+        # "NOT YET -- instrumenting is in scope" into the value is the natural mistake,
+        # and the closed vocabulary now refuses it and says where the reason goes.
+        "-f", "instrumented=not yet",
+        "-f", "instrumented_note=instrumenting is in scope for this PRD")
     run(hub, "pm", "PM", "link", "PRD-1", "measures", "M-1")
     run(hub, "pm", "PM", "move", "PRD-1", "REVIEW")
     # The sponsor approves -- not the author. The hub enforces this.

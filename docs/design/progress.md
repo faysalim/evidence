@@ -37,12 +37,14 @@ Enforced by `check_repo.py coverage`, because the README has been wrong about th
 and the check now also compares each skill's frontmatter with its own body banner, after seven
 files were found disagreeing with themselves.
 
-**18 of 19 suites pass.** `test_description_budget.py` fails on purpose: the listing cost is a
+**19 of 20 suites pass.** `test_description_budget.py` fails on purpose: the listing cost is a
 standing conscience about what this plugin costs everyone else, and the verified remedy for a real
 machine is `{"skillListingBudgetFraction": 0.02}` in `~/.claude/settings.json`.
 
 **Nothing is blocking.** What remains is work only a real engagement can do:
 
+- The closed-vocabulary sweep is done: all four are declared in one place and checked on every
+  write and replay path. `priority` stays open on purpose and `vocabulary.md` says so.
 - Nothing is `draft`. The ceiling now is `proven`, which principle 7 says the author cannot award
   themselves: it needs someone else’s engagement.
 - `discovery` is **no longer NOT RUN**, and the reason it was is worth keeping: the skill made access

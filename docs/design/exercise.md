@@ -465,6 +465,46 @@ product demonstrates on the write path that it knows how to do this.
   one command; the single-language grep two exercises earlier cost three false findings.
 - **I wrote `user.s` into a skill** avoiding an apostrophe in shell quoting, and caught it on reread.
 
+## The sweep: closed vocabularies declared in prose and enforced nowhere
+
+Three exercises each found one of these — `domains`, `link_types`, `confidence`. Three is a habit,
+not a coincidence, so the fourth exercise ended with a sweep rather than a fifth one-off. It found
+four more:
+
+| field | What was wrong |
+|---|---|
+| `mode` | `profile --set mode=exsiting` was stored in silence. **Thirteen skills branch on this field**, and `skills/orient` says getting it wrong is the expensive direction: "treating an existing product as new produces a PRD that describes a product nobody has, and a backlog of stories that are already built". A typo put every downstream skill on the NEW branch of a live product |
+| `provenance` | Guarded by argparse `choices` on the CLI and by **nothing** on replay, so a hand-written log carrying `reconstrcuted` folded in with 0 problems. The suite already has the rule — a hand-written line must not do what the CLI refuses — and this field sat outside it |
+| `instrumented` | `skills/prd` documents `yes / no / NOT YET`; `instrumented=maybe-ish` was stored. And `skills/analytics` documented the **same field on the same item type** as prose — "which events, since when" — so the producer and the consumer of a metric disagreed about what it holds. Analytics now carries the enum plus a separate `events_since` |
+| `confidence` | Fixed one exercise earlier — and its own contract block still listed **three of the four** values while the bullets below listed four. The test written for it checked only the bullets, so it passed |
+
+All four are now declared in **one** place, `model.json: field_vocabularies`, and checked by **one**
+function wired into every write path and every replay path. The old one-off `confidence_levels` key
+was deleted rather than aliased: two declarations of one vocabulary is the defect this sweep is about.
+
+A smaller thing the sweep produced, from a real fixture: `instrumented=NOT YET -- instrumenting is
+in scope` is the natural way to write it and is not a value. A closed vocabulary with nowhere to put
+the *why* pushes people to smuggle the why into the value, so the refusal now names the value it can
+see and says the reason belongs in a field of its own.
+
+`priority` came up in the same sweep and is the one that must **not** be closed. `severity` is this
+suite's word; priority is the operator's, and `orient` Step 3 says to adopt the team's scale.
+`shared/vocabulary.md` now says so explicitly, because "open by design" and "nobody got round to it"
+look identical to a reader otherwise.
+
+### My own check went blind on the line it was written for
+
+Twice, in the same file. The doc-agreement clause reads every line that enumerates a vocabulary and
+compares it to the model. Its first version matched the subject with `\S+`, which skipped lines using
+`<angle bracket>` placeholders. Its second version stripped a trailing prose clause by splitting on a
+three-space run — **before** stripping the line's own indent, so the split consumed the indent and
+returned an empty body. `discovery`'s `confidence` line silently stopped being checked, and the suite
+went green.
+
+I caught it by running with `-v` and noticing a line **absent** from the output, then proved the
+clause could still fail by reverting the fix and watching it fail. That is the habit worth keeping:
+**a check that passes is not evidence until you have seen it fail.**
+
 ## What is still not exercised
 
 Nothing. All fifteen skills have now been run against a real product. That is `exercised`, not
