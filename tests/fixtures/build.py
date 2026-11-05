@@ -189,13 +189,15 @@ def build_existing(hub):
     run(hub, "qa1", "QA", "add", "case", "S5-00a",
         "-f", "scope=licensing", "-f", "graded_by=licensing",
         "-f", "action=Issue one trial end to end through the real form and real mailbox",
-        "-f", "oracle=a licence that activates the real binary")
+        "-f", "oracle=a licence that activates the real binary",
+        "-f", '{"build": "4.2.2@d4d4d4d"}'.replace('{"build"', '{"build"').join(["ran_under=", ""]))
     run(hub, "qa1", "QA", "move", "S5-00a", "PASS", "-f", "evidence=activated; 4.2.1@9f8e7d6")
 
     run(hub, "qa1", "QA", "add", "case", "S5-00b",
         "-f", "scope=licensing", "-f", "graded_by=licensing",
         "-f", "action=Revoke one issued licence by hand, then re-run the activation check",
-        "-f", "oracle=the check reports exactly one failure, not zero and not two")
+        "-f", "oracle=the check reports exactly one failure, not zero and not two",
+        "-f", '{"build": "4.2.2@d4d4d4d"}'.join(["ran_under=", ""]))
     run(hub, "qa1", "QA", "move", "S5-00b", "PASS", "-f", "evidence=1 failure reported")
 
     run(hub, "qa1", "QA", "add", "case", "S5-01",

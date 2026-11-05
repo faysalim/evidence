@@ -1,7 +1,7 @@
 {
  "generated_from": {
   "generated_by": "hub.py",
-  "generated_at": "2026-11-04T16:02:23.537420Z",
+  "generated_at": "2026-11-05T05:04:13.262641Z",
   "event_count": 86,
   "event_digest": "1ddbe320b583fc8b882244b3a34999dcf9058132db2012e7fe11f04ba4e8698f",
   "schema_version": 1,
@@ -65,7 +65,9 @@
    "action": "Issue one trial end to end through the real form and real mailbox",
    "oracle": "a licence that activates the real binary",
    "guards": null,
-   "ran_under": null,
+   "ran_under": {
+    "build": "4.2.2@d4d4d4d"
+   },
    "touches": null,
    "graded_by": "licensing",
    "result": "PASS",
@@ -78,7 +80,9 @@
    "action": "Revoke one issued licence by hand, then re-run the activation check",
    "oracle": "the check reports exactly one failure, not zero and not two",
    "guards": null,
-   "ran_under": null,
+   "ran_under": {
+    "build": "4.2.2@d4d4d4d"
+   },
    "touches": null,
    "graded_by": "licensing",
    "result": "PASS",

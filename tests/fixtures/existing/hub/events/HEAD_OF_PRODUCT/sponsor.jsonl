@@ -1,1 +1,1 @@
-{"v": 1, "event_id": "HEAD_OF_PRODUCT/sponsor#1", "seq": 1, "ts": "2026-11-04T16:02:16.156550Z", "actor": "sponsor", "role": "HEAD_OF_PRODUCT", "op": "move", "after": ["PM/pm#6"], "fields": {}, "item": "PRD-1", "to": "APPROVED"}
+{"v": 1, "event_id": "HEAD_OF_PRODUCT/sponsor#1", "seq": 1, "ts": "2026-11-05T05:04:06.586653Z", "actor": "sponsor", "role": "HEAD_OF_PRODUCT", "op": "move", "after": ["PM/pm#6"], "fields": {}, "item": "PRD-1", "to": "APPROVED"}

@@ -311,7 +311,11 @@ def verdict(hub):
     # Only releases still under consideration. A ROLLED_BACK or already-SHIPPED release's build
     # is not the build this verdict is about, and counting it let a fresh candidate inherit the
     # previous release's gate rows.
-    IN_FLIGHT = {"CANDIDATE", "NO_VERDICT", "NOT_GREEN", "GREEN"}
+    # SHIPPED counts: a verdict about a release that shipped is still a verdict about its build.
+    # Only ROLLED_BACK drops out. Excluding SHIPPED made a shipped release report "no release
+    # names a build", which is the opposite of the condition's purpose -- the per-release coverage
+    # check below is what actually stops a new candidate inheriting an older release's rows.
+    IN_FLIGHT = {"CANDIDATE", "NO_VERDICT", "NOT_GREEN", "GREEN", "SHIPPED"}
     builds = {}
     for i in items.values():
         if (i["type"] == "release" and i["state"] in IN_FLIGHT
