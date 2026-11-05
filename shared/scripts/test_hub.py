@@ -349,14 +349,18 @@ def main():
             # now reads these and why a hub with none of them computes NO VERDICT.
             g("add", "release", "REL-1", "-f", "title=2.5.1", actor="dm1", role="DELIVERY")
             g("move", "REL-1", "CANDIDATE", "-f", "build=sha256:abc", actor="dev1", role="DEV")
+            g("profile", "--set", 'required_checkpoints=["rollback-rehearsed","privacy-signoff"]',
+              actor="hop1", role="HEAD_OF_PRODUCT")
             g("add", "readiness", "RD-1", "-f", "title=rollback rehearsed on the candidate",
-              "-f", "owner_role=DEVOPS", actor="ops1", role="DEVOPS")
+              "-f", "owner_role=DEVOPS", "-f", "checkpoint=rollback-rehearsed",
+              actor="ops1", role="DEVOPS")
             g("link", "RD-1", "gates", "REL-1", actor="ops1", role="DEVOPS")
             g("move", "RD-1", "MET", "-f", "build=sha256:abc",
               "-f", "evidence=rehearsed 2026-03-04, 41s to previous digest",
               actor="ops1", role="DEVOPS")
             g("add", "readiness", "RD-2", "-f", "title=privacy sign-off for the new field",
-              "-f", "owner_role=SECURITY", actor="sec1", role="SECURITY")
+              "-f", "owner_role=SECURITY", "-f", "checkpoint=privacy-signoff",
+              actor="sec1", role="SECURITY")
             g("link", "RD-2", "gates", "REL-1", actor="sec1", role="SECURITY")
             g("move", "RD-2", "MET", "-f", "build=sha256:abc",
               "-f", "evidence=DPIA addendum signed 2026-03-05",

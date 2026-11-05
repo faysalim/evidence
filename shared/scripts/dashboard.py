@@ -396,12 +396,35 @@ def verdict(hub):
         for rel_id in targets:
             gated.setdefault(rel_id, []).append(i)
 
+    # The required SET, not a row count. With ownership and build-scoping enforced, a release could
+    # still go green on a single rehearsed rollback, with nothing said about alerting, on-call,
+    # privacy or support. The team's own set replaces this suite's defaults entirely -- a team that
+    # gates on three things must not be told it is missing twenty-eight.
+    profile = hub.meta.get("profile") or {}
+    their_set = profile.get("required_checkpoints")
+    if isinstance(their_set, str):
+        their_set = [their_set]
+    if their_set:
+        required, set_source = sorted(set(their_set)), "the team's own set"
+    else:
+        defaults = hub.model.get("default_checkpoints") or {}
+        required = sorted({k for role, keys in defaults.items()
+                           if role != "doc" and isinstance(keys, dict) for k in keys})
+        set_source = "this suite's default set -- orient imports the team's own to replace it"
+
     problems, satisfied, stale = [], [], []
     for rel_id, build in sorted(builds.items()):
         rows = gated.get(rel_id, [])
         if not rows:
             problems.append("%s (%s) has no readiness checkpoint at all" % (rel_id, build))
             continue
+        covered = {i["fields"].get("checkpoint") for i in rows
+                   if i["state"] in ("MET", "WAIVED") and i["fields"].get("build") == build}
+        uncovered = [k for k in required if k not in covered]
+        if uncovered:
+            problems.append("%s (%s) is missing %d of %d required checkpoint(s) from %s: %s"
+                            % (rel_id, build, len(uncovered), len(required), set_source,
+                               ", ".join(uncovered)))
         for i in rows:
             row_build = i["fields"].get("build")
             if i["state"] == "OPEN":

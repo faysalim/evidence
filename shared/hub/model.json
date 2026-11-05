@@ -22,11 +22,31 @@
     "OPERATOR": "The operator: the human who owns the decision, the budget and the release"
   },
   "field_vocabularies": {
-    "confidence": ["observed", "authored", "reported", "inferred"],
-    "mode": ["new", "existing"],
-    "provenance": ["authored", "derived", "reconstructed"],
-    "owner_role": ["DEVOPS", "SECURITY", "SUPPORT"],
-    "instrumented": ["yes", "no", "not yet"]
+    "confidence": [
+      "observed",
+      "authored",
+      "reported",
+      "inferred"
+    ],
+    "mode": [
+      "new",
+      "existing"
+    ],
+    "provenance": [
+      "authored",
+      "derived",
+      "reconstructed"
+    ],
+    "owner_role": [
+      "DEVOPS",
+      "SECURITY",
+      "SUPPORT"
+    ],
+    "instrumented": [
+      "yes",
+      "no",
+      "not yet"
+    ]
   },
   "link_types": [
     "gates",
@@ -1558,5 +1578,45 @@
     "finding->fix": "fixes",
     "fix->release": "ships",
     "release->metric": "measures"
+  },
+  "default_checkpoints": {
+    "doc": "The checkpoint set a release is gated on when the team has none of its own. Keys are stable; titles are this suite's wording and the team's wins. skills/orient imports their set into the profile as `required_checkpoints`, which overrides this entirely -- adopt, never impose. A `readiness` row names the key it satisfies in its `checkpoint` field, and the release verdict fails naming any required key with no MET or WAIVED row on that release's build.",
+    "DEVOPS": {
+      "rollback-rehearsed": "Rollback run on the candidate build, and timed",
+      "rollback-data-path": "What happens to writes made after deploy and before rollback",
+      "alert-fired": "An alert was deliberately triggered and the page arrived on-call",
+      "on-call-named": "A named person and a backup, for the release window",
+      "runbook-walked": "Walked by someone who did not write it, with where they stopped",
+      "certs-quotas-secrets": "Expiry past the release horizon, rotation path tested",
+      "capacity-limits": "Headroom at expected load, and the behaviour at the limit",
+      "backup-restored": "A backup restored somewhere and the data read, not merely taken",
+      "observability-new-surface": "The shipped surface is visible: metric, log or trace",
+      "one-person-deploy": "Reversible by one person at 2 a.m., with access and no laptop dependency",
+      "canary-staged-rollout": "Staged exposure defined: cohort, duration, and the promote/halt rule",
+      "kill-switch": "The new behaviour can be turned off without a deploy, and that was exercised",
+      "status-page": "Who updates it, with what wording, and the trigger to do so",
+      "dns-email-auth": "DNS, SPF, DKIM and DMARC correct for any new sending or serving name"
+    },
+    "SECURITY": {
+      "data-classification": "What classes of data the change touches, from schema and code",
+      "privacy-signoff": "Named signer, date and scope where personal data is touched",
+      "legal-signoff": "Where a term, licence or customer contract is implicated",
+      "dependency-check": "Run against the candidate digest, with the result",
+      "secrets-check": "No credential in the artifact, image, logs or client bundle",
+      "authz-new-surface": "Every new route, flag or field exercised as a role that must not reach it",
+      "audit-trail": "A new privileged action is attributable afterwards",
+      "threat-model": "Updated, or explicitly stated unchanged",
+      "consent-and-telemetry-observed": "Consent honoured and telemetry observed ON THE WIRE, not from the product's own setting"
+    },
+    "SUPPORT": {
+      "known-issues-published": "Generated from open and DECIDE findings, each with symptom and workaround",
+      "answers-prepared": "The questions this change predictably causes, answered in advance",
+      "escalation-path": "Who support reaches by name in the window, and what they may do",
+      "support-surfaces-updated": "Macros, canned replies and help-centre entries the change makes wrong",
+      "watch-plan": "What, who, how long, and what would make us act",
+      "volume-expectation": "Plausible effect on ticket volume, and whether the rota covers it",
+      "support-trained": "Support walked the change themselves, not just read about it",
+      "sales-cs-briefed": "Sales and customer success told what changed and what not to promise"
+    }
   }
 }

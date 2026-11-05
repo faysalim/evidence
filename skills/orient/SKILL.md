@@ -135,6 +135,7 @@ Existing products arrive with artifacts. Map rather than rewrite:
 | A bug tracker | `finding` | Ids preserved. States **not** inherited: nobody verified them here |
 | A test suite | `case` items for what it actually asserts | A test whose assertion is weaker than its name is a finding |
 | Runbooks, SLOs, a contract | **acceptance requirements**, source 0 | The highest-authority oracle there is, and the one most often missing from QA |
+| A deploy checklist, change-management form or production-readiness review | **`required_checkpoints`** in the profile | Their keys, their wording. This **replaces** the suite's default set rather than adding to it — a team that gates a release on three things must not be told it is missing twenty-eight |
 | Cloud resources, tenants, keys you touch | `cleanup` | From minute one |
 
 `hub.py import <dir>` does the mechanical part for a prior `qa-state.json`. Everything else is `add
@@ -164,6 +165,16 @@ Put it in the profile's `not_established` field, one entry per gap, not only in 
 hub.py profile --set 'not_established=["deploy_branch: no deployment pipeline, only one CI workflow",
                                        "live build per component: no version endpoint reachable"]'
 ```
+
+If they have a release checklist, import it here too — the release verdict is gated on it:
+
+```
+hub.py profile --set 'required_checkpoints=["lossless-scale-in","rollback-rehearsed","oncall-named"]'
+```
+
+Absent that, the verdict falls back to `shared/hub/model.json: default_checkpoints` — 31 keys across
+DEVOPS, SECURITY and SUPPORT — and says in the condition detail that the set is the suite's and not
+theirs, so nobody mistakes a default for an agreement.
 
 `hub.py status` prints that list to every skill that reads it, and warns when it is **empty** — because
 an empty list means either a complete orientation or one that did not record its gaps, and a reader

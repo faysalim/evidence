@@ -71,7 +71,8 @@ def release(hub, rid, build):
 
 def checkpoint(hub, cid, rel, build=None, owner="DEVOPS", state="MET"):
     run(hub, "add", "readiness", cid, "-f", "title=rollback rehearsed",
-        "-f", "owner_role=%s" % owner, "--actor", "c1", "--role", "DELIVERY")
+        "-f", "owner_role=%s" % owner, "-f", "checkpoint=rollback-rehearsed",
+        "--actor", "c1", "--role", "DELIVERY")
     if rel:
         run(hub, "link", cid, "gates", rel, "--actor", "c1", "--role", "DELIVERY")
     if state == "MET":
@@ -85,6 +86,10 @@ def checkpoint(hub, cid, rel, build=None, owner="DEVOPS", state="MET"):
 def fresh(tmp, name):
     hub = os.path.join(tmp, name)
     run(hub, "init", "--actor", "h1", "--role", "HEAD_OF_PRODUCT")
+    # This file is about build and release scoping, not about set coverage, so the required set
+    # is the one key these probes create. test_required_checkpoints.py covers the set itself.
+    run(hub, "profile", "--set", 'required_checkpoints=["rollback-rehearsed"]',
+        "--actor", "h1", "--role", "HEAD_OF_PRODUCT")
     return hub
 
 
@@ -116,7 +121,8 @@ def main():
         hub = fresh(tmp, "waivebuild")
         release(hub, "REL-A", "sha256:aaa")
         run(hub, "add", "readiness", "RD-9", "-f", "title=alert fires",
-            "-f", "owner_role=DEVOPS", "--actor", "c1", "--role", "DELIVERY")
+            "-f", "owner_role=DEVOPS", "-f", "checkpoint=rollback-rehearsed",
+            "--actor", "c1", "--role", "DELIVERY")
         run(hub, "link", "RD-9", "gates", "REL-A", "--actor", "c1", "--role", "DELIVERY")
         rc, out = run(hub, "move", "RD-9", "WAIVED", "-f", "reason=deadline",
                       "--actor", "op", "--role", "OPERATOR")

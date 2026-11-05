@@ -76,8 +76,11 @@ def green_base(hub):
     cli(hub, "d", "DEV", "move", "REL-1", "CANDIDATE", "-f", "build=sha256:abc")
     # Readiness outside QA, scoped to this release and this build: the verdict counts only rows
     # linked to the release being judged whose build matches it.
+    cli(hub, "h", "HEAD_OF_PRODUCT", "profile",
+        "--set", 'required_checkpoints=["rollback-rehearsed"]')
     cli(hub, "ops", "DEVOPS", "add", "readiness", "RD-1",
-        "-f", "title=rollback rehearsed", "-f", "owner_role=DEVOPS")
+        "-f", "title=rollback rehearsed", "-f", "owner_role=DEVOPS",
+        "-f", "checkpoint=rollback-rehearsed")
     cli(hub, "ops", "DEVOPS", "link", "RD-1", "gates", "REL-1")
     cli(hub, "ops", "DEVOPS", "move", "RD-1", "MET",
         "-f", "evidence=rehearsed, 41s", "-f", "build=sha256:abc")
