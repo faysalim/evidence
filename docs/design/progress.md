@@ -56,19 +56,38 @@ machine is `{"skillListingBudgetFraction": 0.02}` in `~/.claude/settings.json`.
 
 ## Test status
 
-| Suite | Count | State |
-|---|---|---|
-| `shared/scripts/test_hub.py` | 70 | PASS |
-| `shared/scripts/test_safe_edit.py` | 25 | PASS |
-| `shared/scripts/test_qa_dashboard.py` | 25 | PASS |
-| `shared/scripts/check_repo.py` | 7 checks | PASS |
-| `tests/test_fixtures.py` | 24 | PASS |
-| `tests/test_description_budget.py` | 6 (+1 measured) | PASS — 2,349 tok of 2,500 |
-| `tests/triggers/check_overlap.py` | overlap + corpus | PASS — found 8 unguarded pairs, all now guarded |
-| `claude plugin validate .` | — | PASS (one warning: no icon) |
-| `claude plugin eval` (6 cases) | — | MIXED, see below |
+| Suite | State |
+|---|---|
+| `shared/scripts/test_hub.py` | PASS |
+| `shared/scripts/test_qa_dashboard.py` | PASS |
+| `shared/scripts/test_safe_edit.py` | PASS |
+| `tests/test_baseline_evidence.py` | PASS |
+| `tests/test_confidence_vocabulary.py` | PASS |
+| `tests/test_description_budget.py` | FAIL — **deliberate**, see the listing-budget note below |
+| `tests/test_documented_commands.py` | PASS |
+| `tests/test_domain_vocabulary.py` | PASS |
+| `tests/test_enforcement_claims.py` | PASS |
+| `tests/test_field_vocabularies.py` | PASS |
+| `tests/test_fixtures.py` | PASS |
+| `tests/test_link_vocabulary.py` | PASS |
+| `tests/test_low_defects.py` | PASS |
+| `tests/test_metric_denominator.py` | PASS |
+| `tests/test_orient_exercise.py` | PASS |
+| `tests/test_round2_regressions.py` | PASS |
+| `tests/test_secret_patterns.py` | PASS |
+| `tests/test_skill_model_agreement.py` | PASS |
+| `tests/test_status_contract.py` | PASS |
+| `tests/triggers/check_overlap.py` | PASS |
+| `shared/scripts/check_repo.py` | PASS — 8 checks |
+| `claude plugin validate .` | PASS |
 
-**~160 automated checks passing.**
+**19 of 20 suites pass; 8 of 8 repo checks pass.** The one failure is deliberate.
+This table is generated from a real run, not maintained by hand -- the hand-maintained
+version claimed `test_description_budget.py` PASSED while the paragraph above it said the
+opposite, and an independent reviewer caught the contradiction. Regenerate it the same way
+rather than editing rows.
+
+
 
 ### Eval results, honestly
 
