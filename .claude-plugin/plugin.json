@@ -2,7 +2,7 @@
   "name": "evidence",
   "displayName": "Evidence",
   "description": "Evidence-first product development: one skill per deliverable, every role covered, sharing one work-item hub and one dashboard. Verdicts are computed, never written.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": { "name": "Faisal Iqbal", "url": "https://github.com/faysalim" },
   "license": "MIT",
   "keywords": ["qa", "product-management", "testing", "sdlc", "quality-assurance", "agents"],
