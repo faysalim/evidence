@@ -122,7 +122,12 @@ def creator_role(itype):
 def seed(hub):
     """Generous context, with ids unlikely to collide with a document's own examples."""
     sh(["init"], hub)
-    sh(["profile", "--set", "mode=existing", "--set", 'domains=["payments"]'],
+    # A correctly oriented hub has a capability inventory and the command that produced it --
+    # validate now demands both for mode=existing, and `dashboard` exits non-zero on a problem.
+    sh(["profile", "--set", "mode=existing", "--set", 'domains=["payments"]',
+        "--set", "capability_inventory=48",
+        "--set", "capability_inventory_method=git ls-files | xargs grep -ho 'PAY_[A-Z_]*' "
+                 "| sort -u | wc -l"],
        hub, role="HEAD_OF_PRODUCT")
     for t, i, f, actor, role in [
         ("case", "SEED-C1", ["action=do the thing", "oracle=the operator's ledger"], "qa1", "QA"),

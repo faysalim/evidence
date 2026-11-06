@@ -117,6 +117,19 @@ anything. **Establish each of these from the artifact, and record how you establ
 | What data it keeps, and what it promises about it | Consistency, durability, delivery guarantees — stated or **absent**. An absent contract is itself the first finding |
 | Who the users actually are | There is rarely one. An admin, an end user, an implementation partner, a support agent |
 
+**This is enforced, not advised.** `hub.py validate` fails for `mode=existing` with no
+`capability_inventory`, and fails again if there is a count with no `capability_inventory_method`.
+It was prose before, and an engagement on a real product simply never built one — so nobody knew how
+big the job was, ~50 cases looked fine for a whole product, and every check passed. Record both:
+
+```
+hub.py profile --set capability_inventory=131 \
+   --set capability_inventory_method="git ls-files | xargs grep -hoE 'ZARIS_[A-Z0-9_]+' | sort -u | wc -l"
+```
+
+The count is what every later coverage number divides by, and `hub.py status` uses it to compute the
+case floor the engagement owes. A surface nobody counted makes a case set of any size unfalsifiable.
+
 **Do the thing, once, as a user would.** Install it, sign up, run the quickstart — and time it. That
 first-run trace is perishable: you get exactly one genuine first encounter with a product, and it is also
 the baseline every later iteration is measured against.

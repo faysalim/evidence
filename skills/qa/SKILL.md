@@ -134,6 +134,23 @@ on a 12-hour wait.
 
 ## Step 3 — Design the cases first, then test by doing
 
+**Generate the case set; do not invent it.** The suite ships **744 enumerable case candidates** across
+its 31 domain files — every condition in each `## Failure catalogue` and every entry in each
+`## Defect classes to look for by name`. Enumerate them rather than remembering them:
+
+```
+hub.py catalogue <domain>                                      # what it names, numbered
+hub.py catalogue <domain> --as-commands --scope <s> --prefix S1 # ready to run, one per condition
+```
+
+`desktop-app` alone yields 29. Four domains for one product yielded **103 before a single line of
+the product's own surface was considered.** An engagement that worked from memory wrote 50 cases for
+a whole product and every check in this suite passed, because nothing counted what it owed.
+
+**`hub.py status` now reports the case set against a floor** computed from the capability inventory
+plus those catalogue conditions. It is a floor, not a target, and it is the engagement's own
+arithmetic — argue with it by changing the inventory, not by ignoring it.
+
 `${CLAUDE_SKILL_DIR}/references/test-cases.md` carries the row fields, the nine derivation sources and the
 honesty rules. Four things must survive any summary of it:
 

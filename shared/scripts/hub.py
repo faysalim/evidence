@@ -252,6 +252,190 @@ def next_seq(hub, role, actor):
     return last + 1
 
 
+DOMAINS_DIR_PATH = os.path.join(os.path.dirname(HERE), "domains")
+MIDDOT = "·"
+
+
+def shlex_split(line):
+    """Split a printed command the way a shell would, so emitted stubs can be re-run."""
+    import shlex
+    return shlex.split(line)
+
+
+def _domain_text(name):
+    path = os.path.join(DOMAINS_DIR_PATH, "%s.md" % name)
+    if not os.path.isfile(path):
+        have = sorted(f[:-3] for f in os.listdir(DOMAINS_DIR_PATH)
+                      if f.endswith(".md") and f != "README.md")
+        raise HubError("no domain file %r. The suite ships %d: %s"
+                       % (name, len(have), ", ".join(have)))
+    with io.open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
+def _section(text, pattern):
+    m = re.search(r"^## [^\n]*%s[^\n]*\n(.*?)(?=^## |\Z)" % pattern, text, re.S | re.M | re.I)
+    return m.group(1) if m else ""
+
+
+def catalogue_entries(name):
+    """Every condition a domain's failure catalogue names, as case material.
+
+    Two shapes exist in the files and both are load-bearing: middot-separated prose (most of
+    them) and bullet lists. The first parser handled only bullets and reported `desktop-app` as
+    having ZERO conditions when it names eighteen -- which is how 413 enumerable conditions across
+    31 domains stayed invisible to tooling, and how an engagement wrote 50 cases for a whole
+    product. A catalogue nobody can enumerate is a catalogue nobody enumerates.
+    """
+    # The heading name varies across the files -- "Failure catalogue", "Fault catalogue",
+    # "Fault / failure catalogue (...)". Matching only the first spelling reported
+    # distributed-database as having ZERO conditions when it names a dozen. Match the word that
+    # is actually common.
+    body = _section(_domain_text(name), "catalogue")
+    return _enumerate_section(body)
+
+
+def _enumerate_section(body):
+    """Every distinct item a domain section names, whatever shape it is written in.
+
+    Three shapes exist in the files and all are load-bearing: middot-separated prose, bullet
+    lists, and markdown tables -- several files use two at once. Handling one at a time, or
+    returning early on the first found, reported `desktop-app` as having ZERO conditions when it
+    names eighteen and `distributed-database` as having ONE when it names eighteen. That is how
+    446 enumerable conditions stayed invisible to tooling while an engagement wrote 50 cases for
+    a whole product.
+    """
+    out, seen = [], set()
+
+    def add(condition, detail):
+        key = re.sub(r"\W+", " ", condition.lower()).strip()
+        if len(key) > 8 and key not in seen:
+            seen.add(key)
+            out.append({"condition": condition, "detail": detail})
+
+    for para in body.split("\n\n"):
+        if MIDDOT not in para or para.lstrip().startswith(("- ", "|")):
+            continue
+        for piece in para.split(MIDDOT):
+            flat = " ".join(piece.split()).strip(" .")
+            add(re.sub(r"\*\*(.+?)\*\*", r"\1", flat), flat)
+    for raw in re.findall(r"^- (.+?)(?=\n- |\n\n|\Z)", body, re.S | re.M):
+        flat = " ".join(raw.split())
+        lead = re.match(r"\*\*(.+?)\.?\*\*", flat)
+        add(re.sub(r"\*\*(.+?)\*\*", r"\1", lead.group(1) if lead else flat), flat)
+    for line in body.splitlines():
+        if not line.startswith("|") or "---" in line:
+            continue
+        cells = [c.strip().strip("*") for c in line.strip().strip("|").split("|")]
+        if len(cells) < 2 or cells[0].lower() in ("class", "defect class", "family", "surface"):
+            continue
+        add(cells[0], cells[1])
+    return out
+
+
+def defect_classes(name):
+    """The classes a domain says to look for BY NAME. Same three shapes as the catalogue."""
+    body = _section(_domain_text(name), "defect classes")
+    return [{"name": e["condition"], "test": e["detail"]} for e in _enumerate_section(body)]
+
+
+def coverage_floor(hub_obj):
+    """The case count this engagement's OWN profile implies, with the arithmetic shown.
+
+    An engagement wrote ~50 cases for a whole product and every check passed, because no expected
+    count existed anywhere in the suite. With no surface count there is nothing for 30 cases to be
+    30 of, so 30 reads as fine.
+
+    A FLOOR, never a target: one case per capability-inventory entry, plus one per catalogue
+    condition and named defect class of each declared domain, plus a smoke and a calibration row
+    per scope. Every term is data the suite already collects, so the number is derived rather than
+    asserted -- and it is deliberately conservative, because a floor that can be argued with is
+    worth more than a target that can be dismissed.
+    """
+    profile = hub_obj.meta.get("profile") or {}
+    inv = profile.get("capability_inventory")
+    n_inv = 0
+    if isinstance(inv, int):
+        n_inv = inv
+    elif isinstance(inv, str):
+        m = re.search(r"\d[\d,]*", inv)
+        n_inv = int(m.group(0).replace(",", "")) if m else 0
+    elif isinstance(inv, (list, tuple)):
+        n_inv = len(inv)
+
+    domains = profile.get("domains") or []
+    if isinstance(domains, str):
+        domains = [domains]
+    per_domain, n_dom = {}, 0
+    for d in domains:
+        try:
+            n = len(catalogue_entries(d)) + len(defect_classes(d))
+        except HubError:
+            per_domain[d] = None          # declared and has no file: reported, never counted as 0
+            continue
+        per_domain[d] = n
+        n_dom += n
+
+    other = profile.get("domains_other") or []
+    if isinstance(other, str):
+        other = [other]
+    unmatched = [d for d, n in per_domain.items() if n is None] + list(other)
+
+    scopes = {i["fields"].get("scope") or i["fields"].get("graded_by")
+              for i in hub_obj.items.values() if i["type"] == "case"}
+    scopes = {s for s in scopes if s}
+    gates = 2 * max(len(scopes), 1)       # a smoke and a calibration row per scope
+
+    cases = sum(1 for i in hub_obj.items.values() if i["type"] == "case")
+    return {"inventory": n_inv, "domain_conditions": n_dom, "per_domain": per_domain,
+            "unmatched_domains": unmatched, "gate_rows": gates,
+            "floor": n_inv + n_dom + gates, "cases": cases}
+
+
+def cmd_catalogue(args):
+    """Enumerate a domain's catalogue, optionally as runnable `add case` stubs."""
+    names = [args.domain] if args.domain else []
+    if not names:
+        raise HubError("name a domain, or several: `hub.py catalogue desktop-app`. The profile's "
+                       "own domains are in `hub.py profile`; pass one of them. Run without a hub "
+                       "-- this reads the shipped domain files, not your engagement.")
+    seq = 0
+    for name in names:
+        entries = catalogue_entries(name)
+        classes = defect_classes(name)
+        if not args.as_commands:
+            print("%s -- %d catalogue condition(s), %d named defect class(es)"
+                  % (name, len(entries), len(classes)))
+            for i, e in enumerate(entries, 1):
+                print("  %2d. %s" % (i, e["condition"]))
+            for c in classes:
+                print("   * %s -- %s" % (c["name"], c["test"]))
+            print()
+            print("Each line above is one case. `--as-commands` emits them ready to run; give "
+                  "`--scope` and `--prefix` to match your own id convention.")
+            continue
+        for e in entries:
+            seq += 1
+            cid = "%s-%02d" % (args.prefix, seq)
+            action = e["condition"]
+            print('hub.py add case %s -f scope=%s -f action=%s -f oracle=%s --role QA'
+                  % (cid, _q(args.scope), _q(action),
+                     _q("TO FILL: what independently says pass or fail for this condition")))
+        for c in classes:
+            seq += 1
+            cid = "%s-%02d" % (args.prefix, seq)
+            print('hub.py add case %s -f scope=%s -f action=%s -f oracle=%s --role QA'
+                  % (cid, _q(args.scope), _q("look for %s by name" % c["name"]),
+                     _q(c["test"])))
+    return 0
+
+
+def _q(s):
+    """Quote for a shell line that must survive copy-paste."""
+    s = str(s).replace('"', "'")
+    return '"%s"' % s
+
+
 def role_problem(role):
     """A role the model does not declare, on any write.
 
@@ -785,6 +969,27 @@ class Hub:
         #
         # Filing the finding is deliberately NOT blocked anywhere: making the defect the expensive
         # thing to record would be the exact opposite of the point.
+        # The capability inventory, demanded rather than suggested. orient Step 4 calls it "the
+        # heart of the skill" and a real engagement simply never built one -- so nobody knew how
+        # big the job was, ~50 cases looked fine for a whole product, and every check passed.
+        # Without a surface count there is no denominator for anything downstream.
+        profile = self.meta.get("profile") or {}
+        if profile.get("mode") == "existing":
+            if not profile.get("capability_inventory"):
+                out.append(
+                    "mode=existing and the profile has no `capability_inventory`. skills/orient "
+                    "Step 4 calls this the heart of the skill: enumerate what the product really "
+                    "exposes, from code. Until it exists there is no coverage denominator for "
+                    "anything -- a case set of any size is unfalsifiable, because nothing records "
+                    "how big the surface is. `hub.py profile --set capability_inventory=<n> "
+                    "--set capability_inventory_method='<the command>'`")
+            elif not profile.get("capability_inventory_method"):
+                out.append(
+                    "the profile states a `capability_inventory` and no "
+                    "`capability_inventory_method`. A count nobody can recompute is not a "
+                    "denominator: four honest readings of one prose exclusion once gave 93, 96, "
+                    "103 and 131 on the same commit. Record the command that produced it.")
+
         scoped_cases = {i["fields"].get("scope") or i["fields"].get("graded_by")
                         for i in self.items.values() if i["type"] == "case"}
         any_case = any(i["type"] == "case" for i in self.items.values())
@@ -1574,10 +1779,34 @@ def cmd_status(args):
         # A class the suite has no file for. Surfaced so a reader can tell it from a typo, and so
         # the skill that goes looking for a fault catalogue knows there is none to find.
         out["domains_other"] = list(other)
+    # The case set against the floor its own profile implies. An engagement wrote ~50 cases for a
+    # whole product and nothing anywhere said that was thin, because no expected count existed.
+    fl = coverage_floor(h)
+    out["coverage_floor"] = {k: fl[k] for k in
+                             ("cases", "floor", "inventory", "domain_conditions", "gate_rows")}
+    if fl["unmatched_domains"]:
+        out["coverage_floor"]["domains_without_a_file"] = fl["unmatched_domains"]
+    if fl["floor"] and fl["cases"] < fl["floor"]:
+        out["coverage_shortfall"] = (
+            "%d case(s) of a floor of %d implied by this profile: %d capability-inventory "
+            "entr(ies) + %d catalogue condition(s) and named defect class(es) across %s + %d gate "
+            "row(s). A FLOOR, not a target. `hub.py catalogue <domain> --as-commands` emits the "
+            "domain half ready to run."
+            % (fl["cases"], fl["floor"], fl["inventory"], fl["domain_conditions"],
+               ", ".join(k for k, v in fl["per_domain"].items() if v) or "no domain",
+               fl["gate_rows"]))
+
     if not profile:
         out["next"] = ("no profile. Run /evidence:orient first, or every skill after this "
                        "one guesses the product class, the deploy branch and their vocabulary.")
-    elif not domains:
+    elif profile.get("mode") == "existing" and not profile.get("capability_inventory"):
+        out["next"] = ("no `capability_inventory`. orient Step 4 is the heart of the skill: "
+                       "enumerate what the product really exposes, from code, and record the "
+                       "command. Until then no coverage number this engagement reports means "
+                       "anything, because nothing says how big the surface is.")
+    # Independent of the `next` step above: a missing class and a missing inventory are two
+    # different gaps and reporting only the first found hid the other.
+    if profile and not domains:
         out["domains_warning"] = (
             "the profile names no product class. orient Step 2 requires choosing one from "
             "shared/domains/ -- and every skill that reads this field treats silence as 'no "
@@ -1776,6 +2005,19 @@ def build_parser():
     p.add_argument("--state"); p.add_argument("--owner")
     p.add_argument("--provenance", choices=["authored", "derived", "reconstructed"])
     p.add_argument("-f", "--field", action="append"); p.set_defaults(fn=cmd_add)
+
+    p = add_parser("catalogue",
+                   epilog="one case per catalogue condition. The 31 domain files name 413\n"
+                          "conditions between them; an engagement that wrote 50 cases for a\n"
+                          "whole product had no way to enumerate them.\n"
+                          "  hub.py catalogue desktop-app\n"
+                          "  hub.py catalogue desktop-app --as-commands --scope install "
+                          "--prefix I1")
+    p.add_argument("domain", nargs="?")
+    p.add_argument("--as-commands", action="store_true")
+    p.add_argument("--scope", default="TO-FILL")
+    p.add_argument("--prefix", default="C1")
+    p.set_defaults(fn=cmd_catalogue)
 
     p = add_parser("moves", epilog="what each move of a type demands, and who may make it.")
     p.add_argument("type", nargs="?"); p.set_defaults(fn=cmd_moves)

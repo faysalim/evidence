@@ -63,6 +63,12 @@ def build_existing(hub):
         "--set", "mode=existing",
         "--set", 'domains=["licensing-server","api-platform"]',
         "--set", "deploy_branch=release/4.2",
+        # orient Step 4's heart: the surface, counted, with the command that counted it. validate
+        # demands both for an existing product, because without a surface count no coverage
+        # number the engagement reports means anything.
+        "--set", "capability_inventory=74",
+        "--set", "capability_inventory_method=git ls-files '*.cs' | grep -viE 'tests?/' | "
+                 "xargs grep -hoE 'LICENCE_[A-Z_]+' | sort -u | wc -l",
         "--set", 'live_builds={"web":"a1b2c3d","issuer":"4.2.1@9f8e7d6"}',
         "--set", "methodology=two-week-iterations",
         "--set", 'mandate={"role":"QA","report_only":true,'
