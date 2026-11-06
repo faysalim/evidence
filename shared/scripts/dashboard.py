@@ -536,6 +536,154 @@ def render_overview(hub):
     return "".join(out) + "</table>"
 
 
+def process_by_iteration(hub):
+    """What happened in each cycle: filed, fixed, verified, bounced, reopened, and coverage.
+
+    The dashboard showed current state and no process. It could not answer the questions anyone
+    actually asks of a QA engagement -- how many defects did the first pass find, how much of the
+    planned coverage was reachable, how many of DEV's fixes survived verification, how many came
+    back -- even though every one of those is already in the event log with an actor, a role, a
+    timestamp and an iteration.
+
+    Derived by walking the applied events in fold order and tracking the iteration the `iteration`
+    op last set, so every move is attributed to the cycle it happened in rather than to the
+    item's creation cycle. Nothing here is stored; it is all recomputed, like the verdict.
+    """
+    BOUNCE = ("STILL_PRESENT", "PARTIAL", "NOT_IN_BUILD", "CANNOT_RETEST")
+    DISMISS = ("REJECTED", "DEFERRED", "DUPLICATE", "WITHDRAWN", "DISPUTED")
+    RAN = ("PASS", "PASS_SHORT", "FAIL")
+    UNREACHED = ("BLOCKED", "NOT_RUN")
+
+    rows = {}
+    order = []
+
+    def bucket(n):
+        if n not in rows:
+            rows[n] = Counter()
+            order.append(n)
+        return rows[n]
+
+    cur = None
+    for ev in hub.applied:
+        op = ev.get("op")
+        if op == "iteration":
+            cur = ev.get("iteration")
+            bucket(cur)
+            continue
+        b = bucket(cur)
+        typ = ev.get("type")
+        if op == "add" and typ == "finding":
+            b["filed"] += 1
+            s = str((ev.get("fields") or {}).get("severity") or "").strip().lower()
+            if s in ("critical", "blocker"):
+                b["filed_blocking"] += 1
+        elif op == "add" and typ == "case":
+            b["designed"] += 1
+        elif op == "move":
+            to = ev.get("to")
+            role = ev.get("role")
+            item = hub.items.get(ev.get("item")) or {}
+            if item.get("type") == "finding":
+                if to == "FIXED" and role == "DEV":
+                    b["fixed_by_dev"] += 1
+                elif to == "VERIFIED":
+                    b["verified"] += 1
+                elif to == "CLOSED":
+                    b["closed"] += 1
+                elif to in BOUNCE:
+                    b["bounced"] += 1
+                elif to in DISMISS:
+                    b["dismissed"] += 1
+                elif to == "REOPENED":
+                    b["reopened"] += 1
+            elif item.get("type") == "case":
+                if to in RAN:
+                    b["ran"] += 1
+                    if to == "FAIL":
+                        b["failed"] += 1
+                elif to in UNREACHED:
+                    b["unreached"] += 1
+
+    # A regression is a NEW id linked `introduced_by`, not a reopen of the same id -- the model
+    # says so explicitly, and conflating them hides which fixes caused new defects.
+    for i in hub.items.values():
+        if i["type"] != "finding":
+            continue
+        if any(l.get("rel") == "introduced_by" for l in i.get("links", [])):
+            rows.setdefault(i.get("iteration"), Counter())
+            if i.get("iteration") not in order:
+                order.append(i.get("iteration"))
+            rows[i.get("iteration")]["regressions"] += 1
+    return order, rows
+
+
+def render_process(hub):
+    order, rows = process_by_iteration(hub)
+    if not rows or not any(sum(c.values()) for c in rows.values()):
+        return ('<p class="empty">No iterations recorded. <code>hub.py iteration N</code> marks a '
+                'cycle, and every count below is then attributed to the cycle it happened in.</p>')
+
+    # A cycle in which nothing countable happened is noise, not information -- the events before
+    # the first `iteration` op are usually just init and profile.
+    order = [n for n in order if sum(rows[n].values())]
+    if not order:
+        return ('<p class="empty">Iterations are recorded but nothing countable happened in '
+                'them yet.</p>')
+
+    def label(n):
+        return "iteration %s" % n if n is not None else "before any iteration"
+
+    out = ['<table><tr><th>cycle</th><th>findings filed</th><th>of those blocking</th>'
+           '<th>fixed by DEV</th><th>verified by QA</th><th>closed</th>'
+           '<th>bounced back by QA</th><th>dismissed</th><th>reopened</th>'
+           '<th>regressions (new id)</th></tr>']
+    tot = Counter()
+    for n in order:
+        c = rows[n]
+        tot.update(c)
+        out.append("<tr><td>%s</td>%s</tr>"
+                   % (esc(label(n)),
+                      "".join("<td>%s</td>" % (c.get(k) or "&ndash;")
+                              for k in ("filed", "filed_blocking", "fixed_by_dev", "verified",
+                                        "closed", "bounced", "dismissed", "reopened",
+                                        "regressions"))))
+    out.append("<tr><th>all cycles</th>%s</tr>"
+               % "".join("<th>%s</th>" % (tot.get(k) or 0)
+                         for k in ("filed", "filed_blocking", "fixed_by_dev", "verified",
+                                   "closed", "bounced", "dismissed", "reopened",
+                                   "regressions")))
+    out.append("</table>")
+
+    # First-pass fix yield: of the fixes DEV handed back, how many survived verification. This is
+    # the single number that says whether the QA-DEV loop is working, and it was not on the page.
+    graded = tot.get("verified", 0) + tot.get("bounced", 0)
+    if graded:
+        out.append('<p>Of %d fix(es) DEV handed back and QA graded, <strong>%d survived '
+                   'verification first time</strong> and %d came back &mdash; first-pass yield '
+                   '<strong>%d%%</strong>. A handback that bounces is not a failure of either '
+                   'role; a <em>rising</em> bounce rate is.</p>'
+                   % (graded, tot.get("verified", 0), tot.get("bounced", 0),
+                      round(100.0 * tot.get("verified", 0) / graded)))
+
+    out.append('<h3>Coverage, per cycle</h3>')
+    out.append('<table><tr><th>cycle</th><th>cases designed</th><th>run</th><th>of those failed</th>'
+               '<th>blocked or not run</th><th>reached</th></tr>')
+    for n in order:
+        c = rows[n]
+        ran, un = c.get("ran", 0), c.get("unreached", 0)
+        attempted = ran + un
+        pct = ("%d%%" % round(100.0 * ran / attempted)) if attempted else "&ndash;"
+        out.append("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>"
+                   % (esc(label(n)), c.get("designed") or "&ndash;", ran or "&ndash;",
+                      c.get("failed") or "&ndash;", un or "&ndash;", pct))
+    out.append("</table>")
+    out.append('<p><strong>&ldquo;Reached&rdquo; is the honest coverage number</strong>: cases that '
+               'actually ran, over cases anyone tried to run. A case that is <code>BLOCKED</code> '
+               'or <code>NOT RUN</code> is not coverage and is never counted as such &mdash; it is '
+               'the gap, and it is what the verdict denies on.</p>')
+    return "".join(out)
+
+
 def render_roles(hub):
     waiting = defaultdict(list)
     owned = defaultdict(list)
@@ -758,6 +906,7 @@ def render_index(hub):
         (sum(1 for i in items.values() if "OPERATOR" in hub.waiting_on(i) and is_open(i)),
          "waiting on operator", "warn"),
     ]))
+    body.append("<h2>The process, cycle by cycle</h2>" + render_process(hub))
     body.append("<h2>All items by type and state</h2>" + render_overview(hub))
     body.append("<h2>Per role: waiting on them, and what they own</h2>" + render_roles(hub))
     body.append("<h2>Awaiting the operator</h2>" + render_operator_queue(hub))
