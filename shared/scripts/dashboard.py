@@ -371,6 +371,33 @@ def verdict(hub):
     else:
         conditions.append(("The hub itself validates", True, "validate: 0 problems"))
 
+    # Case-first, as a gate rather than an instruction. The verdict is what everyone wants, so it
+    # is where skipping the step has to cost something: a scope that produced findings and never
+    # recorded a single thing it tried has no coverage denominator, and a green against no
+    # denominator is the claim this whole method exists to refuse.
+    case_scopes = {i["fields"].get("scope") or i["fields"].get("graded_by")
+                   for i in items.values() if i["type"] == "case"}
+    any_case = any(i["type"] == "case" for i in items.values())
+    findings = [i for i in items.values() if i["type"] == "finding"]
+    no_denom = sorted({i["fields"].get("scope") for i in findings
+                       if i["fields"].get("scope") and i["fields"].get("scope")
+                       not in case_scopes})
+    unscoped = [i["id"] for i in findings if not i["fields"].get("scope")]
+    if not findings:
+        cf_ok, cf_detail = (True, "no findings yet, so nothing claims a denominator")
+    elif no_denom or (unscoped and not any_case):
+        bits = []
+        if no_denom:
+            bits.append("scope(s) with findings and no designed case set: " + ", ".join(no_denom))
+        if unscoped and not any_case:
+            bits.append("%d unscoped finding(s) in a hub with no case at all" % len(unscoped))
+        cf_ok, cf_detail = False, "; ".join(bits)
+    else:
+        cf_detail = "%d finding(s) across %d scope(s), each with a designed case set" % (
+            len(findings), len([s for s in case_scopes if s]))
+        cf_ok = True
+    conditions.append(("Every scope with findings has a designed case set", cf_ok, cf_detail))
+
     # Readiness outside QA. Until this condition existed, a green verdict meant "QA found nothing"
     # and said nothing about whether the rollback had been rehearsed, an alert fired, anyone was
     # on call, or privacy had signed off -- so the most consequential sentence in the suite was

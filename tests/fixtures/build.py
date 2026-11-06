@@ -73,6 +73,14 @@ def build_existing(hub):
 
     # The capability inventory found a surface the docs never mention. That is a finding
     # before any feature work starts.
+    # Case-first: the scope that produced this finding records what was tried there. Without it
+    # the scope has findings and no coverage denominator, which validate now refuses.
+    run(hub, "lead", "QA", "add", "case", "D1-01", "-f", "scope=documentation",
+        "-f", "action=follow the published self-hosting page verbatim on a clean host",
+        "-f", "oracle=the service issues a licence; the env var the page names is the one the "
+              "binary reads, checked by grep of the shipped binary")
+    run(hub, "lead", "QA", "move", "D1-01", "FAIL",
+        "-f", "evidence=page names LICENCE_PATH; the binary reads LICENCE_SELF_PATH")
     run(hub, "lead", "QA", "add", "finding", "F-1",
         "-f", "title=Issuer reads an env var the published docs never name",
         "-f", "severity=blocker", "-f", "scope=documentation",
@@ -163,6 +171,11 @@ def build_existing(hub):
     run(hub, "po", "PO", "move", "DES-1", "ACCEPTED")
 
     # A design review finding of the strongest kind: the product's own two surfaces disagree.
+    run(hub, "designer", "DESIGNER", "add", "case", "X1-01", "-f", "scope=experience",
+        "-f", "action=take the first-run trace as a new admin, timed, with every backtrack",
+        "-f", "oracle=time and step count to first success, against the documented happy path")
+    run(hub, "designer", "DESIGNER", "move", "X1-01", "FAIL",
+        "-f", "evidence=first success took 4 backtracks; the error names a condition and no action")
     run(hub, "designer", "DESIGNER", "add", "finding", "F-2",
         "-f", "title=Trial form reports success before the licence is actually issued",
         "-f", "severity=major", "-f", "scope=experience",
@@ -444,6 +457,11 @@ def build_new(hub):
     run(hub, "qa1", "QA", "link", "S3-01", "verifies", "S-1")
     run(hub, "qa1", "QA", "move", "S3-01", "FAIL",
         "-f", "evidence=the UI hides it; the CSV export returns it")
+    run(hub, "qa1", "QA", "add", "case", "S4-01", "-f", "scope=security",
+        "-f", "action=request another tenant's record as a signed-in user of tenant A",
+        "-f", "oracle=refusal, and nothing from tenant B in the response body or the logs")
+    run(hub, "qa1", "QA", "move", "S4-01", "FAIL",
+        "-f", "evidence=tenant B's record returned in full")
     run(hub, "qa1", "QA", "add", "finding", "F-1",
         "-f", "title=CSV export ignores team scoping and returns other teams rows",
         "-f", "severity=critical", "-f", "scope=security", "-f", "status_action=CODE",

@@ -1,9 +1,9 @@
 {
  "generated_from": {
   "generated_by": "hub.py",
-  "generated_at": "2026-11-06T06:04:52.459593Z",
-  "event_count": 96,
-  "event_digest": "1c271c0cca535cbe85ac07ee31fe7c1776587d90f0bc9766924e4c104cb482be",
+  "generated_at": "2026-11-06T07:00:46.804751Z",
+  "event_count": 100,
+  "event_digest": "15550ecd7e701d74df04e316b39a54a5b8c52c79583e2024d0af1ca80ad91120",
   "schema_version": 1,
   "warning": "GENERATED FILE -- never hand-edit. The hub is the source of truth."
  },
@@ -43,6 +43,19 @@
   }
  ],
  "cases": [
+  {
+   "id": "D1-01",
+   "scope": "documentation",
+   "action": "follow the published self-hosting page verbatim on a clean host",
+   "oracle": "the service issues a licence; the env var the page names is the one the binary reads, checked by grep of the shipped binary",
+   "guards": null,
+   "ran_under": null,
+   "touches": null,
+   "graded_by": null,
+   "result": "FAIL",
+   "provenance": "authored",
+   "finding": null
+  },
   {
    "id": "R-1",
    "scope": "requirements",
@@ -126,6 +139,19 @@
    ],
    "graded_by": "licensing",
    "result": "PASS",
+   "provenance": "authored",
+   "finding": null
+  },
+  {
+   "id": "X1-01",
+   "scope": "experience",
+   "action": "take the first-run trace as a new admin, timed, with every backtrack",
+   "oracle": "time and step count to first success, against the documented happy path",
+   "guards": null,
+   "ran_under": null,
+   "touches": null,
+   "graded_by": null,
+   "result": "FAIL",
    "provenance": "authored",
    "finding": null
   }

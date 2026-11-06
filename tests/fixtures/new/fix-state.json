@@ -1,9 +1,9 @@
 {
  "generated_from": {
   "generated_by": "hub.py",
-  "generated_at": "2026-11-06T06:04:55.583940Z",
-  "event_count": 30,
-  "event_digest": "aa0fc10603bde1194b6603b576a5a255ee77489a65d265a2b06accd5de385d26",
+  "generated_at": "2026-11-06T07:00:50.091521Z",
+  "event_count": 32,
+  "event_digest": "f40598bc906eaddf900f1f6bccd74a57dc0372fefc9ecf2b5eed1d37d1f3265e",
   "schema_version": 1,
   "warning": "GENERATED FILE -- never hand-edit. The hub is the source of truth."
  },

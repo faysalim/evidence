@@ -250,7 +250,12 @@ def main():
               any("does not match what the hub would generate" in p for p in h.validate()),
               h.validate()[:1])
         cli(hub, "q", "QA", "views")
-        check("   and regenerating clears it", not H.Hub(hub).validate(),
+        # Asserts the VIEW problem is gone, not that the hub is problem-free: this probe's hub
+        # holds a finding with no scope and no cases, which case-first now reports, and that is
+        # a different subject.
+        check("   and regenerating clears it",
+              not any("does not match what the hub would generate" in p
+                      for p in H.Hub(hub).validate()),
               H.Hub(hub).validate()[:1])
 
         print("\nMG-3 round 2 -- a gate row with no recorded build is not agreement")

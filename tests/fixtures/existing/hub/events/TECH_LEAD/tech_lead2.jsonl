@@ -1,1 +1,1 @@
-{"v": 1, "event_id": "TECH_LEAD/tech_lead2#1", "seq": 1, "ts": "2026-11-06T06:04:44.953599Z", "actor": "tech_lead2", "role": "TECH_LEAD", "op": "move", "after": ["TECH_LEAD/tech_lead#2"], "fields": {}, "item": "ADR-1", "to": "ACCEPTED"}
+{"v": 1, "event_id": "TECH_LEAD/tech_lead2#1", "seq": 1, "ts": "2026-11-06T07:00:40.699730Z", "actor": "tech_lead2", "role": "TECH_LEAD", "op": "move", "after": ["TECH_LEAD/tech_lead#2"], "fields": {}, "item": "ADR-1", "to": "ACCEPTED"}

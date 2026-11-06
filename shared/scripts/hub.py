@@ -771,6 +771,47 @@ class Hub:
                 if n.startswith("UNREADABLE") or n.startswith("MISATTRIBUTED")
                 or n.startswith("UNDECLARED_ROLE")]
 
+        # Case-first, enforced. The hub hardened every cheap invariant -- undeclared role, a
+        # finding with no title, a severity outside the vocabulary, an out-of-order causal chain --
+        # and left the single most expensive one as prose. A real engagement then produced 20
+        # findings and 0 cases and validated CLEAN. An agent reliably skips the one gate that costs
+        # an hour and is not checked, precisely because everything around it is checked.
+        #
+        # Keyed per SCOPE, not per finding: skills/qa says a finding stumbled on while doing
+        # something else needs no case of its own, and that stays true. What is refused is a scope
+        # that produced findings and never recorded one thing it tried -- which is not a tidiness
+        # problem, it is the absence of a coverage denominator, and the method's central claim
+        # rests on having one.
+        #
+        # Filing the finding is deliberately NOT blocked anywhere: making the defect the expensive
+        # thing to record would be the exact opposite of the point.
+        scoped_cases = {i["fields"].get("scope") or i["fields"].get("graded_by")
+                        for i in self.items.values() if i["type"] == "case"}
+        any_case = any(i["type"] == "case" for i in self.items.values())
+        bare = sorted({i["id"] for i in self.items.values()
+                       if i["type"] == "finding" and not i["fields"].get("scope")})
+        missing = {}
+        for i in self.items.values():
+            if i["type"] != "finding":
+                continue
+            sc = i["fields"].get("scope")
+            if sc and sc not in scoped_cases:
+                missing.setdefault(sc, []).append(i["id"])
+        for sc in sorted(missing):
+            out.append(
+                "scope %r has %d finding(s) (%s) and no designed case set, so it has NO COVERAGE "
+                "DENOMINATOR: nothing records what was tried there, only what broke. A scope that "
+                "was tested may hold extra findings freely -- this is about a scope with none. "
+                "`hub.py add case <id> -f action=... -f oracle=... -f scope=%s`"
+                % (sc, len(missing[sc]), ", ".join(sorted(missing[sc])[:6]), sc))
+        if bare and not any_case:
+            out.append(
+                "%d finding(s) carry no scope (%s) and this hub holds no case at all, so there is "
+                "NO COVERAGE DENOMINATOR anywhere in it. Unscoped is not an exemption: record what "
+                "was tried, with `hub.py add case <id> -f action=... -f oracle=...`, and put a "
+                "`scope` on the findings so coverage can be read per scope."
+                % (len(bare), ", ".join(bare[:6])))
+
         for item in self.items.values():
             tdef = type_def(self.model, item["type"])
             if item["state"] not in states_of(tdef):
