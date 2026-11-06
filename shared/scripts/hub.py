@@ -219,6 +219,16 @@ def read_all_events(hub):
                                path_role, path_actor, path_role, path_actor))
                     # The path wins. Otherwise a line could claim any role simply by saying so.
                     ev["role"], ev["actor"] = path_role, path_actor
+                    # ...and the path's role must be one the model declares. A real hub had four
+                    # events under `events/LEAD/`, including both profile writes, and validate
+                    # reported 0 problems. UNDECLARED_ROLE, not a plain note, for the same reason
+                    # UNREADABLE is not: "a role nobody declared" must never read as "clean".
+                    if path_role not in (load_model().get("roles") or {}):
+                        notes.append(
+                            "UNDECLARED_ROLE %s line %d is filed under role %s, which the model "
+                            "does not declare. The path is the attribution, so this event belongs "
+                            "to an identity that does not exist."
+                            % (rel, lineno, path_role))
                     events.append(ev)
     return events, notes
 
@@ -242,8 +252,39 @@ def next_seq(hub, role, actor):
     return last + 1
 
 
+def role_problem(role):
+    """A role the model does not declare, on any write.
+
+    A real engagement's hub was found with `init`, the `iteration` marker and BOTH `profile`
+    writes authored by the role `LEAD`, which does not exist -- and `validate` reported 0 problems.
+    `identity()` checked a role was present, never that it existed, and the only role check was
+    per-transition, so every op that involves no type and no transition (`init`, `profile`,
+    `iteration`, `note`, `link`) took any string at all.
+
+    That is the field this suite can least afford to leave open: the path IS the attribution, so a
+    role nobody declared creates a parallel identity whose writes read as legitimate. Fifth closed
+    vocabulary found declared-and-unenforced; the sweep that was meant to end that class checked
+    field values and never the role on the event itself.
+    """
+    model = load_model()
+    declared = model.get("roles") or {}
+    if not declared or role in declared:
+        return None
+    import difflib
+    near = difflib.get_close_matches(str(role).upper().replace(" ", "_"),
+                                     list(declared), n=2, cutoff=0.6)
+    return ("%r is not a role. The model declares %s.%s Every write is attributed by the role it "
+            "is filed under -- the path is the attribution -- so a role nobody declared creates an "
+            "identity whose writes read as legitimate and belong to no one."
+            % (role, ", ".join(sorted(declared)),
+               (" Did you mean %s?" % ", ".join(near)) if near else ""))
+
+
 def append_event(hub, role, actor, event):
     """Append one event to this actor's own log. No other writer touches this file."""
+    problem = role_problem(role)
+    if problem:
+        raise HubError(problem)
     path = actor_log_path(hub, role, actor)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     seq = next_seq(hub, role, actor)
@@ -390,6 +431,14 @@ class Hub:
     def _hist(self, item, ev, **extra):
         entry = {"ts": ev.get("ts"), "actor": ev.get("actor"), "role": ev.get("role"),
                  "op": ev.get("op"), "event_id": ev.get("event_id")}
+        # The fields supplied ON THIS EVENT, kept per entry rather than only folded into the
+        # item's current fields. Without them the audit trail says a case moved to PASS and
+        # cannot say what evidence was given at the time -- and a later move overwrites the
+        # field, so the evidence for an earlier PASS was simply unrecoverable from the hub.
+        # Deliberately NOT `fields`: the `set` op already uses that key for the sorted list of
+        # field NAMES it changed, and overwriting it with a dict broke every item page.
+        if ev.get("fields"):
+            entry["values"] = dict(ev["fields"])
         entry.update({k: v for k, v in extra.items() if v is not None})
         item["history"].append(entry)
 
@@ -719,7 +768,8 @@ class Hub:
         """Structural problems plus the invariants that are not single-transition rules."""
         out = list(self.problems)
         out += [n for n in self.notes
-                if n.startswith("UNREADABLE") or n.startswith("MISATTRIBUTED")]
+                if n.startswith("UNREADABLE") or n.startswith("MISATTRIBUTED")
+                or n.startswith("UNDECLARED_ROLE")]
 
         for item in self.items.values():
             tdef = type_def(self.model, item["type"])
@@ -1084,6 +1134,11 @@ def identity(args):
     if not actor or not role:
         raise HubError("a write needs --actor NAME --role ROLE (or $PRODUCT_ACTOR / "
                        "$PRODUCT_ROLE). Every PASS is attributable or it is anonymous.")
+    # Checked here as well as in append_event so the refusal lands BEFORE any directory is made:
+    # `init --role LEAD` used to create the hub and then fail, leaving a half-built tree.
+    problem = role_problem(role)
+    if problem:
+        raise HubError(problem)
     return actor, role
 
 

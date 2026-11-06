@@ -684,6 +684,159 @@ def render_process(hub):
     return "".join(out)
 
 
+def case_category(cid, item):
+    """The team's own id conventions decide the category -- QA owns them, stated in skills/release.
+
+    Grouping is not cosmetic here. A smoke row and an acceptance requirement are read differently
+    by the verdict, so a flat list of cases hides which part of the evidence is thin.
+    """
+    if cid.endswith("-00a"):
+        return "Smoke (-00a)"
+    if cid.endswith("-00b"):
+        return "Calibration (-00b)"
+    head = cid.split("-")[0]
+    if head == "R":
+        return "Acceptance requirements (source 0)"
+    if head == "J":
+        return "Journeys"
+    scope = item["fields"].get("scope") or item["fields"].get("graded_by")
+    return "Scope: %s" % scope if scope else "Uncategorised"
+
+
+def case_matrix(hub):
+    """Every case, its category, and the state it ended each iteration in.
+
+    Built by replaying the moves in fold order and tracking the iteration the `iteration` op last
+    set, so a cell is "where this case stood at the end of that cycle" -- which is the question
+    QA asks when deciding what to re-run.
+    """
+    iters, seen = [], set()
+    cur = None
+    # (case id, iteration) -> (state, event_id) of the LAST move in that iteration
+    cell = {}
+    for ev in hub.applied:
+        if ev.get("op") == "iteration":
+            cur = ev.get("iteration")
+            if cur not in seen:
+                seen.add(cur)
+                iters.append(cur)
+            continue
+        if ev.get("op") != "move":
+            continue
+        item = hub.items.get(ev.get("item")) or {}
+        if item.get("type") != "case":
+            continue
+        if cur not in seen:
+            seen.add(cur)
+            iters.append(cur)
+        cell[(ev["item"], cur)] = (ev.get("to"), ev.get("event_id"))
+
+    cases = sorted((i for i in hub.items.values() if i["type"] == "case"),
+                   key=lambda i: (case_category(i["id"], i), i["id"]))
+    return iters, cases, cell
+
+
+def next_iteration_work(hub, iters, cases, cell):
+    """What QA has to do next cycle, derived rather than remembered.
+
+    The operator's point, and it is the right one: this table is not a report, it is the resume
+    point. A case that passed last cycle is a regression candidate; a case that failed and whose
+    finding is now claimed FIXED is waiting on verification; a case that could not run is a retry.
+    Without this the next iteration starts by re-deciding what to run, from memory.
+    """
+    last = iters[-1] if iters else None
+    regression, verify, retry = [], [], []
+    for c in cases:
+        state = c["state"]
+        if state in ("PASS", "PASS_SHORT"):
+            regression.append(c["id"])
+        elif state in ("BLOCKED", "NOT_RUN"):
+            retry.append((c["id"], c["fields"].get("reason") or "no reason recorded"))
+        elif state == "FAIL":
+            # Is the finding this case named now claimed fixed? Then it is QA's to verify.
+            fixed = []
+            for l in c.get("links", []):
+                t = hub.items.get(l.get("target")) or {}
+                if t.get("type") == "finding" and t.get("state") in ("FIXED", "PARTIAL"):
+                    fixed.append(t["id"])
+            verify.append((c["id"], fixed))
+    return last, regression, verify, retry
+
+
+def render_case_matrix(hub):
+    iters, cases, cell = case_matrix(hub)
+    if not cases:
+        n_find = sum(1 for i in hub.items.values() if i["type"] == "finding")
+        return ('<p class="empty"><strong>No test cases recorded.</strong> This hub holds %d '
+                'finding(s) and <strong>no <code>case</code> items</strong>, so there is no record '
+                'of what was exercised and <em>no coverage denominator at all</em> &mdash; '
+                '&ldquo;how much coverage was possible&rdquo; cannot be answered for this '
+                'engagement, and no regression or verification queue can be derived for the next '
+                'one. A finding says what broke; a case says what was tried. '
+                '<code>hub.py add case &lt;id&gt; -f action=... -f oracle=...</code>.</p>'
+                % n_find)
+
+    out = ['<table><tr><th>case</th>']
+    for n in iters:
+        out.append("<th>%s</th>" % esc("iteration %s" % n if n is not None else "pre"))
+    out.append("<th>now</th><th>oracle</th></tr>")
+
+    cat = None
+    for c in cases:
+        k = case_category(c["id"], c)
+        if k != cat:
+            cat = k
+            out.append('<tr><th colspan="%d" class="mono">%s</th></tr>'
+                       % (len(iters) + 3, esc(cat)))
+        cells = []
+        for n in iters:
+            got = cell.get((c["id"], n))
+            if not got:
+                cells.append('<td class="note">&ndash;</td>')
+            else:
+                state, eid = got
+                # Click the status, get the move that set it -- the evidence is on the item page,
+                # anchored at that event.
+                cells.append('<td><a href="item-%s.html#%s">%s</a></td>'
+                             % (esc(c["id"]), esc(eid or ""), state_pill(state)))
+        out.append('<tr><td class="mono"><a href="item-%s.html">%s</a></td>%s'
+                   '<td>%s</td><td class="note">%s</td></tr>'
+                   % (esc(c["id"]), esc(c["id"]), "".join(cells), state_pill(c["state"]),
+                      esc((c["fields"].get("oracle") or "no oracle recorded")[:70])))
+    out.append("</table>")
+    out.append('<p class="note">Click a case id for its full description and lifecycle; click a '
+               'status for the move that set it, with its evidence. A blank cell means the case '
+               'was not touched in that cycle &mdash; which is itself a finding if it guards '
+               'something blocking.</p>')
+
+    last, regression, verify, retry = next_iteration_work(hub, iters, cases, cell)
+    nxt = (last + 1) if isinstance(last, int) else "the next cycle"
+    out.append("<h3>What iteration %s has to run</h3>" % esc(str(nxt)))
+    out.append('<p class="note">Derived from the matrix, not remembered. This is the resume point: '
+               'without it the next cycle begins by re-deciding what to re-run.</p>')
+    out.append("<table><tr><th>why</th><th>n</th><th>cases</th></tr>")
+
+    def row(why, ids):
+        out.append("<tr><td>%s</td><td>%d</td><td class=\"mono\">%s</td></tr>"
+                   % (why, len(ids),
+                      " ".join('<a href="item-%s.html">%s</a>' % (esc(i), esc(i))
+                               for i in ids[:24]) or "&ndash;"))
+
+    row("<strong>Regression</strong> &mdash; passed before, so a pass is only current until the "
+        "build changes", regression)
+    row("<strong>Verify a fix</strong> &mdash; failed, and the finding it names is now claimed "
+        "FIXED or PARTIAL by DEV", [c for c, f in verify if f])
+    row("<strong>Still failing, no fix yet</strong> &mdash; nothing to verify; this is DEV's",
+        [c for c, f in verify if not f])
+    row("<strong>Retry</strong> &mdash; could not run, so it is a gap and not a pass",
+        [c for c, _r in retry])
+    out.append("</table>")
+    if retry:
+        out.append('<p class="note">Why each could not run: %s</p>'
+                   % esc("; ".join("%s: %s" % (c, r) for c, r in retry[:6])))
+    return "".join(out)
+
+
 def render_roles(hub):
     waiting = defaultdict(list)
     owned = defaultdict(list)
@@ -850,10 +1003,18 @@ def render_item_page(hub, item):
         for h in item["history"]:
             detail = " ".join("%s→%s" % (esc(h.get("from")), esc(h.get("to")))
                               for _ in [0] if h.get("to"))
-            body.append('<div class="ts">%s</div><div class="who">%s</div>'
-                        '<div><strong>%s</strong> %s <span class="note">%s</span></div>'
-                        % (esc(h.get("ts")), esc(h.get("role")), esc(h.get("op")),
-                           detail, esc(h.get("actor"))))
+            # The event id is the anchor the case matrix links a status cell to, so clicking a
+            # status lands on the move that set it rather than at the top of the page.
+            vals = h.get("values") or {}
+            shown = " ".join(
+                '<span class="note">%s=</span>%s' % (esc(k), esc(str(vals[k])[:120]))
+                for k in ("evidence", "reason", "cutoff", "build", "variant_used")
+                if vals.get(k))
+            body.append('<div class="ts" id="%s">%s</div><div class="who">%s</div>'
+                        '<div><strong>%s</strong> %s <span class="note">%s</span>%s</div>'
+                        % (esc(h.get("event_id") or ""), esc(h.get("ts")), esc(h.get("role")),
+                           esc(h.get("op")), detail, esc(h.get("actor")),
+                           ("<br>" + shown) if shown else ""))
         body.append("</div>")
     else:
         body.append('<p class="empty">No events. An item with no history has no audit trail.</p>')
@@ -906,6 +1067,8 @@ def render_index(hub):
         (sum(1 for i in items.values() if "OPERATOR" in hub.waiting_on(i) and is_open(i)),
          "waiting on operator", "warn"),
     ]))
+    body.append("<h2>Test cases by iteration, and what to run next</h2>"
+                + render_case_matrix(hub))
     body.append("<h2>The process, cycle by cycle</h2>" + render_process(hub))
     body.append("<h2>All items by type and state</h2>" + render_overview(hub))
     body.append("<h2>Per role: waiting on them, and what they own</h2>" + render_roles(hub))
