@@ -47,7 +47,7 @@ are already built.
 
 ## Step 2 — Product class, from the product
 
-Pick from `${CLAUDE_PLUGIN_ROOT}/shared/domains/` — thirty classes, indexed in its README. **Read the
+Pick from `${CLAUDE_PLUGIN_ROOT}/shared/domains/` — thirty-one classes, indexed in its README. **Read the
 closest one, and every one that applies**: a SaaS CRM is `crm.md` **and** `multi-tenant-saas.md`; an
 API-fronted licensing platform is `licensing-server.md` **and** `api-platform.md`. Take the union.
 
@@ -141,6 +141,20 @@ Existing products arrive with artifacts. Map rather than rewrite:
 `hub.py import <dir>` does the mechanical part for a prior `qa-state.json`. Everything else is `add
 --provenance reconstructed`, and the mapping itself goes in the profile so the next person uses the same
 one.
+
+**Ask the tool what each type needs rather than learning it by rejection.** An engagement discovered
+every required field by being refused, twice per type:
+
+```
+hub.py add --help          # required fields per type, and who may create each
+hub.py moves finding       # what every move of a type demands, and who may make it
+hub.py profile --help      # which values are JSON literals, and the quoting
+hub.py iteration --help    # `n` is positional; there is no --start
+```
+
+All four are generated from `shared/hub/model.json`, so they cannot drift from what is enforced.
+There is deliberately **no table of required fields in this file** — a hand-written copy would be
+the fourth stale count in this repo's history.
 
 ## Step 6 — Write the profile and the baseline
 

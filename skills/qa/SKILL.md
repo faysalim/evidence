@@ -119,7 +119,7 @@ may contest an `N/A` with a one-line observation; the lead answers it in the ind
 are listed as N/A with one line of reasoning, so a reader sees the omission was chosen rather than missed.
 
 `${CLAUDE_SKILL_DIR}/references/scope-playbooks.md` has the playbook per family and what extra agents buy.
-`${CLAUDE_PLUGIN_ROOT}/shared/domains/` maps the families onto thirty product classes. **Read the
+`${CLAUDE_PLUGIN_ROOT}/shared/domains/` maps the families onto thirty-one product classes. **Read the
 closest one before briefing, and every file that applies when the product is two things at once** — take
 the union of the fault catalogues and reconcile the scope maps once.
 
@@ -264,7 +264,7 @@ oracle. A disagreement is a finding about the harness and downgrades that scope 
 | `${CLAUDE_SKILL_DIR}/references/test-cases.md` | Step 3, before running anything |
 | `${CLAUDE_SKILL_DIR}/assets/test-case-register.md` | The register itself — the run's denominator |
 | `${CLAUDE_PLUGIN_ROOT}/shared/contracts/handoff-packet.md` | Writing the ticket packet for a dev session |
-| `${CLAUDE_PLUGIN_ROOT}/shared/domains/` | **First, every time.** Thirty product classes |
+| `${CLAUDE_PLUGIN_ROOT}/shared/domains/` | **First, every time.** Thirty-one product classes |
 | `${CLAUDE_PLUGIN_ROOT}/shared/references/docs-conformance.md` | Scope 9, both directions |
 | `${CLAUDE_SKILL_DIR}/references/iteration-cycles.md` | Any iteration after the first |
 | `${CLAUDE_PLUGIN_ROOT}/shared/contracts/qa-dev.md` | A separate session fixes what you found |

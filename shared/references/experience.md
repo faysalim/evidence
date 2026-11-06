@@ -366,6 +366,7 @@ and *what they are trying to find out*. One line each, with the detail in each d
 | **Relational database** | Error-message precision on constraint and migration failures, and what a failed migration tells you about the state you are now in. → `domains/relational-database.md` |
 | **Licensing / entitlement** | The acquisition funnel is the product; and whether every failure path reaches a human. → `domains/licensing-server.md` |
 | **CRM** | Permission opacity — can a user tell what they are *not* allowed to see? → `domains/crm.md` |
+| **Obfuscator / compiler / SDK tooling** | The build that reports success and ships a binary that crashes at runtime — the tool certifying itself. → `domains/obfuscator-tooling.md` |
 | **Real-time collaboration** | Losing work without being told — a conflict resolved by picking a winner that never tells the loser. → `domains/collaboration.md` |
 | **CMS / content platform** | The author who cannot tell what a reader will actually see, and publishes anyway. → `domains/cms.md` |
 | **Feature flags** | "Why is this user getting that variant?" — unanswerable, so every support ticket becomes an investigation. → `domains/feature-flags.md` |

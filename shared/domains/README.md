@@ -15,6 +15,7 @@ next person in your field will need it.
 | `distributed-database.md` | Replicated/partitioned store: failover, rebalance, membership, change feeds |
 | `relational-database.md` | Transactional store: schema migration, isolation, planner, backup/restore |
 | `message-queue.md` | Broker / event streaming: offsets, ordering, retention, delivery semantics |
+| `obfuscator-tooling.md` | Obfuscator / compiler / SDK tooling: semantic preservation, determinism, self-certification |
 | `data-pipeline.md` | ETL / streaming: sources and sinks, schema drift, backfills, exactly-once claims |
 | `file-sync-storage.md` | Files synced across devices: conflict, quota, share links, deletion |
 | `collaboration.md` | Real-time co-editing: convergence, lost updates, offline reconcile, live revocation |

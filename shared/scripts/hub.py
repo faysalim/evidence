@@ -1243,6 +1243,40 @@ def cmd_profile(args):
     return 0
 
 
+def cmd_moves(args):
+    """What each transition of a type demands, and who may make it.
+
+    Exists because a real engagement discovered the required-field set by being rejected, once per
+    transition. The hub knew the answer the whole time and had no way to be asked.
+    """
+    model = load_model()
+    types = [args.type] if args.type else sorted(model["types"])
+    for t in types:
+        tdef = model["types"].get(t)
+        if not tdef:
+            raise HubError("%r is not an item type. The model declares %s"
+                           % (t, ", ".join(sorted(model["types"]))))
+        req = tdef.get("requires_fields_on_create") or []
+        print("%s -- created in %s by %s%s"
+              % (t, tdef["initial"], ", ".join(tdef.get("create") or []) or "any role",
+                 ("; needs " + " ".join("-f %s=" % f for f in req)) if req else ""))
+        for tr in tdef.get("transitions", []):
+            bits = []
+            if tr.get("roles"):
+                bits.append("role: " + " or ".join(tr["roles"]))
+            if tr.get("role_from_field"):
+                bits.append("role must equal the item's %s" % tr["role_from_field"])
+            if tr.get("requires_fields"):
+                bits.append("needs " + " ".join("-f %s=" % f for f in tr["requires_fields"]))
+            if tr.get("different_actor_from"):
+                bits.append("a DIFFERENT actor from whoever set %s"
+                            % ", ".join(tr["different_actor_from"]))
+            print("  %-22s -> %-14s %s"
+                  % (", ".join(tr.get("from") or []), tr["to"], "; ".join(bits)))
+        print()
+    return 0
+
+
 def cmd_iteration(args):
     hub = resolve_hub(args)
     actor, role = identity(args)
@@ -1653,20 +1687,57 @@ def build_parser():
                                  description=__doc__.strip().splitlines()[0])
     sub = ap.add_subparsers(dest="cmd")
 
-    def add_parser(name):
-        return sub.add_parser(name, parents=[common])
+    def add_parser(name, epilog=None):
+        return sub.add_parser(name, parents=[common], epilog=epilog,
+                              formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    # A real engagement learned every required field by being REJECTED, twice per type, because
+    # the set was documented nowhere. Generated from the model so it cannot drift from what the
+    # tool actually enforces -- a hand-written list here would be the fourth stale count in this
+    # repo's history.
+    def add_epilog():
+        m = load_model()
+        lines = ["required fields per type, enforced at creation:"]
+        for t in sorted(m["types"]):
+            req = m["types"][t].get("requires_fields_on_create") or []
+            who = ", ".join(m["types"][t].get("create") or []) or "any role"
+            lines.append("  %-12s %-28s created by: %s"
+                         % (t, (" ".join("-f %s=" % f for f in req) or "(no required fields)"),
+                            who))
+        lines.append("")
+        lines.append("a type not listed takes any fields; the per-TRANSITION requirements are "
+                     "separate --")
+        lines.append("run `hub.py moves <type>` to see what each move demands.")
+        return "\n".join(lines)
 
     p = add_parser("init"); p.add_argument("--engagement"); p.set_defaults(fn=cmd_init)
-    p = add_parser("profile"); p.add_argument("--set", action="append")
+    p = add_parser("profile",
+                   epilog="structured values are JSON literals, and the quoting matters:\n"
+                          "  --set mode=existing                      a bare string\n"
+                          "  --set 'domains=[\"crm\",\"payments\"]'       a LIST needs JSON "
+                          "brackets\n"
+                          "  --set 'live_builds={\"web\":\"a1b2c3d\"}'    an OBJECT needs JSON "
+                          "braces\n"
+                          "a value that does not parse as JSON is stored as a plain string, so\n"
+                          "`domains=crm` silently becomes the string \"crm\" and not a list.")
+    p.add_argument("--set", action="append")
     p.set_defaults(fn=cmd_profile)
-    p = add_parser("iteration"); p.add_argument("n", type=int)
+    p = add_parser("iteration",
+                   epilog="open or mark a cycle. `n` is POSITIONAL -- there is no --start:\n"
+                          "  hub.py iteration 1 --note \"first pass, docs scope only\"\n"
+                          "Every later move is attributed to the cycle open at the time, which is\n"
+                          "what the dashboard's per-iteration columns are built from.")
+    p.add_argument("n", type=int)
     p.add_argument("--note"); p.set_defaults(fn=cmd_iteration)
 
-    p = add_parser("add")
+    p = add_parser("add", epilog=add_epilog())
     p.add_argument("type"); p.add_argument("id")
     p.add_argument("--state"); p.add_argument("--owner")
     p.add_argument("--provenance", choices=["authored", "derived", "reconstructed"])
     p.add_argument("-f", "--field", action="append"); p.set_defaults(fn=cmd_add)
+
+    p = add_parser("moves", epilog="what each move of a type demands, and who may make it.")
+    p.add_argument("type", nargs="?"); p.set_defaults(fn=cmd_moves)
 
     p = add_parser("move"); p.add_argument("id"); p.add_argument("state")
     p.add_argument("-f", "--field", action="append"); p.set_defaults(fn=cmd_move)

@@ -255,7 +255,7 @@ shared/
   contracts/           qa-dev.md, the handoff packets
   templates/           the finding template
   references/          evidence-standard, experience, docs-conformance, gotchas
-  domains/             30 product classes + index
+  domains/             31 product classes + index
   hub/model.json       item types, states, who may move them
   scripts/             hub.py, dashboard.py, safe_edit.py, check_repo.py, tests
 skills/                the 15 skills

@@ -101,6 +101,37 @@ reconstructed switch expression cannot be bypassed. Same for absence: when a hea
 a policy until it can be verified somewhere non-production, assert the absence, so nobody ships an
 unverified policy quietly.
 
+### Commit the failing test before you start the fix
+
+**The resumable unit is a commit, not an uncommitted diff.** As soon as the test fails for the right
+reason, commit it — on its own, before a line of the fix exists:
+
+```
+git -C <worktree> add <test files> && git -C <worktree> commit -m "test: <finding> fails first (no fix yet)"
+```
+
+This is not tidiness. In a long unattended engagement a DEV session can simply stop existing
+mid-fix — context compacted, process gone — and an in-flight agent leaves no handback. One did:
+three failing regression tests and fixtures written, **uncommitted**, fix not started. It was
+recoverable only because the worktree rule had forced the work onto disk, and only at the cost of a
+human reading `git status` and `git diff` to reconstruct what the dead session had been doing. Work
+that lived only in the session's head would have been lost outright.
+
+A committed failing test survives all of that. It is also the honest artefact: it says *this defect
+is now characterised and not yet fixed*, which is exactly the state the hub should be able to show.
+
+**And leave the breadcrumb in the hub**, because the hub cannot otherwise tell a busy DEV from a
+dead one:
+
+```
+hub.py note <finding> "worktree <path>; test committed at <sha>, fails first; fix NOT started" --role DEV
+```
+
+The hub never lied about the dead session — the finding stayed `ACCEPTED`, which was correct, since
+DEV never reached `FIXED`. But `ACCEPTED` with no note cannot distinguish *in progress* from
+*abandoned*, and a lead reading the hub after a compaction has no other signal. One note per
+handoff point costs a second and is the difference between resuming and re-deriving.
+
 Record the fix in the hub so the fail-first evidence is part of the record, not a sentence in a message:
 
 ```

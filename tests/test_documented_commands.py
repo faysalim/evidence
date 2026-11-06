@@ -224,7 +224,13 @@ def main():
                                       mid, itype))
                     rc, out = sh(argv, hub, role=role)
                 RAN += 1
-                bad = rc != 0 or "REJECTED" in out
+                # `REJECTED` as a bare substring is too weak a signal: `hub.py moves finding`
+                # legitimately prints the finding lifecycle, which contains a state CALLED
+                # REJECTED, and the harness read its own sentinel in that output and failed a
+                # command that had worked. hub.py's actual error format is `REJECTED: ` at the
+                # start of a line, so match that.
+                rejected = any(l.lstrip().startswith("REJECTED:") for l in out.splitlines())
+                bad = rc != 0 or rejected
                 if VERBOSE or bad:
                     print("  %s %s" % ("FAIL" if bad else "ok  ", tail[:66]))
                 if bad:
