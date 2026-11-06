@@ -236,8 +236,42 @@ def check_registry():
             fail("registry", "%s:%d claims %s domain files but there are %d"
                  % (rel(path), line, token, n))
             bad += 1
+    # The release-checklist map states a checkpoint count and claims every key is mapped. Both are
+    # hand-written, which is the kind of count this repo has already been bitten by three times --
+    # a README table claiming a deliberate failure passed, eleven skill READMEs contradicting their
+    # own frontmatter, and a trigger note still saying "15 skills" after three were added. This
+    # check was named in the commit that wrote the map; it exists so the naming was not the end of
+    # it.
+    import json
+    mp = os.path.join(ROOT, "docs", "design", "release-checklist-map.md")
+    model_p = os.path.join(ROOT, "shared", "hub", "model.json")
+    keys = set()
+    if os.path.isfile(model_p):
+        defaults = json.loads(read(model_p)).get("default_checkpoints") or {}
+        keys = {k for role, ks in defaults.items()
+                if role != "doc" and isinstance(ks, dict) for k in ks}
+    if os.path.isfile(mp) and keys:
+        text = read(mp)
+        missing = sorted(k for k in keys if "`%s`" % k not in text)
+        if missing:
+            fail("registry", "release-checklist-map.md maps %d of %d default checkpoints; "
+                             "unmapped: %s" % (len(keys) - len(missing), len(keys),
+                                               ", ".join(missing)))
+            bad += 1
+        for m in re.finditer(r"\*\*(\d+) of (\d+) mapped", text):
+            if int(m.group(1)) != len(keys) or int(m.group(2)) != len(keys):
+                fail("registry", "release-checklist-map.md claims %s of %s mapped; there are %d "
+                                 "default checkpoints" % (m.group(1), m.group(2), len(keys)))
+                bad += 1
+        for m in re.finditer(r"the (\d+) default checkpoints", text):
+            if int(m.group(1)) != len(keys):
+                fail("registry", "release-checklist-map.md says 'the %s default checkpoints'; "
+                                 "there are %d" % (m.group(1), len(keys)))
+                bad += 1
+
     if not bad:
-        ok("registry", "%d domain files, all registered, all counts agree" % n)
+        ok("registry", "%d domain files and %d default checkpoints, all registered, "
+                       "all counts agree" % (n, len(keys)))
 
 
 def check_headings():

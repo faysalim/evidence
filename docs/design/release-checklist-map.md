@@ -99,6 +99,12 @@ Named rather than left as a silent gap. Each is a deliberate N/A, not an oversig
 python -I -B -c "import json,io; d=json.load(io.open('shared/hub/model.json',encoding='utf-8'))['default_checkpoints']; print(sum(len(v) for k,v in d.items() if k!='doc'))"
 ```
 
-The count in the heading above must match that number. `check_repo.py` does not yet enforce it,
-which is the kind of hand-maintained count this repo has already been bitten by three times --
-recorded here as the next cheap check to add.
+The count in the heading above must match that number, and **`check_repo.py registry` now enforces
+it** — in all three directions: a stated count that drifts, a key that loses its row, and a
+checkpoint added to the model and never mapped. Each was proven to fail before the check was
+accepted.
+
+It exists because the alternative was a hand-maintained count, and this repo has been bitten by one
+three times: a README table claiming a deliberate test failure had passed, eleven skill READMEs
+contradicting their own frontmatter, and a trigger note still reading "15 skills" after three were
+added. Naming the risk is not the same as closing it.
