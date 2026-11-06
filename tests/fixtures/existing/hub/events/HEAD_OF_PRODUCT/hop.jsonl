@@ -1,1 +1,1 @@
-{"v": 1, "event_id": "HEAD_OF_PRODUCT/hop#1", "seq": 1, "ts": "2026-11-06T07:19:08.527723Z", "actor": "hop", "role": "HEAD_OF_PRODUCT", "op": "profile", "fields": {"required_checkpoints": ["rollback-rehearsed", "privacy-signoff", "known-issues-published"]}}
+{"v": 1, "event_id": "HEAD_OF_PRODUCT/hop#1", "seq": 1, "ts": "2026-11-06T07:27:15.478571Z", "actor": "hop", "role": "HEAD_OF_PRODUCT", "op": "profile", "fields": {"required_checkpoints": ["rollback-rehearsed", "privacy-signoff", "known-issues-published"]}}

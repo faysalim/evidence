@@ -42,12 +42,19 @@ which you must read before assuming anyone looked.
 
 | Hub item | Note |
 |---|---|
-| `launch` | `DRAFT` → `CLAIMS_CHECKED` (requires `evidence`) → `APPROVED` by PM, Head of Product or operator → `LIVE` |
+| `launch` | `DRAFT` → `CLAIMS_CHECKED` (requires `evidence`, **`claims_verified_by`** naming the case ids, and **`unverified_claims`** — `none` is a valid answer) → `APPROVED` by PM, Head of Product or operator → `LIVE` |
 | `finding` | Where the copy is right and the product is wrong — that is a product finding, not a copy edit |
 | `decision` | Where a claim cannot be substantiated and someone must decide whether to soften it or delay |
 
 `CLAIMS_CHECKED` before approval is the gate. A claim table with no evidence column has not been checked,
 it has been written.
+
+**And the gate now asks which cases.** It used to require a free-text `evidence` field, which
+`evidence="checked them"` satisfied — so the skill's central rule, *every claim links to a passing
+case or is flagged unverified*, was prose on the highest-exposure surface a product has. It needs
+`claims_verified_by` (the case ids) and `unverified_claims` (what is flagged, or `none`). An
+unverified claim may still exist — it must be **declared**, which is what stops it shipping by
+accident.
 
 ## The claims table
 

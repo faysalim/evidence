@@ -1,3 +1,3 @@
-{"v": 1, "event_id": "DEV/dev1#1", "seq": 1, "ts": "2026-11-06T07:19:14.202366Z", "actor": "dev1", "role": "DEV", "op": "move", "after": ["PO/po#3"], "fields": {}, "item": "S-1", "to": "IN_PROGRESS"}
-{"v": 1, "event_id": "DEV/dev1#2", "seq": 2, "ts": "2026-11-06T07:19:14.314470Z", "actor": "dev1", "role": "DEV", "op": "move", "after": ["DEV/dev1#1"], "fields": {"commit": "b0b0b01"}, "item": "S-1", "to": "DONE"}
-{"v": 1, "event_id": "DEV/dev1#3", "seq": 3, "ts": "2026-11-06T07:19:15.831478Z", "actor": "dev1", "role": "DEV", "op": "move", "after": ["DELIVERY/dm#2"], "fields": {"build": "0.1.0@b0b0b01"}, "item": "REL-1", "to": "CANDIDATE"}
+{"v": 1, "event_id": "DEV/dev1#1", "seq": 1, "ts": "2026-11-06T07:27:21.059232Z", "actor": "dev1", "role": "DEV", "op": "move", "after": ["PO/po#3"], "fields": {}, "item": "S-1", "to": "IN_PROGRESS"}
+{"v": 1, "event_id": "DEV/dev1#2", "seq": 2, "ts": "2026-11-06T07:27:21.159941Z", "actor": "dev1", "role": "DEV", "op": "move", "after": ["DEV/dev1#1"], "fields": {"commit": "b0b0b01"}, "item": "S-1", "to": "DONE"}
+{"v": 1, "event_id": "DEV/dev1#3", "seq": 3, "ts": "2026-11-06T07:27:22.651022Z", "actor": "dev1", "role": "DEV", "op": "move", "after": ["DELIVERY/dm#2"], "fields": {"build": "0.1.0@b0b0b01"}, "item": "REL-1", "to": "CANDIDATE"}

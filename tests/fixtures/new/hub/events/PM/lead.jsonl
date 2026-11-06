@@ -1,3 +1,3 @@
-{"v": 1, "event_id": "PM/lead#1", "seq": 1, "ts": "2026-11-06T07:19:12.682941Z", "actor": "lead", "role": "PM", "op": "init", "engagement": "greenfield-intake"}
-{"v": 1, "event_id": "PM/lead#2", "seq": 2, "ts": "2026-11-06T07:19:12.773018Z", "actor": "lead", "role": "PM", "op": "iteration", "iteration": 1, "note": "first slice of a new product"}
-{"v": 1, "event_id": "PM/lead#3", "seq": 3, "ts": "2026-11-06T07:19:12.858828Z", "actor": "lead", "role": "PM", "op": "profile", "fields": {"mode": "new", "domains": ["multi-tenant-saas"], "methodology": "weekly", "note": "no current state exists; there is no baseline to compare to"}}
+{"v": 1, "event_id": "PM/lead#1", "seq": 1, "ts": "2026-11-06T07:27:19.558530Z", "actor": "lead", "role": "PM", "op": "init", "engagement": "greenfield-intake"}
+{"v": 1, "event_id": "PM/lead#2", "seq": 2, "ts": "2026-11-06T07:27:19.648996Z", "actor": "lead", "role": "PM", "op": "iteration", "iteration": 1, "note": "first slice of a new product"}
+{"v": 1, "event_id": "PM/lead#3", "seq": 3, "ts": "2026-11-06T07:27:19.740511Z", "actor": "lead", "role": "PM", "op": "profile", "fields": {"mode": "new", "domains": ["multi-tenant-saas"], "methodology": "weekly", "note": "no current state exists; there is no baseline to compare to"}}

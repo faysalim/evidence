@@ -173,7 +173,14 @@ def build_existing(hub):
         "-f", "states=empty, submitting, success-pending-email, already-has-trial, "
               "provider-down, invalid-mailbox, rate-limited")
     run(hub, "designer", "DESIGNER", "link", "DES-1", "realizes", "S-1")
-    run(hub, "design_lead", "DESIGN_LEAD", "move", "DES-1", "REVIEWED")
+    # The eight states are the deliverable, so REVIEWED records what was decided for each.
+    run(hub, "design_lead", "DESIGN_LEAD", "move", "DES-1", "REVIEWED",
+        "-f", "states_covered=empty: first-run panel names the one action; loading: skeleton "
+              "after 400ms; partial: per-row failure with a retry; error-per-cause: network, "
+              "permission, validation and issuer-down are four messages; permission-denied: the "
+              "control is shown disabled with who to ask; too-much-data: 10k rows paginated, "
+              "200-char names truncated with a tooltip; offline: n/a, the product requires the "
+              "issuer; success: names the licence id and that email may lag")
     run(hub, "po", "PO", "move", "DES-1", "ACCEPTED")
 
     # A design review finding of the strongest kind: the product's own two surfaces disagree.
@@ -363,7 +370,14 @@ def build_existing(hub):
     run(hub, "pmm", "PMM", "move", "LAU-1", "CLAIMS_CHECKED",
         "-f", "evidence=4 claims: 2 SUPPORTED (S5-01, S5-02 PASS), 1 SOFTENED (offline "
               "activation is air-gapped-capable, not verified at scale), 1 REMOVED "
-              "(no durability claim: R-1 is NOT RUN)")
+              "(no durability claim: R-1 is NOT RUN)",
+        # Which cases carry which claim, and what is flagged. Free-text evidence alone used to
+        # satisfy this gate, which left the skill's central rule on the highest-exposure surface
+        # a product has as prose.
+        "-f", "claims_verified_by=S5-01 (activation works end to end), S5-02 (one licence per "
+              "mailbox, no duplicates)",
+        "-f", "unverified_claims=offline activation at scale -- SOFTENED in the copy; "
+              "issuer durability -- REMOVED, R-1 is NOT RUN")
     run(hub, "pm", "PM", "move", "LAU-1", "APPROVED")
     run(hub, "pmm", "PMM", "move", "LAU-1", "LIVE")
 

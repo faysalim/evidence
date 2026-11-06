@@ -459,6 +459,9 @@
           ],
           "different_actor_from": [
             "PROPOSED"
+          ],
+          "requires_fields": [
+            "states_covered"
           ]
         },
         {
@@ -1243,7 +1246,9 @@
             "PMM"
           ],
           "requires_fields": [
-            "evidence"
+            "evidence",
+            "claims_verified_by",
+            "unverified_claims"
           ],
           "doc": "Every product claim links to a passing case or is flagged unverified."
         },

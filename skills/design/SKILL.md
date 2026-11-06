@@ -37,7 +37,7 @@ which you must read before assuming anyone looked.
 
 | Hub item | Note |
 |---|---|
-| `design` | `PROPOSED` → `REVIEWED` by the design lead → `ACCEPTED` by the PO. **Never by its author** |
+| `design` | `PROPOSED` → `REVIEWED` by the design lead, **requiring `states_covered`** → `ACCEPTED` by the PO. **Never by its author**, and the hub enforces that |
 | `finding` | Design-review findings, same template and same evidence bar as QA's |
 | `decision` | Where a design trade needs the operator — a cost, a platform convention, a deadline |
 
@@ -59,6 +59,11 @@ skipped are the ones users actually hit:
 | Too much data | 10,000 rows, a 200-character name, a 50 MB upload |
 | Offline | If the product claims to work offline, design the reconciliation, not just the banner |
 | Success | Including what it says when the thing succeeded but something downstream has not happened yet |
+
+**`REVIEWED` requires `states_covered`**, listing what was decided for each of the eight — `n/a` with
+a reason is a valid entry, silence is not. This was prose until an audit found that `REVIEWED`
+required *no field at all*, so a design reached `ACCEPTED` with not one state recorded: the skill's
+entire deliverable, unrecorded, on the lifecycle meant to carry it.
 
 **A design that specifies only the happy path has specified the part that was never in doubt.** The origin
 engagement's worst findings were all failure paths that looked finished: a form that showed success
